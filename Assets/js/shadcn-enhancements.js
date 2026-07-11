@@ -21,75 +21,14 @@
          * Initialize all enhancements
          */
         init() {
-            this.setupRippleEffects();
             this.setupTooltipEnhancements();
             this.setupFormEnhancements();
             this.setupTableEnhancements();
             this.setupModalEnhancements();
             this.setupDropdownEnhancements();
             this.setupKeyboardNavigation();
-            this.setupAnimations();
         }
-        
-        /**
-         * Add ripple effects to buttons
-         */
-        setupRippleEffects() {
-            const addRipple = (element, event) => {
-                const rect = element.getBoundingClientRect();
-                const ripple = document.createElement('span');
-                const size = Math.max(rect.width, rect.height);
-                const x = event.clientX - rect.left - size / 2;
-                const y = event.clientY - rect.top - size / 2;
-                
-                ripple.style.cssText = `
-                    position: absolute;
-                    width: ${size}px;
-                    height: ${size}px;
-                    left: ${x}px;
-                    top: ${y}px;
-                    background: currentColor;
-                    opacity: 0.3;
-                    border-radius: 50%;
-                    transform: scale(0);
-                    animation: ripple 0.6s ease-out;
-                    pointer-events: none;
-                `;
-                
-                element.style.position = 'relative';
-                element.style.overflow = 'hidden';
-                element.appendChild(ripple);
-                
-                setTimeout(() => {
-                    if (ripple.parentNode) {
-                        ripple.parentNode.removeChild(ripple);
-                    }
-                }, 600);
-            };
-            
-            // Add ripple CSS animation
-            if (!document.querySelector('#shadcn-ripple-styles')) {
-                const style = document.createElement('style');
-                style.id = 'shadcn-ripple-styles';
-                style.textContent = `
-                    @keyframes ripple {
-                        to {
-                            transform: scale(2);
-                            opacity: 0;
-                        }
-                    }
-                `;
-                document.head.appendChild(style);
-            }
-            
-            // Add ripple to buttons
-            document.addEventListener('click', (e) => {
-                if (e.target.matches('.btn, button, .ripple-effect')) {
-                    addRipple(e.target, e);
-                }
-            });
-        }
-        
+
         /**
          * Enhanced tooltips
          */
@@ -409,58 +348,8 @@
         }
         
         /**
-         * Setup smooth animations
-         */
-        setupAnimations() {
-            // Add intersection observer for scroll animations
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('animate-in');
-                    }
-                });
-            }, {
-                threshold: 0.1,
-                rootMargin: '0px 0px -50px 0px'
-            });
-            
-            // Observe elements that should animate in
-            document.querySelectorAll('.task-board, .panel, .table-list-row').forEach(el => {
-                observer.observe(el);
-            });
-            
-            // Add animation styles
-            if (!document.querySelector('#shadcn-animation-styles')) {
-                const style = document.createElement('style');
-                style.id = 'shadcn-animation-styles';
-                style.textContent = `
-                    .animate-in {
-                        animation: slideInUp 0.3s ease-out;
-                    }
-                    
-                    @keyframes slideInUp {
-                        from {
-                            opacity: 0;
-                            transform: translateY(20px);
-                        }
-                        to {
-                            opacity: 1;
-                            transform: translateY(0);
-                        }
-                    }
-                    
-                    .keyboard-navigation *:focus {
-                        outline: 2px solid var(--ring, #0066cc) !important;
-                        outline-offset: 2px !important;
-                    }
-                `;
-                document.head.appendChild(style);
-            }
-        }
-        
-        /**
          * Add loading states to buttons
-         * @param {HTMLElement} button 
+         * @param {HTMLElement} button
          */
         addLoadingState(button) {
             if (button.classList.contains('loading')) return;
