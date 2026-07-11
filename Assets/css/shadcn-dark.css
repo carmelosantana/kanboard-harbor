@@ -12,42 +12,42 @@
 .theme-dark {
   color-scheme: dark;
   
-  /* Base colors using OKLCH color space for better perceptual uniformity */
-  --background: oklch(0.147 0.004 49.25);              /* Dark slate */
-  --foreground: oklch(0.985 0.001 106.423);           /* Off white */
-  
+  /* Base colors — shadcn neutral (pure grayscale, chroma 0) */
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+
   /* Card colors */
-  --card: oklch(0.216 0.006 56.043);                  /* Darker slate */
-  --card-foreground: oklch(0.985 0.001 106.423);       /* Off white */
-  
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+
   /* Popover colors */
-  --popover: oklch(0.216 0.006 56.043);               /* Darker slate */
-  --popover-foreground: oklch(0.985 0.001 106.423);    /* Off white */
-  
-  /* Primary colors - violet brand accent (shadcn default) */
-  --primary: oklch(0.62 0.19 293);                     /* Violet brand accent */
-  --primary-foreground: oklch(0.985 0 0);              /* Off-white for contrast */
-  
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+
+  /* Primary — near-white; primary is NOT a hue. Foreground text is dark. */
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+
   /* Secondary colors */
-  --secondary: oklch(0.268 0.007 34.298);             /* Dark gray */
-  --secondary-foreground: oklch(0.985 0.001 106.423);  /* Off white */
-  
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+
   /* Muted colors */
-  --muted: oklch(0.268 0.007 34.298);                 /* Dark gray */
-  --muted-foreground: oklch(0.76 0.01 56.259);        /* Raised for WCAG AA legibility */
-  
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+
   /* Accent colors */
-  --accent: oklch(0.268 0.007 34.298);                /* Dark gray */
-  --accent-foreground: oklch(0.985 0.001 106.423);     /* Off white */
-  
-  /* Destructive colors */
-  --destructive: oklch(0.704 0.191 22.216);           /* Red for dark theme */
-  --destructive-foreground: oklch(0.985 0.001 106.423); /* Off white */
-  
-  /* Border and input colors — single subtle hairline used everywhere */
-  --border: oklch(1 0 0 / 8%);                        /* Subtle border */
-  --input: oklch(1 0 0 / 8%);                         /* Input border (matches --border) */
-  --ring: oklch(0.62 0.19 293 / 70%);                 /* Accent-tinted focus ring */
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+
+  /* Destructive colors (semantic — stays red) */
+  --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: oklch(0.985 0 0);
+
+  /* Border and input — hairlines */
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);                            /* neutral focus ring */
 
   /* Shadow tokens (dark mode — restrained; elevation only where it matters) */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.25);
@@ -77,10 +77,11 @@
   --color-medium: var(--muted-foreground);
   --color-error: var(--destructive);
   
-  /* Link colors */
-  --link-color-primary: var(--primary);
-  --link-color-focus: oklch(0.72 0.19 293);
-  --link-color-hover: oklch(0.72 0.19 293);
+  /* Link colors — decoupled from primary (near-white primary would blend into
+     text). Links read as foreground; underline appears on hover/focus only. */
+  --link-color-primary: var(--foreground);
+  --link-color-focus: var(--foreground);
+  --link-color-hover: var(--foreground);
   
   /* Alert colors */
   --alert-color-default: var(--foreground);
@@ -113,8 +114,8 @@
   --button-primary-background-color: var(--primary);
   --button-primary-border-color: var(--primary);
   --button-primary-color-focus: var(--primary-foreground);
-  --button-primary-background-color-focus: oklch(0.72 0.19 293);
-  --button-primary-border-color-focus: oklch(0.72 0.19 293);
+  --button-primary-background-color-focus: var(--primary);
+  --button-primary-border-color-focus: var(--primary);
   
   --button-danger-color: var(--destructive-foreground);
   --button-danger-background-color: var(--destructive);
@@ -125,7 +126,7 @@
   
   /* Table colors */
   --table-header-background-color: var(--muted);
-  --table-nth-background-color: oklch(0.18 0.005 49.25);
+  --table-nth-background-color: oklch(0.18 0 0);
   --table-border-color: var(--border);
   
   /* Board and task colors */
@@ -479,13 +480,18 @@ html.theme-dark body,
   color: var(--muted-foreground);
 }
 
-/* Dark theme link styling */
+/* Dark theme link styling — neutral, underline on hover/focus only. Task-title
+   links stay clean (their own rules set text-decoration:none and only underline
+   is added here on hover). */
 .theme-dark a {
-  color: var(--primary);
+  color: var(--foreground);
+  text-decoration: none;
 }
 
-.theme-dark a:hover {
-  color: oklch(0.72 0.19 293);
+.theme-dark a:hover,
+.theme-dark a:focus-visible {
+  color: var(--foreground);
+  text-decoration: underline;
 }
 
 /* ================================
@@ -655,11 +661,11 @@ html.theme-dark body,
   color: oklch(0.85 0.1 22);
 }
 
-/* Today date chip: accent violet tint */
+/* Today date chip: neutral emphasis (brighter hairline + foreground text) */
 .theme-dark .task-board-icons-row .task-date-today {
-  background-color: color-mix(in oklch, var(--primary) 28%, var(--card));
-  border-color: var(--primary);
-  color: oklch(0.82 0.1 293);
+  background-color: color-mix(in oklch, var(--foreground) 12%, var(--card));
+  border-color: color-mix(in oklch, var(--foreground) 35%, var(--card));
+  color: var(--foreground);
 }
 
 /* ================================
@@ -740,10 +746,10 @@ html.theme-dark body,
   color: var(--popover-foreground);
 }
 
-/* Subtle violet hover tint — text stays legible white */
+/* Subtle neutral hover tint — text stays legible */
 .theme-dark .dropdown-submenu-open > li:not(.no-hover):hover {
-  background-color: oklch(0.62 0.19 293 / 15%);
-  color: var(--popover-foreground);
+  background-color: var(--accent);
+  color: var(--accent-foreground);
 }
 
 .theme-dark .dropdown-submenu-open > li:not(.no-hover):hover a {
