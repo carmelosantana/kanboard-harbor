@@ -15,7 +15,7 @@ page for uploading a custom favicon and logo.
 |---|---|
 | **Dark-first with no FOUC** | A synchronous script in `<head>` reads `localStorage` and sets the theme before first paint — no flash on page load. |
 | **Light / dark / system toggle** | Dropdown in the page header.  Preference stored per user in `user_metadata`; guest users fall back to the session. |
-| **shadcn/ui design tokens** | CSS custom properties (`--background`, `--foreground`, `--accent`, `--border`, `--radius`, etc.) plus `kbx-` primitive variables for a consistent palette across both themes. |
+| **shadcn/ui "neutral" design tokens** | Pure neutral-zinc palette with a near-white primary (near-black in light mode); color reserved for destructive + status. CSS custom properties (`--background`, `--foreground`, `--accent`, `--border`, `--radius`, etc.) plus `kbx-` primitive variables for a consistent palette across both themes. |
 | **Dark-mode task colors** | All Kanboard task card color classes are overridden in dark mode with perceptually appropriate, WCAG AA-compliant shades. |
 | **Header / navigation** | Top bar and sidebar correctly contrast in both light and dark themes. |
 | **Login card** | Centered card layout with uploaded logo (or product name) above the form. |
