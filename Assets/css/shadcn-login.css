@@ -28,10 +28,10 @@ body:has(.form-login) {
   display: flex;
   flex-direction: column;
   background-color: var(--background);
-  /* Subtle radial spotlight to give depth */
+  /* Subtle neutral spotlight to give depth (hueless) */
   background-image: radial-gradient(
     ellipse 80% 50% at 50% -10%,
-    oklch(0.62 0.19 293 / 10%) 0%,
+    oklch(0.556 0 0 / 8%) 0%,
     transparent 60%
   );
 }
@@ -106,7 +106,7 @@ body:has(.form-login) .container {
 .form-login input[type="password"]:focus,
 .form-login input[type="email"]:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px var(--ring);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring) 25%, transparent);
 }
 
 /* Required asterisk — accent-colored instead of raw browser default */
@@ -151,19 +151,28 @@ body:has(.form-login) .container {
   border-color: var(--primary);
 }
 
+/* Check glyph via mask so its color follows --primary-foreground and flips per
+   theme (dark check on near-white box in dark mode; light check on near-black
+   box in light mode). The SVG stroke color is irrelevant under a mask — only its
+   alpha shape matters. */
 .form-login input[type="checkbox"]:checked::after {
   content: "";
   position: absolute;
   inset: 2px;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 12 10' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolyline points='1,5 4,9 11,1' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
+  background-color: var(--primary-foreground);
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 12 10' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolyline points='1,5 4,9 11,1' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 12 10' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolyline points='1,5 4,9 11,1' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
 }
 
 .form-login input[type="checkbox"]:focus {
   outline: none;
-  box-shadow: 0 0 0 3px var(--ring);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring) 25%, transparent);
 }
 
 /* ================================
@@ -252,7 +261,7 @@ body:has(.form-login) .container {
 /* Slightly tinted page background in light mode for contrast with the white card */
 .theme-light body:has(.form-login),
 body:not(.theme-dark):has(.form-login) {
-  background-color: oklch(0.97 0.001 106.424);
+  background-color: oklch(0.97 0 0);
 }
 
 /* Title heading added via a login partial (template:auth:login-form:before) */
