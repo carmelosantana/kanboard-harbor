@@ -439,6 +439,38 @@ button:focus-visible,
 }
 
 /* ================================
+   TABS — Kanboard .views strips as shadcn segmented tabs
+   ================================ */
+.views {
+  gap: var(--space-1);
+}
+
+.views a,
+.views button {
+  border-radius: calc(var(--radius) - 2px);
+  padding: var(--space-1) var(--space-3);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  text-decoration: none;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.views a:hover,
+.views button:hover {
+  color: var(--foreground);
+  background-color: var(--accent);
+}
+
+.views a.active,
+.views .active a,
+.views button.active {
+  color: var(--views-active-color, var(--foreground));
+  background-color: var(--background);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ================================
    ENHANCED BOARD & TASKS
    ================================ */
 
@@ -513,7 +545,7 @@ button:focus-visible,
 }
 
 .kbx-btn:focus-visible {
-  outline: 2px solid var(--ring, oklch(0.62 0.19 293 / 70%));
+  outline: 2px solid var(--ring, oklch(0.556 0 0));
   outline-offset: 2px;
 }
 
@@ -558,6 +590,13 @@ button:focus-visible,
   overflow-y: auto;
 }
 
+/* Checkbox contrast note (spec §3): with a near-white --primary, the native
+   accent-color checkbox stays readable because the browser auto-selects a
+   contrasting check glyph (dark check on the near-white fill in dark mode,
+   light check on the near-black fill in light mode). So --primary is kept as
+   the accent here. The login page uses a custom appearance:none checkbox whose
+   check is drawn manually — that one is fixed separately in shadcn-login.css
+   (mask-image + --primary-foreground) so its check follows the token per theme. */
 /* kbx-checkbox — styled checkbox */
 .kbx-checkbox {
   display: inline-flex;
@@ -575,12 +614,12 @@ button:focus-visible,
   border-radius: calc(var(--radius, 0.5rem) / 2);
   border: 1px solid var(--border, rgba(255,255,255,0.15));
   background-color: var(--muted, #2a2a2e);
-  accent-color: var(--primary, oklch(0.62 0.19 293));
+  accent-color: var(--primary, oklch(0.922 0 0));
   cursor: pointer;
 }
 
 .kbx-checkbox input[type="checkbox"]:focus-visible {
-  outline: 2px solid var(--ring, oklch(0.62 0.19 293 / 70%));
+  outline: 2px solid var(--ring, oklch(0.556 0 0));
   outline-offset: 2px;
 }
 
@@ -632,11 +671,13 @@ button:focus-visible,
   border: 1px solid var(--border, rgba(255,255,255,0.1));
 }
 
-/* kbx-badge variant: accent (violet) */
+/* kbx-badge variant: accent — neutral emphasis (brighter hairline + foreground
+   text). Primary is not a hue in the neutral palette, so this no longer paints a
+   brand color; use --success/--warning/--destructive for semantic meaning. */
 .kbx-badge--accent {
-  background-color: color-mix(in oklch, var(--primary, oklch(0.62 0.19 293)) 20%, var(--card, #1c1c1e));
-  color: var(--primary, oklch(0.62 0.19 293));
-  border-color: var(--primary, oklch(0.62 0.19 293));
+  background-color: color-mix(in oklch, var(--foreground, oklch(0.985 0 0)) 10%, var(--card, #1c1c1e));
+  color: var(--foreground, oklch(0.985 0 0));
+  border-color: color-mix(in oklch, var(--foreground, oklch(0.985 0 0)) 30%, var(--card, #1c1c1e));
 }
 
 /* kbx-badge variant: destructive (red) */
@@ -644,6 +685,38 @@ button:focus-visible,
   background-color: color-mix(in oklch, var(--destructive, oklch(0.704 0.191 22.216)) 20%, var(--card, #1c1c1e));
   color: var(--destructive, oklch(0.704 0.191 22.216));
   border-color: var(--destructive, oklch(0.704 0.191 22.216));
+}
+
+/* kbx-badge variant: success (green) */
+.kbx-badge--success {
+  background-color: color-mix(in oklch, var(--kbx-success, oklch(0.6 0.13 160)) 20%, var(--card, #1c1c1e));
+  color: var(--kbx-success, oklch(0.72 0.13 160));
+  border-color: var(--kbx-success, oklch(0.6 0.13 160));
+}
+
+/* kbx-badge variant: warning (amber) */
+.kbx-badge--warning {
+  background-color: color-mix(in oklch, var(--kbx-warning, oklch(0.75 0.15 80)) 20%, var(--card, #1c1c1e));
+  color: var(--kbx-warning, oklch(0.82 0.15 80));
+  border-color: var(--kbx-warning, oklch(0.75 0.15 80));
+}
+
+/* kbx-badge variant: neutral (muted) */
+.kbx-badge--neutral {
+  background-color: var(--muted, #2a2a2e);
+  color: var(--muted-foreground, #b0b0b0);
+  border-color: var(--border, rgba(255,255,255,0.1));
+}
+
+/* kbx-badge status dot — a leading ● that inherits the variant color via
+   currentColor. Usage: <span class="kbx-badge kbx-badge--success kbx-badge--dot">Done</span> */
+.kbx-badge--dot::before {
+  content: "";
+  width: 0.5em;
+  height: 0.5em;
+  border-radius: 50%;
+  background-color: currentColor;
+  flex: 0 0 auto;
 }
 
 /* ============================================================
