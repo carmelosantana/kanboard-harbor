@@ -49,6 +49,11 @@
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.556 0 0);                            /* neutral focus ring */
 
+  /* Control surface (shadcn dark: bg-input/30) + select chevron */
+  --input-surface: oklch(1 0 0 / 4.5%);
+  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a1a1a1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  --task-tint: 7%;
+
   /* Shadow tokens (dark mode — restrained; elevation only where it matters) */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.25);
   --shadow-md: 0 4px 8px -2px rgb(0 0 0 / 0.35), 0 2px 4px -2px rgb(0 0 0 / 0.25);
@@ -73,7 +78,7 @@
   --color-primary: var(--foreground);
   --color-light: var(--muted-foreground);
   --color-lighter: var(--muted);
-  --color-dark: var(--background);
+  --color-dark: var(--foreground);
   --color-medium: var(--muted-foreground);
   --color-error: var(--destructive);
   
@@ -136,8 +141,8 @@
   --input-focus-color: var(--foreground);
   --input-focus-border-color: var(--ring);
   --input-focus-shadow-color: var(--ring);
-  --input-background-color: var(--muted);
-  --input-border-color: var(--border);
+  --input-background-color: var(--input-surface);
+  --input-border-color: var(--input);
   --input-placeholder-color: var(--muted-foreground);
   
   /* Dropdown colors */
@@ -207,6 +212,8 @@
   --views-background-color: var(--muted);
   --views-border-color: var(--border);
   --views-active-color: var(--foreground);
+  --views-active-bg: oklch(1 0 0 / 8%);
+  --views-active-border: var(--input);
 }
 
 /* ================================
@@ -224,265 +231,21 @@ html.theme-dark body,
   color: var(--foreground);
 }
 
-.theme-dark .page-header h2 {
-  color: var(--foreground);
-  border-bottom-color: var(--border);
-}
-
 .theme-dark header {
   background-color: var(--background);
-  border-bottom-color: var(--border);
+  border-bottom: 1px solid var(--border);
 }
 
 .theme-dark .sidebar {
   background-color: var(--background);
-  border-right-color: var(--border);
 }
 
-.theme-dark #modal-box {
-  background-color: var(--card);
-  border-color: var(--border);
-}
-
-.theme-dark .table-list-header {
-  background-color: transparent;
-  border-color: var(--border);
-  color: var(--muted-foreground);
-  font-size: 0.8125rem;
-}
-
-.theme-dark .table-list-row {
-  border-bottom-color: var(--border);
-}
-
-.theme-dark .table-list-row:hover {
-  background-color: color-mix(in oklch, var(--muted) 45%, transparent);
-}
-
-/* ================================
-   DARK THEME TASK COLOR ACCENT SYSTEM (B1 / B3 fix)
-   Specificity 0,3,0 — cleanly beats core's .task-board.color-<c> (0,2,0).
-   Neutral base + colored left rail; per-color rules add accent border + subtle tint.
-   ================================ */
-
-/* Neutral surface + colored left rail base (replaces flat background-color override) */
+/* Cards need a touch more lift on a near-black surface. */
 .theme-dark .task-board {
-  background-color: var(--card);
-  border: 1px solid var(--border);
-  border-left: 4px solid var(--border);
-  color: var(--card-foreground);
-  /* Soft elevation so cards lift off the (now borderless) column — improves
-     visibility per feedback #3. */
-  box-shadow: 0 1px 3px rgb(0 0 0 / 0.45);
-  border-radius: var(--radius);
-  transition: box-shadow 150ms cubic-bezier(0.4,0,0.2,1),
-              transform 150ms cubic-bezier(0.4,0,0.2,1);
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.4);
 }
 
-/* Keep all card text legible on the tinted surface — the task title and any
-   other card links render as light foreground, never a dark default. */
-.theme-dark .task-board a,
-.theme-dark .task-board .task-board-title a,
-.theme-dark .task-summary-container,
-.theme-dark .task-summary-container a {
-  color: var(--card-foreground);
-}
-
-/* Task title: brighter + a touch bolder for readability at a glance. */
-.theme-dark .task-board-title a,
-.theme-dark .task-board-title {
-  font-weight: 600;
-  color: var(--foreground);
-}
-
-.theme-dark .task-board:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-1px);
-}
-
-/* --- Per-color accent rules (0,3,0 specificity) --- */
-/* green — OKLCH hue 150 */
-.theme-dark .task-board.color-green {
-  border-left-color: oklch(0.75 0.16 150);
-  background-color: color-mix(in oklch, oklch(0.75 0.16 150) 28%, var(--card));
-}
-/* yellow — OKLCH hue 95 */
-.theme-dark .task-board.color-yellow {
-  border-left-color: oklch(0.86 0.15 95);
-  background-color: color-mix(in oklch, oklch(0.86 0.15 95) 28%, var(--card));
-}
-/* blue — OKLCH hue 250 */
-.theme-dark .task-board.color-blue {
-  border-left-color: oklch(0.68 0.15 250);
-  background-color: color-mix(in oklch, oklch(0.68 0.15 250) 28%, var(--card));
-}
-/* purple — OKLCH hue 300 */
-.theme-dark .task-board.color-purple {
-  border-left-color: oklch(0.65 0.18 300);
-  background-color: color-mix(in oklch, oklch(0.65 0.18 300) 28%, var(--card));
-}
-/* red — OKLCH hue 25 */
-.theme-dark .task-board.color-red {
-  border-left-color: oklch(0.70 0.19 25);
-  background-color: color-mix(in oklch, oklch(0.70 0.19 25) 28%, var(--card));
-}
-/* orange — OKLCH hue 55 */
-.theme-dark .task-board.color-orange {
-  border-left-color: oklch(0.78 0.17 55);
-  background-color: color-mix(in oklch, oklch(0.78 0.17 55) 28%, var(--card));
-}
-/* grey — OKLCH low chroma hue 250 */
-.theme-dark .task-board.color-grey {
-  border-left-color: oklch(0.65 0.02 250);
-  background-color: color-mix(in oklch, oklch(0.65 0.02 250) 28%, var(--card));
-}
-/* brown — OKLCH hue 50 */
-.theme-dark .task-board.color-brown {
-  border-left-color: oklch(0.58 0.12 50);
-  background-color: color-mix(in oklch, oklch(0.58 0.12 50) 28%, var(--card));
-}
-/* deep_orange — OKLCH hue 40 */
-.theme-dark .task-board.color-deep_orange {
-  border-left-color: oklch(0.72 0.20 40);
-  background-color: color-mix(in oklch, oklch(0.72 0.20 40) 28%, var(--card));
-}
-/* dark_grey — OKLCH low chroma hue 250 (darker than grey) */
-.theme-dark .task-board.color-dark_grey {
-  border-left-color: oklch(0.48 0.02 250);
-  background-color: color-mix(in oklch, oklch(0.48 0.02 250) 28%, var(--card));
-}
-/* pink — OKLCH hue 350 */
-.theme-dark .task-board.color-pink {
-  border-left-color: oklch(0.72 0.19 350);
-  background-color: color-mix(in oklch, oklch(0.72 0.19 350) 28%, var(--card));
-}
-/* teal — OKLCH hue 190 */
-.theme-dark .task-board.color-teal {
-  border-left-color: oklch(0.70 0.14 190);
-  background-color: color-mix(in oklch, oklch(0.70 0.14 190) 28%, var(--card));
-}
-/* cyan — OKLCH hue 210 */
-.theme-dark .task-board.color-cyan {
-  border-left-color: oklch(0.73 0.14 210);
-  background-color: color-mix(in oklch, oklch(0.73 0.14 210) 28%, var(--card));
-}
-/* lime — OKLCH hue 125 */
-.theme-dark .task-board.color-lime {
-  border-left-color: oklch(0.82 0.17 125);
-  background-color: color-mix(in oklch, oklch(0.82 0.17 125) 28%, var(--card));
-}
-/* light_green — OKLCH hue 140 */
-.theme-dark .task-board.color-light_green {
-  border-left-color: oklch(0.79 0.17 140);
-  background-color: color-mix(in oklch, oklch(0.79 0.17 140) 28%, var(--card));
-}
-/* amber — OKLCH hue 85 */
-.theme-dark .task-board.color-amber {
-  border-left-color: oklch(0.83 0.16 85);
-  background-color: color-mix(in oklch, oklch(0.83 0.16 85) 28%, var(--card));
-}
-
-/* --- Task summary container (task detail page, B3) --- */
-.theme-dark .task-summary-container.color-green     { border-left: 3px solid oklch(0.75 0.16 150); background-color: color-mix(in oklch, oklch(0.75 0.16 150) 28%, var(--card)); }
-.theme-dark .task-summary-container.color-yellow    { border-left: 3px solid oklch(0.86 0.15 95);  background-color: color-mix(in oklch, oklch(0.86 0.15 95) 28%, var(--card)); }
-.theme-dark .task-summary-container.color-blue      { border-left: 3px solid oklch(0.68 0.15 250); background-color: color-mix(in oklch, oklch(0.68 0.15 250) 28%, var(--card)); }
-.theme-dark .task-summary-container.color-purple    { border-left: 3px solid oklch(0.65 0.18 300); background-color: color-mix(in oklch, oklch(0.65 0.18 300) 28%, var(--card)); }
-.theme-dark .task-summary-container.color-red       { border-left: 3px solid oklch(0.70 0.19 25);  background-color: color-mix(in oklch, oklch(0.70 0.19 25) 28%, var(--card)); }
-.theme-dark .task-summary-container.color-orange    { border-left: 3px solid oklch(0.78 0.17 55);  background-color: color-mix(in oklch, oklch(0.78 0.17 55) 28%, var(--card)); }
-.theme-dark .task-summary-container.color-grey      { border-left: 3px solid oklch(0.65 0.02 250); background-color: color-mix(in oklch, oklch(0.65 0.02 250) 28%, var(--card)); }
-.theme-dark .task-summary-container.color-brown     { border-left: 3px solid oklch(0.58 0.12 50);  background-color: color-mix(in oklch, oklch(0.58 0.12 50) 28%, var(--card)); }
-.theme-dark .task-summary-container.color-deep_orange { border-left: 3px solid oklch(0.72 0.20 40); background-color: color-mix(in oklch, oklch(0.72 0.20 40) 28%, var(--card)); }
-.theme-dark .task-summary-container.color-dark_grey { border-left: 3px solid oklch(0.48 0.02 250); background-color: color-mix(in oklch, oklch(0.48 0.02 250) 28%, var(--card)); }
-.theme-dark .task-summary-container.color-pink      { border-left: 3px solid oklch(0.72 0.19 350); background-color: color-mix(in oklch, oklch(0.72 0.19 350) 28%, var(--card)); }
-.theme-dark .task-summary-container.color-teal      { border-left: 3px solid oklch(0.70 0.14 190); background-color: color-mix(in oklch, oklch(0.70 0.14 190) 28%, var(--card)); }
-.theme-dark .task-summary-container.color-cyan      { border-left: 3px solid oklch(0.73 0.14 210); background-color: color-mix(in oklch, oklch(0.73 0.14 210) 28%, var(--card)); }
-.theme-dark .task-summary-container.color-lime      { border-left: 3px solid oklch(0.82 0.17 125); background-color: color-mix(in oklch, oklch(0.82 0.17 125) 28%, var(--card)); }
-.theme-dark .task-summary-container.color-light_green { border-left: 3px solid oklch(0.79 0.17 140); background-color: color-mix(in oklch, oklch(0.79 0.17 140) 28%, var(--card)); }
-.theme-dark .task-summary-container.color-amber     { border-left: 3px solid oklch(0.83 0.16 85);  background-color: color-mix(in oklch, oklch(0.83 0.16 85) 28%, var(--card)); }
-
-/* --- Task tags (board footer + task detail, B3) --- */
-.theme-dark .task-tag.color-green      { background-color: color-mix(in oklch, oklch(0.75 0.16 150) 28%, var(--card)); border-color: oklch(0.75 0.16 150); color: var(--card-foreground); }
-.theme-dark .task-tag.color-yellow     { background-color: color-mix(in oklch, oklch(0.86 0.15 95) 28%, var(--card));  border-color: oklch(0.86 0.15 95);  color: var(--card-foreground); }
-.theme-dark .task-tag.color-blue       { background-color: color-mix(in oklch, oklch(0.68 0.15 250) 28%, var(--card)); border-color: oklch(0.68 0.15 250); color: var(--card-foreground); }
-.theme-dark .task-tag.color-purple     { background-color: color-mix(in oklch, oklch(0.65 0.18 300) 28%, var(--card)); border-color: oklch(0.65 0.18 300); color: var(--card-foreground); }
-.theme-dark .task-tag.color-red        { background-color: color-mix(in oklch, oklch(0.70 0.19 25) 28%, var(--card));  border-color: oklch(0.70 0.19 25);  color: var(--card-foreground); }
-.theme-dark .task-tag.color-orange     { background-color: color-mix(in oklch, oklch(0.78 0.17 55) 28%, var(--card));  border-color: oklch(0.78 0.17 55);  color: var(--card-foreground); }
-.theme-dark .task-tag.color-grey       { background-color: color-mix(in oklch, oklch(0.65 0.02 250) 28%, var(--card)); border-color: oklch(0.65 0.02 250); color: var(--card-foreground); }
-.theme-dark .task-tag.color-brown      { background-color: color-mix(in oklch, oklch(0.58 0.12 50) 28%, var(--card));  border-color: oklch(0.58 0.12 50);  color: var(--card-foreground); }
-.theme-dark .task-tag.color-deep_orange { background-color: color-mix(in oklch, oklch(0.72 0.20 40) 28%, var(--card)); border-color: oklch(0.72 0.20 40); color: var(--card-foreground); }
-.theme-dark .task-tag.color-dark_grey  { background-color: color-mix(in oklch, oklch(0.48 0.02 250) 28%, var(--card)); border-color: oklch(0.48 0.02 250); color: var(--card-foreground); }
-.theme-dark .task-tag.color-pink       { background-color: color-mix(in oklch, oklch(0.72 0.19 350) 28%, var(--card)); border-color: oklch(0.72 0.19 350); color: var(--card-foreground); }
-.theme-dark .task-tag.color-teal       { background-color: color-mix(in oklch, oklch(0.70 0.14 190) 28%, var(--card)); border-color: oklch(0.70 0.14 190); color: var(--card-foreground); }
-.theme-dark .task-tag.color-cyan       { background-color: color-mix(in oklch, oklch(0.73 0.14 210) 28%, var(--card)); border-color: oklch(0.73 0.14 210); color: var(--card-foreground); }
-.theme-dark .task-tag.color-lime       { background-color: color-mix(in oklch, oklch(0.82 0.17 125) 28%, var(--card)); border-color: oklch(0.82 0.17 125); color: var(--card-foreground); }
-.theme-dark .task-tag.color-light_green { background-color: color-mix(in oklch, oklch(0.79 0.17 140) 28%, var(--card)); border-color: oklch(0.79 0.17 140); color: var(--card-foreground); }
-.theme-dark .task-tag.color-amber      { background-color: color-mix(in oklch, oklch(0.83 0.16 85) 28%, var(--card));  border-color: oklch(0.83 0.16 85);  color: var(--card-foreground); }
-
-/* --- Task board category labels (board footer, B3) --- */
-.theme-dark .task-board-category.color-green      { background-color: color-mix(in oklch, oklch(0.75 0.16 150) 28%, var(--card)); border-color: oklch(0.75 0.16 150); color: var(--card-foreground); }
-.theme-dark .task-board-category.color-yellow     { background-color: color-mix(in oklch, oklch(0.86 0.15 95) 28%, var(--card));  border-color: oklch(0.86 0.15 95);  color: var(--card-foreground); }
-.theme-dark .task-board-category.color-blue       { background-color: color-mix(in oklch, oklch(0.68 0.15 250) 28%, var(--card)); border-color: oklch(0.68 0.15 250); color: var(--card-foreground); }
-.theme-dark .task-board-category.color-purple     { background-color: color-mix(in oklch, oklch(0.65 0.18 300) 28%, var(--card)); border-color: oklch(0.65 0.18 300); color: var(--card-foreground); }
-.theme-dark .task-board-category.color-red        { background-color: color-mix(in oklch, oklch(0.70 0.19 25) 28%, var(--card));  border-color: oklch(0.70 0.19 25);  color: var(--card-foreground); }
-.theme-dark .task-board-category.color-orange     { background-color: color-mix(in oklch, oklch(0.78 0.17 55) 28%, var(--card));  border-color: oklch(0.78 0.17 55);  color: var(--card-foreground); }
-.theme-dark .task-board-category.color-grey       { background-color: color-mix(in oklch, oklch(0.65 0.02 250) 28%, var(--card)); border-color: oklch(0.65 0.02 250); color: var(--card-foreground); }
-.theme-dark .task-board-category.color-brown      { background-color: color-mix(in oklch, oklch(0.58 0.12 50) 28%, var(--card));  border-color: oklch(0.58 0.12 50);  color: var(--card-foreground); }
-.theme-dark .task-board-category.color-deep_orange { background-color: color-mix(in oklch, oklch(0.72 0.20 40) 28%, var(--card)); border-color: oklch(0.72 0.20 40); color: var(--card-foreground); }
-.theme-dark .task-board-category.color-dark_grey  { background-color: color-mix(in oklch, oklch(0.48 0.02 250) 28%, var(--card)); border-color: oklch(0.48 0.02 250); color: var(--card-foreground); }
-.theme-dark .task-board-category.color-pink       { background-color: color-mix(in oklch, oklch(0.72 0.19 350) 28%, var(--card)); border-color: oklch(0.72 0.19 350); color: var(--card-foreground); }
-.theme-dark .task-board-category.color-teal       { background-color: color-mix(in oklch, oklch(0.70 0.14 190) 28%, var(--card)); border-color: oklch(0.70 0.14 190); color: var(--card-foreground); }
-.theme-dark .task-board-category.color-cyan       { background-color: color-mix(in oklch, oklch(0.73 0.14 210) 28%, var(--card)); border-color: oklch(0.73 0.14 210); color: var(--card-foreground); }
-.theme-dark .task-board-category.color-lime       { background-color: color-mix(in oklch, oklch(0.82 0.17 125) 28%, var(--card)); border-color: oklch(0.82 0.17 125); color: var(--card-foreground); }
-.theme-dark .task-board-category.color-light_green { background-color: color-mix(in oklch, oklch(0.79 0.17 140) 28%, var(--card)); border-color: oklch(0.79 0.17 140); color: var(--card-foreground); }
-.theme-dark .task-board-category.color-amber      { background-color: color-mix(in oklch, oklch(0.83 0.16 85) 28%, var(--card));  border-color: oklch(0.83 0.16 85);  color: var(--card-foreground); }
-
-/* Dark theme board styling — borderless columns (feedback #2): no boxed outline
-   around each column; columns read via spacing + the quiet header label only. */
-.theme-dark .board-column-header {
-  background-color: transparent;
-  border: none;
-  color: var(--card-foreground);
-  padding: 0.5rem 0.75rem;
-}
-
-.theme-dark .board-task-list {
-  background-color: transparent;
-  border: none;
-  padding: 0.5rem 0.25rem;
-  gap: 0;
-}
-
-/* The board is a <table>; suppress the global td/th hairlines between columns
-   so the borderless look is clean. */
-.theme-dark .board th,
-.theme-dark .board td {
-  border: none;
-  background-color: transparent;
-}
-
-/* Dark theme form styling */
-.theme-dark input[type="text"]:not(.input-addon-field),
-.theme-dark input[type="email"],
-.theme-dark input[type="password"],
-.theme-dark input[type="number"],
-.theme-dark input[type="date"],
-.theme-dark select,
-.theme-dark textarea {
-  background-color: var(--muted);
-  border-color: var(--border);
-  color: var(--foreground);
-}
-
-.theme-dark input[type="text"]:not(.input-addon-field)::placeholder,
-.theme-dark input[type="email"]::placeholder,
-.theme-dark input[type="password"]::placeholder,
-.theme-dark textarea::placeholder {
-  color: var(--muted-foreground);
-}
-
-/* Dark theme link styling — neutral, underline on hover/focus only. Task-title
-   links stay clean (their own rules set text-decoration:none and only underline
-   is added here on hover). */
+/* Links — neutral, underline on hover/focus only. */
 .theme-dark a {
   color: var(--foreground);
   text-decoration: none;
@@ -494,55 +257,6 @@ html.theme-dark body,
   text-decoration: underline;
 }
 
-/* ================================
-   DARK THEME DROPDOWN IMPROVEMENTS
-   ================================ */
-
-.theme-dark .dropdown-submenu-open,
-.theme-dark #select-dropdown-menu {
-  background-color: var(--popover);
-  border-color: var(--border);
-  color: var(--popover-foreground);
-}
-
-.theme-dark .dropdown-submenu-open li,
-.theme-dark .select-dropdown-menu-item {
-  color: var(--popover-foreground);
-}
-
-.theme-dark .dropdown-submenu-open li:hover,
-.theme-dark .dropdown-submenu-open li:not(.no-hover):hover,
-.theme-dark .select-dropdown-menu-item:hover,
-.theme-dark .select-dropdown-menu-item.active {
-  background-color: var(--accent);
-  color: var(--accent-foreground);
-}
-
-/* ================================
-   DARK THEME ACCESSIBILITY
-   ================================ */
-
-.theme-dark a:focus-visible,
-.theme-dark button:focus-visible,
-.theme-dark input:focus-visible,
-.theme-dark select:focus-visible,
-.theme-dark textarea:focus-visible,
-.theme-dark [tabindex]:focus-visible {
-  outline: none;
-  border-color: var(--ring);
-  box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring) 25%, transparent);
-}
-
-/* Better contrast for dark theme text selection */
-.theme-dark ::selection {
-  background-color: var(--accent);
-  color: var(--accent-foreground);
-}
-
-/* ================================
-   IMPROVED VISUAL HIERARCHY
-   ================================ */
-
 .theme-dark h1,
 .theme-dark h2,
 .theme-dark h3,
@@ -552,206 +266,26 @@ html.theme-dark body,
   color: var(--foreground);
 }
 
-.theme-dark .text-muted {
-  color: var(--muted-foreground);
+.theme-dark ::selection {
+  background-color: oklch(0.4 0 0);
+  color: var(--foreground);
 }
 
-.theme-dark .bg-muted {
-  background-color: var(--muted);
-}
-
-/* ================================
-   SCROLLBAR STYLING FOR DARK THEME
-   ================================ */
-
+/* Scrollbars — thin, neutral */
 .theme-dark ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 .theme-dark ::-webkit-scrollbar-track {
-  background-color: var(--muted);
-  border-radius: var(--radius);
+  background-color: transparent;
 }
 
 .theme-dark ::-webkit-scrollbar-thumb {
-  background-color: var(--muted-foreground);
-  border-radius: var(--radius);
+  background-color: oklch(1 0 0 / 15%);
+  border-radius: 9999px;
 }
 
 .theme-dark ::-webkit-scrollbar-thumb:hover {
-  background-color: var(--foreground);
-}
-
-/* ================================
-   DARK THEME COMMENTS (#5 — rounded backgrounds)
-   Core alternates .comment backgrounds via --comment-nth-background-color.
-   Give each comment a card-like rounded surface with breathing room.
-   ================================ */
-
-.theme-dark .comment {
-  background-color: color-mix(in oklch, var(--muted) 55%, transparent);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: var(--space-3);
-  margin-bottom: var(--space-3);
-}
-
-.theme-dark .comment-inner {
-  background: transparent;
-  border: 0;
-}
-
-/* ================================
-   DARK THEME CODE BLOCKS
-   ================================ */
-
-.theme-dark .markdown pre,
-.theme-dark code {
-  background-color: var(--muted);
-  color: var(--foreground);
-  border: 1px solid var(--border);
-}
-
-/* ================================
-   DARK THEME CARD POLISH (C2)
-   Real class: .task-board (board/task_private.php, board/table_tasks.php)
-   Icons row: .task-board-icons / .task-board-icons-row (board/task_footer.php)
-   ================================ */
-
-/* Card footer meta row: badge/chip treatment */
-.theme-dark .task-board-icons {
-  margin-top: 0.375rem;
-  padding-top: 0.375rem;
-  border-top: 1px solid var(--border);
-}
-
-.theme-dark .task-board-icons-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
-  align-items: center;
-  line-height: 1;
-}
-
-/* Chip style for each meta icon/span in the footer */
-.theme-dark .task-board-icons-row > span,
-.theme-dark .task-board-icons-row > a,
-.theme-dark .task-board-icons-row .task-score,
-.theme-dark .task-board-icons-row .task-date,
-.theme-dark .task-board-icons-row .task-time-estimated,
-.theme-dark .task-board-icons-row .task-icon-age {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.2em;
-  padding: 0.15em 0.45em;
-  border-radius: calc(var(--radius) - 2px);
-  font-size: 0.75rem;
-  font-weight: 500;
-  background-color: var(--muted);
-  color: var(--muted-foreground);
-  border: 1px solid var(--border);
-  white-space: nowrap;
-}
-
-/* Overdue date chip: accent destructive tint */
-.theme-dark .task-board-icons-row .task-date-overdue {
-  background-color: color-mix(in oklch, var(--destructive) 28%, var(--card));
-  border-color: var(--destructive);
-  color: oklch(0.85 0.1 22);
-}
-
-/* Today date chip: neutral emphasis (brighter hairline + foreground text) */
-.theme-dark .task-board-icons-row .task-date-today {
-  background-color: color-mix(in oklch, var(--foreground) 12%, var(--card));
-  border-color: color-mix(in oklch, var(--foreground) 35%, var(--card));
-  color: var(--foreground);
-}
-
-/* ================================
-   DARK THEME COLUMN POLISH (C2)
-   Real classes: .board-column-header (th, board/table_column.php)
-                 .board-column-title  (board/table_column.php)
-                 .board-column-header-task-count (board/table_column.php)
-                 .board-task-list (div, board/table_tasks.php)
-   ================================ */
-
-/* Column title: small-caps treatment */
-.theme-dark .board-column-title {
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--muted-foreground);
-}
-
-/* Column header title link should also be quiet */
-.theme-dark .board-column-title a,
-.theme-dark .board-column-title .dropdown-menu {
-  color: var(--muted-foreground);
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  text-decoration: none;
-}
-
-.theme-dark .board-column-title a:hover,
-.theme-dark .board-column-title .dropdown-menu:hover {
-  color: var(--foreground);
-}
-
-/* Muted task count badge in column header */
-.theme-dark .board-column-header-task-count {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.1em 0.45em;
-  border-radius: 9999px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  background-color: var(--muted);
-  color: var(--muted-foreground);
-  border: 1px solid var(--border);
-}
-
-/* ================================
-   DARK THEME DROPDOWN / POPOVER POLISH (C3)
-   Live DOM: <div id="dropdown"><ul class="dropdown-submenu-open"><li>…</li></ul></div>
-   The UL itself carries .dropdown-submenu-open — no nested ul. Target directly.
-   Consolidated with the existing .dropdown-submenu-open base rule above.
-   ================================ */
-
-/* Enhanced popover treatment merged onto the ul-level rule above */
-.theme-dark .dropdown-submenu-open {
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-lg);
-  padding: 0.25rem;
-  min-width: 12rem;
-  z-index: 1000;
-}
-
-/* Item-level polish (direct child li) */
-.theme-dark .dropdown-submenu-open > li {
-  border-radius: calc(var(--radius) - 2px);
-  padding: 0.375rem 0.625rem;
-  font-size: 0.875rem;
-  border: none;
-  list-style: none;
-  transition: background-color 150ms cubic-bezier(0.4,0,0.2,1);
-}
-
-/* Neutral dropdown links; the neutral --accent tint is used for the hover background */
-.theme-dark .dropdown-submenu-open > li a,
-.theme-dark .dropdown-submenu-open > li .dropdown-menu {
-  color: var(--popover-foreground);
-}
-
-/* Subtle neutral hover tint — text stays legible */
-.theme-dark .dropdown-submenu-open > li:not(.no-hover):hover {
-  background-color: var(--accent);
-  color: var(--accent-foreground);
-}
-
-.theme-dark .dropdown-submenu-open > li:not(.no-hover):hover a {
-  color: var(--popover-foreground);
+  background-color: oklch(1 0 0 / 25%);
 }
