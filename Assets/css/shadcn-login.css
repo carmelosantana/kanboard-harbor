@@ -28,10 +28,10 @@ body:has(.form-login) {
   display: flex;
   flex-direction: column;
   background-color: var(--background);
-  /* Subtle radial spotlight to give depth */
+  /* Subtle neutral spotlight to give depth (hueless) */
   background-image: radial-gradient(
     ellipse 80% 50% at 50% -10%,
-    oklch(0.62 0.19 293 / 10%) 0%,
+    oklch(0.556 0 0 / 8%) 0%,
     transparent 60%
   );
 }
@@ -74,39 +74,18 @@ body:has(.form-login) .container {
    FORM ELEMENTS
    ================================ */
 
-/* Labels */
+/* Labels — type and spacing come from shadcn-core.css. */
 .form-login label:not(:has(input[type="checkbox"])) {
   display: block;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--foreground);
-  margin-bottom: var(--space-1);
-  margin-top: var(--space-3);
 }
 
-/* Text / password inputs */
+/* Inputs take their size and focus ring from shadcn-core.css; here they
+   only stretch to the card width. */
 .form-login input[type="text"],
 .form-login input[type="password"],
 .form-login input[type="email"] {
   display: block;
   width: 100%;
-  box-sizing: border-box;
-  padding: 0.5rem 0.75rem;
-  font-size: 0.875rem;
-  line-height: 1.5;
-  background-color: transparent;
-  color: var(--foreground);
-  border: 1px solid var(--input);
-  border-radius: var(--radius);
-  outline: none;
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
-}
-
-.form-login input[type="text"]:focus,
-.form-login input[type="password"]:focus,
-.form-login input[type="email"]:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px var(--ring);
 }
 
 /* Required asterisk — accent-colored instead of raw browser default */
@@ -132,40 +111,6 @@ body:has(.form-login) .container {
   user-select: none;
 }
 
-.form-login input[type="checkbox"] {
-  appearance: none;
-  -webkit-appearance: none;
-  width: 1rem;
-  height: 1rem;
-  border: 1px solid var(--input);
-  border-radius: calc(var(--radius) * 0.5);
-  background-color: transparent;
-  flex-shrink: 0;
-  cursor: pointer;
-  position: relative;
-  transition: background-color var(--transition-fast), border-color var(--transition-fast);
-}
-
-.form-login input[type="checkbox"]:checked {
-  background-color: var(--primary);
-  border-color: var(--primary);
-}
-
-.form-login input[type="checkbox"]:checked::after {
-  content: "";
-  position: absolute;
-  inset: 2px;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 12 10' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolyline points='1,5 4,9 11,1' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}
-
-.form-login input[type="checkbox"]:focus {
-  outline: none;
-  box-shadow: 0 0 0 3px var(--ring);
-}
-
 /* ================================
    SIGN IN BUTTON
    ================================ */
@@ -176,32 +121,7 @@ body:has(.form-login) .container {
 
 .form-login .form-actions .btn.btn-blue,
 .form-login .btn.btn-blue[type="submit"] {
-  display: block;
   width: 100%;
-  padding: 0.6rem 1rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  text-align: center;
-  background-color: var(--primary);
-  color: var(--primary-foreground);
-  border: none;
-  border-radius: var(--radius);
-  cursor: pointer;
-  transition: opacity var(--transition-fast), box-shadow var(--transition-fast);
-  box-shadow: var(--shadow-sm);
-  letter-spacing: 0.01em;
-}
-
-.form-login .form-actions .btn.btn-blue:hover,
-.form-login .btn.btn-blue[type="submit"]:hover {
-  opacity: 0.92;
-  box-shadow: var(--shadow-md);
-}
-
-.form-login .form-actions .btn.btn-blue:active,
-.form-login .btn.btn-blue[type="submit"]:active {
-  opacity: 0.85;
-  box-shadow: var(--shadow-sm);
 }
 
 /* ================================
@@ -252,7 +172,7 @@ body:has(.form-login) .container {
 /* Slightly tinted page background in light mode for contrast with the white card */
 .theme-light body:has(.form-login),
 body:not(.theme-dark):has(.form-login) {
-  background-color: oklch(0.97 0.001 106.424);
+  background-color: oklch(0.97 0 0);
 }
 
 /* Title heading added via a login partial (template:auth:login-form:before) */

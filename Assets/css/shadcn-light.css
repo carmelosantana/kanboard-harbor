@@ -10,43 +10,47 @@
    ================================ */
 
 :root {
-  /* Base colors using OKLCH color space for better perceptual uniformity */
-  --background: oklch(1 0 0);                          /* Pure white */
-  --foreground: oklch(0.15 0.004 49.25);              /* Near black */
-  
+  /* Base colors — shadcn neutral light (pure grayscale, chroma 0) */
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+
   /* Card colors */
-  --card: oklch(1 0 0);                                /* White */
-  --card-foreground: oklch(0.15 0.004 49.25);         /* Near black */
-  
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+
   /* Popover colors */
-  --popover: oklch(1 0 0);                             /* White */
-  --popover-foreground: oklch(0.15 0.004 49.25);      /* Near black */
-  
-  /* Primary colors - shadcn slate */
-  --primary: oklch(0.216 0.006 56.043);               /* Dark slate */
-  --primary-foreground: oklch(0.985 0.001 106.423);   /* Off white */
-  
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+
+  /* Primary — near-black; primary is NOT a hue. */
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+
   /* Secondary colors */
-  --secondary: oklch(0.97 0.001 106.424);             /* Light gray */
-  --secondary-foreground: oklch(0.216 0.006 56.043);  /* Dark slate */
-  
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+
   /* Muted colors */
-  --muted: oklch(0.97 0.001 106.424);                 /* Light gray */
-  --muted-foreground: oklch(0.553 0.013 58.071);      /* Medium gray */
-  
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+
   /* Accent colors */
-  --accent: oklch(0.97 0.001 106.424);                /* Light gray */
-  --accent-foreground: oklch(0.216 0.006 56.043);     /* Dark slate */
-  
-  /* Destructive colors */
-  --destructive: oklch(0.627 0.241 29.699);           /* Red */
-  --destructive-foreground: oklch(0.985 0.001 106.423); /* Off white */
-  
-  /* Border and input colors */
-  --border: oklch(0.923 0.003 48.717);                /* Light border */
-  --input: oklch(0.923 0.003 48.717);                 /* Light input border */
-  --ring: oklch(0.216 0.006 56.043);                  /* Focus ring */
-  
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+
+  /* Destructive colors (semantic — stays red) */
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+
+  /* Border and input — hairlines */
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+
+  /* Control surface (shadcn: bg-transparent) + select chevron */
+  --input-surface: transparent;
+  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23737373' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+
   /* Chart colors */
   --chart-1: oklch(0.646 0.222 41.116);               /* Blue */
   --chart-2: oklch(0.6 0.118 184.704);                /* Teal */
@@ -69,7 +73,7 @@
 :root {
   /* Override Kanboard's existing CSS variables with shadcn colors */
   --body-background-color: var(--background);
-  --header-background-color: var(--card);
+  --header-background-color: var(--background);
   --color-primary: var(--foreground);
   --color-light: var(--muted-foreground);
   --color-lighter: var(--muted);
@@ -77,10 +81,11 @@
   --color-medium: var(--muted-foreground);
   --color-error: var(--destructive);
   
-  /* Link colors */
-  --link-color-primary: var(--primary);
-  --link-color-focus: var(--primary);
-  --link-color-hover: var(--primary);
+  /* Link colors — decoupled from primary (near-black primary would read as
+     plain body text with no affordance difference; underline on hover instead). */
+  --link-color-primary: var(--foreground);
+  --link-color-focus: var(--foreground);
+  --link-color-hover: var(--foreground);
   
   /* Alert colors */
   --alert-color-default: var(--foreground);
@@ -135,7 +140,7 @@
   --input-focus-color: var(--foreground);
   --input-focus-border-color: var(--ring);
   --input-focus-shadow-color: var(--ring);
-  --input-background-color: var(--background);
+  --input-background-color: var(--input-surface);
   --input-border-color: var(--input);
   --input-placeholder-color: var(--muted-foreground);
   
@@ -192,7 +197,7 @@
   
   /* Table list colors */
   --table-list-header-border-color: var(--border);
-  --table-list-header-background-color: var(--muted);
+  --table-list-header-background-color: transparent;
   --table-list-nth-background-color: var(--background);
   --table-list-border-color: var(--border);
   --table-list-row-hover-border-color: var(--border);
@@ -209,110 +214,44 @@
 }
 
 /* ================================
-   ENHANCED VISUAL ELEMENTS
+   LIGHT SURFACES
    ================================ */
 
-/* Subtle improvements for better visual hierarchy */
-.page-header h2 {
-  font-weight: 600;
-  color: var(--foreground);
-  border-bottom: 1px solid var(--border);
-}
-
-/* Enhanced task board appearance */
-.task-board {
-  box-shadow: var(--shadow-sm);
-  transition: all var(--transition-fast);
-}
-
-/* Enhanced header */
 header {
   background-color: var(--background);
   border-bottom: 1px solid var(--border);
-  box-shadow: var(--shadow-sm);
 }
 
-/* Enhanced sidebar */
 .sidebar {
   background-color: var(--background);
-  border-right: 1px solid var(--border);
 }
 
-/* Enhanced modal */
-#modal-box {
-  background-color: var(--card);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow-xl);
-}
-
-/* Enhanced table styling */
-.table-list-header {
-  background-color: var(--muted);
-  border: 1px solid var(--border);
-  color: var(--muted-foreground);
-  font-weight: 600;
-}
-
-.table-list-row {
-  border-bottom: 1px solid var(--border);
-  transition: all var(--transition-fast);
-}
-
-.table-list-row:hover {
-  background-color: var(--accent);
-}
-
-/* ================================
-   ACCESSIBILITY ENHANCEMENTS
-   ================================ */
-
-/* Improved focus indicators for better accessibility */
-a:focus-visible,
-button:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible,
-[tabindex]:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: 2px;
-  border-color: var(--ring);
-}
-
-/* Better contrast for links */
+/* Links — neutral foreground, underline on hover/focus only. */
 a {
-  color: var(--primary);
+  color: var(--foreground);
   text-decoration: none;
 }
 
-a:hover {
-  color: var(--primary);
-  opacity: 0.8;
+a:hover,
+a:focus-visible {
+  color: var(--foreground);
   text-decoration: underline;
 }
 
-/* ================================
-   RESPONSIVE DESIGN IMPROVEMENTS
-   ================================ */
+a:focus-visible,
+button:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
 
-@media (max-width: 768px) {
-  :root {
-    --space-1: 0.125rem;
-    --space-2: 0.25rem;
-    --space-3: 0.5rem;
-    --space-4: 0.75rem;
-  }
-  
-  .btn {
-    min-height: 2.25rem;
-    padding: var(--space-2) var(--space-3);
-  }
-  
-  input[type="text"]:not(.input-addon-field),
-  input[type="email"],
-  input[type="password"],
-  input[type="number"],
-  input[type="date"],
-  select {
-    min-height: 2.25rem;
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

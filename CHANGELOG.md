@@ -5,6 +5,57 @@ All notable changes to ShadcnTheme are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-11-17
+
+### Changed
+
+- **One size for every form control** — inputs, selects, date/time fields,
+  textareas' padding, buttons, the filter bar, the header project switcher,
+  select2 pickers and the view tabs now all share a single `--control-height`
+  token (shadcn `h-9`, 36px) with the same padding, `rounded-md` corners, 1px
+  `--input` border, faint `shadow-xs` and a `--ring` focus halo. Previously
+  heights ranged from 24px to 35px depending on the page.
+- **Theme files are colors only** — sizing, spacing and shape live once in
+  `shadcn-core.css`; `shadcn-light.css` / `shadcn-dark.css` carry tokens.
+- **Board looks the same in both themes** — borderless columns with a quiet
+  uppercase label, neutral cards with the task color as a 3px left rail and a
+  faint tint (light mode used to fall back to Kanboard's yellow cards), tags and
+  categories as outline badges with a colored dot.
+- **shadcn controls** — chevron selects, custom checkbox/radio (all pages, not
+  just login), outline/primary/destructive button variants, TabsList-style view
+  switcher, rounded sidebar rows without dividers.
+- **Type** — Geist / Inter are used when installed, falling back to the system UI
+  face.
+- **Neutral-zinc repaint** — the palette moves from warm-slate/violet to the
+  authentic shadcn/ui "neutral" look: a pure neutral-zinc, near-monochrome
+  palette with a **near-white primary** (near-black in light mode). Color is now
+  reserved for destructive actions and semantic status (success/warning/info).
+  Applied exhaustively across every screen in both light and dark, CSS-first,
+  keeping Kanboard's top-nav layout.
+- **Links decoupled from primary** — since primary is no longer a hue, links now
+  render as `--foreground` with an underline on hover/focus only (no permanent
+  underline on task-title links).
+- **Radius** bumped to `0.625rem` to match shadcn's neutral tokens.
+- **Core CSS reorganized** into four labelled layers (tokens → base → components
+  → Kanboard overrides) for a navigable audit.
+- **Status-dot badges** — new `.kbx-badge--dot` plus `--success`/`--warning`/
+  `--neutral` variants driven by tokens.
+- **Login checkbox** now uses a mask-image check so the glyph stays visible under
+  the near-white/near-black primary in both themes.
+- **Leaner JS** — removed the Material-style button ripple and the scroll-in
+  `animate-in` animation (neither is shadcn); kept modal backdrop/Escape close,
+  dropdown/tooltip fade-in, and form/table helpers.
+
+### Fixed
+
+- Task-color tints mixed in OKLCH drifted toward brown/pink against the neutral
+  card; they now mix in sRGB.
+- The project header (gear, tabs, filter) is a flex row, so taller tabs no
+  longer push the board sideways.
+- Dark mode task-summary labels rendered near-black (`--color-dark`).
+- **Version drift** — `plugin.json` (1.0.4) and `Plugin.php` (1.0.2) had diverged;
+  both are now aligned to 1.1.0, guarded by a new `PluginTest` assertion.
+
 ## [1.0.4] - 2026-07-05
 
 ### Fixed
@@ -145,4 +196,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `ThemeControllerTest` covering plugin metadata, access control (admin gate, CSRF),
   configModel persistence, and userMetadata theme-mode round-trips.
 
+[1.1.0]: https://github.com/carmelosantana/kanboard-shadcn-theme/releases/tag/v1.1.0
 [1.0.0]: https://github.com/carmelosantana/kanboard-shadcn-theme/releases/tag/v1.0.0
