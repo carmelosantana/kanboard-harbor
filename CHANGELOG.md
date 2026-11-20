@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   [Steward](https://github.com/carmelosantana/kanboard-steward) plugin, which ShadcnTheme
   recommends (1.0.0 or later). Uploads made with ShadcnTheme 1.1 are left where they are
   (`shadcn_logo_path` / `shadcn_favicon_path` and `data/files/shadcn-theme/`), so Steward's
-  Import can bring them over. Until you run it (Settings → Steward → Branding), your old logo
+  Import can bring them over. Until you run it (Settings → Steward branding), your old logo
   and favicon are not shown.
 - **Login card** — shows Steward's logo, or its site name, above the form; without Steward
   it shows the product name.
