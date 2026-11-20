@@ -2,8 +2,9 @@
 
 A modern Kanboard theme inspired by [shadcn/ui](https://ui.shadcn.com/) design
 principles.  Ships dark mode as the default, with a per-user light / dark / system
-toggle, accessible task card colors, a branded login card, and an admin settings
-page for uploading a custom favicon and logo.
+toggle, accessible task card colors and a branded login card. The site logo, favicon
+and name come from the [Steward](https://github.com/carmelosantana/kanboard-steward)
+plugin (recommended).
 
 > **Note:** Screenshots will be added in a follow-up.
 
@@ -18,9 +19,7 @@ page for uploading a custom favicon and logo.
 | **shadcn/ui "neutral" design tokens** | Pure neutral-zinc palette with a near-white primary (near-black in light mode); color reserved for destructive + status. CSS custom properties (`--background`, `--foreground`, `--accent`, `--border`, `--radius`, etc.) plus `kbx-` primitive variables for a consistent palette across both themes. |
 | **Dark-mode task colors** | All Kanboard task card color classes are overridden in dark mode with perceptually appropriate, WCAG AA-compliant shades. |
 | **Header / navigation** | Top bar and sidebar correctly contrast in both light and dark themes. |
-| **Login card** | Centered card layout with uploaded logo (or product name) above the form. |
-| **Favicon & logo upload** | Admin-only settings page to upload a custom favicon and logo; served via a public-accessible endpoint so they appear on the login page. |
-| **Header logo override** | Custom logo replaces the Kanboard wordmark in the top bar when configured. |
+| **Login card** | Centered card layout with Steward's logo or site name (or the product name without Steward) above the form. |
 
 ---
 
@@ -59,19 +58,14 @@ preference).  Your choice is saved per-user and remembered across sessions.
 
 ---
 
-## Theme settings (favicon & logo upload)
+## Logo, favicon and site name
 
-Admin users can upload a custom favicon and logo at **Settings → Theme**
-(`/shadcn-theme/settings`).
+Branding lives in the [Steward](https://github.com/carmelosantana/kanboard-steward)
+plugin (1.0.0 or later); ShadcnTheme no longer has its own upload page. The login card
+shows Steward's logo, or its site name, and falls back to "Kanboard" without Steward.
 
-- **Logo** — displayed in the top-bar brand area and above the login form.
-  Accepted formats: `.png`, `.jpg`, `.jpeg`, `.gif`, `.svg`, `.webp` (max 2 MB).
-- **Favicon** — replaces the default Kanboard favicon.
-  Accepted formats: `.ico`, `.png`, `.svg` (max 2 MB).
-
-Files are stored via Kanboard's ObjectStorage (`data/files/shadcn-theme/…`) and
-served through a public-accessible route so they are visible even on the login page.
-Existing files can be removed using the "Remove" checkboxes on the settings page.
+Upgrading from ShadcnTheme 1.1? Your uploaded logo and favicon stay where they were —
+use **Import** in Steward's branding settings to bring them over.
 
 ---
 

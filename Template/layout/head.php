@@ -6,9 +6,3 @@
 $shadcnPreloadFile = dirname(__DIR__, 2) . '/Assets/js/theme-preload.js';
 ?>
 <script src="<?= $this->url->dir() ?>plugins/ShadcnTheme/Assets/js/theme-preload.js?<?= @filemtime($shadcnPreloadFile) ?>"></script>
-<?php
-$shadcnFaviconPath = $this->app->config('shadcn_favicon_path');
-if (! empty($shadcnFaviconPath)):
-?>
-<link rel="icon" href="<?= $this->url->href('SettingsController', 'serveAsset', ['plugin' => 'ShadcnTheme', 'slot' => 'favicon']) ?>">
-<?php endif ?>

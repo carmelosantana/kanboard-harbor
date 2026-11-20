@@ -15,7 +15,7 @@
  * Strategy: we do NOT exercise the JSON response path (response->json() calls header()
  * which is fatal in CLI). Instead we test the model layer directly — the same
  * userMetadataModel that the controller reads/writes — and verify that the CSRF-param
- * gate fires for invalid tokens (matching the pattern in SettingsControllerTest).
+ * gate fires for invalid tokens.
  */
 
 require_once 'tests/units/Base.php';
