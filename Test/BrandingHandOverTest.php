@@ -156,12 +156,12 @@ class BrandingHandOverTest extends Base
         $this->assertSame('shadcn-theme/favicon.png', $this->container['configModel']->getOption('shadcn_favicon_path'));
     }
 
-    public function testRecommendsSteward()
+    public function testRecommendsStewardVersionThatSupportsLayoutChaining(): void
     {
         $json = json_decode(file_get_contents(__DIR__.'/../plugin.json'), true);
 
         $this->assertContains(
-            ['plugin' => 'Steward', 'min_version' => '1.0.0', 'reason' => 'site logo, favicon and name'],
+            ['plugin' => 'Steward', 'min_version' => '1.2.0', 'reason' => 'layout wrappers stack (Harbor D7)'],
             $json['recommends'] ?? []
         );
     }

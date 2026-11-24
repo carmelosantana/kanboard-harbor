@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Harbor succeeds ShadcnTheme 1.x with a new name, namespace, and theme route (`harbor/theme/:mode`, POST).
+- Needs Steward 1.2.0 or later when Steward is installed; older Steward replaces Harbor's layout.
 - The theme toggle now saves the preference in Kanboard's core `theme` column.
 - Harbor migrates `shadcn_theme_mode` once per user when the core theme is `light`.
   A user who chose core `light` and had ShadcnTheme set to `dark` moves to `dark`.

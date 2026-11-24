@@ -10,8 +10,8 @@
     "recommends": [
         {
             "plugin": "Steward",
-            "min_version": "1.0.0",
-            "reason": "site logo, favicon and name"
+            "min_version": "1.2.0",
+            "reason": "layout wrappers stack (Harbor D7)"
         }
     ],
     "replaces": [
