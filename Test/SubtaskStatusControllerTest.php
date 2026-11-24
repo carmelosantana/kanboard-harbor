@@ -111,21 +111,16 @@ class SubtaskStatusControllerTest extends Base
         $this->assertForbidden();
     }
 
+    public function testPermissiveActionCannotAuthorizeANonMember(): void
+    {
+        $this->registerDoneActionPermission(true);
+        $this->assertForbidden();
+    }
+
     public function testActionPermissionCanDenyAProjectMember(): void
     {
         $this->addMember();
-        $this->container['hook']->on('kit:actions', static fn () => [[
-            'id' => 'subtask.done',
-            'label' => 'Mark done',
-            'slot' => 'subtask-row',
-            'key' => 'd',
-            'when' => 'status != done',
-            'route' => ['SubtaskStatusController', 'set', 'plugin' => 'Harbor', 'status' => 'done'],
-            'risk' => 'reversible',
-            'stepUp' => false,
-            'can' => static fn (): bool => false,
-        ]]);
-
+        $this->registerDoneActionPermission(false);
         $this->assertForbidden();
     }
 
@@ -337,6 +332,21 @@ class SubtaskStatusControllerTest extends Base
     private function addMember(): void
     {
         $this->container['projectUserRoleModel']->addUser($this->projectId, 1, Role::PROJECT_MEMBER);
+    }
+
+    private function registerDoneActionPermission(bool $allowed): void
+    {
+        $this->container['hook']->on('kit:actions', static fn () => [[
+            'id' => 'subtask.done',
+            'label' => 'Mark done',
+            'slot' => 'subtask-row',
+            'key' => 'd',
+            'when' => 'status != done',
+            'route' => ['SubtaskStatusController', 'set', 'plugin' => 'Harbor', 'status' => 'done'],
+            'risk' => 'reversible',
+            'stepUp' => false,
+            'can' => static fn (): bool => $allowed,
+        ]]);
     }
 
     private function request(

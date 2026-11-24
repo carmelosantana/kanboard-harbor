@@ -63,7 +63,8 @@ class SubtaskStatusController extends BaseController
         $projectId = (int) $this->taskFinderModel->getProjectId($taskId);
         $userId = (int) $this->userSession->getId();
         if (filter_var($this->request->getStringParam('task_id', $taskId), FILTER_VALIDATE_INT) !== $taskId
-            || filter_var($this->request->getStringParam('project_id', $projectId), FILTER_VALIDATE_INT) !== $projectId) {
+            || filter_var($this->request->getStringParam('project_id', $projectId), FILTER_VALIDATE_INT) !== $projectId
+            || !self::canSet($this->container, $projectId, $userId)) {
             throw new AccessForbiddenException();
         }
 
