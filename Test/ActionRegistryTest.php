@@ -1,0 +1,53 @@
+<?php
+
+require_once 'tests/units/Base.php';
+
+use Kanboard\Plugin\Harbor\Action\ActionRegistry;
+use KanboardTests\units\Base;
+use Psr\Log\LoggerInterface;
+
+class ActionRegistryTest extends Base
+{
+    public function testCollectsValidDescriptorsFromMultipleListenersAndLogsEachRejectionOnce(): void
+    {
+        $hook = $this->container['hook'];
+        $hook->on('kit:actions', fn () => [
+            $this->descriptor(['id' => "subtask.done\n"]),
+            $this->descriptor(['risk' => 'unknown']),
+            array_diff_key($this->descriptor(), ['stepUp' => true]),
+            $this->descriptor(['can' => false]),
+            $this->descriptor(),
+        ]);
+        $hook->on('kit:actions', fn () => [
+            $this->descriptor(['id' => 'subtask.done', 'label' => 'Duplicate']),
+            $this->descriptor(['id' => 'subtask.start']),
+            $this->descriptor(['id' => 'task.close', 'slot' => 'task-row']),
+        ]);
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->exactly(5))->method('warning')->with($this->stringContains('kit:actions'));
+        unset($this->container['logger']);
+        $this->container['logger'] = $logger;
+
+        $registry = new ActionRegistry($this->container);
+        for ($i = 0; $i < 2; $i++) {
+            $actions = $registry->forSlot('subtask-row', ['status' => 'todo'], ['id' => 1]);
+            $this->assertSame(['subtask.done', 'subtask.start'], array_column($actions, 'id'));
+            $this->assertSame('Mark done', $actions[0]['label']);
+        }
+    }
+
+    private function descriptor(array $overrides = []): array
+    {
+        return array_replace([
+            'id' => 'subtask.done',
+            'label' => 'Mark done',
+            'slot' => 'subtask-row',
+            'key' => 'd',
+            'when' => 'status != done',
+            'route' => ['SubtaskStatus', 'set', 'status' => 'done'],
+            'risk' => 'reversible',
+            'stepUp' => false,
+            'can' => static fn (array $entity, array $user): bool => true,
+        ], $overrides);
+    }
+}
