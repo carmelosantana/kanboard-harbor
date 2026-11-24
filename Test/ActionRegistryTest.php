@@ -68,6 +68,32 @@ class ActionRegistryTest extends Base
         ));
     }
 
+    public function testExecuteChecksCurrentPermissionEvenAfterAnAllowedRender(): void
+    {
+        $allowed = true;
+        $can = static function (array $entity, array $user) use (&$allowed): bool {
+            return $allowed && $entity['owner_id'] === $user['id'];
+        };
+        $this->container['hook']->on('kit:actions', fn () => [$this->descriptor(['can' => $can])]);
+        $registry = new ActionRegistry($this->container);
+        $entity = ['status' => 'todo', 'owner_id' => 7];
+        $user = ['id' => 7];
+
+        $this->assertFalse($registry->forSlot('subtask-row', $entity, $user)[0]['disabled']);
+        $allowed = false;
+        $this->assertNull($registry->execute('subtask.done', $entity, $user));
+
+        $allowed = true;
+        $this->assertNull($registry->execute('subtask.done', $entity, ['id' => 8]));
+        $this->assertNull($registry->execute('subtask.missing', $entity, $user));
+        // Repeating an authorized action can reach its idempotent controller.
+        $entity['status'] = 'done';
+        $this->assertSame(
+            ['SubtaskStatus', 'set', 'status' => 'done'],
+            $registry->execute('subtask.done', $entity, $user)
+        );
+    }
+
     private function descriptor(array $overrides = []): array
     {
         return array_replace([

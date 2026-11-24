@@ -27,6 +27,16 @@ class ActionRegistry extends Base
         return $actions;
     }
 
+    public function execute(string $id, array $entity, array $user): array|string|null
+    {
+        $descriptor = $this->descriptors()[$id] ?? null;
+        if ($descriptor === null || $descriptor['can']($entity, $user) !== true) {
+            return null;
+        }
+
+        return $descriptor['route'];
+    }
+
     private function matchesWhen(string $when, array $entity): bool
     {
         $when = trim($when);
@@ -41,7 +51,12 @@ class ActionRegistry extends Base
 
             [, $field, $operator, $expected] = $parts;
             $actual = $entity[$field] ?? null;
-            if (!is_scalar($actual) || (((string) $actual === $expected) !== ($operator === '=='))) {
+            if (!is_scalar($actual)) {
+                return false;
+            }
+
+            $equal = (string) $actual === $expected;
+            if ($equal !== ($operator === '==')) {
                 return false;
             }
         }
