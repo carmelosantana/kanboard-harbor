@@ -164,15 +164,13 @@ body:has(.form-login) .container {
    LIGHT THEME ADJUSTMENTS
    ================================ */
 
-.theme-light .form-login,
-:root:not(.theme-dark) .form-login {
+html.theme-light .form-login {
   box-shadow: var(--shadow-md), 0 0 0 1px var(--border);
 }
 
 /* Slightly tinted page background in light mode for contrast with the white card */
-.theme-light body:has(.form-login),
-body:not(.theme-dark):has(.form-login) {
-  background-color: oklch(0.97 0 0);
+html.theme-light body:has(.form-login) {
+  background-color: var(--secondary, var(--body-background-color));
 }
 
 /* Title heading added via a login partial (template:auth:login-form:before) */

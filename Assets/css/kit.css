@@ -12,9 +12,7 @@
    ============================================================ */
 
 :root {
-  /* Form controls — ONE height for inputs, selects, buttons, tabs and the
-     filter bar (shadcn h-9). Change it here and every control follows. */
-  --control-height: 2.25rem;
+  /* Form control height comes from tokens.css. */
   --control-px: 0.75rem;
   --control-font-size: 0.875rem;
 

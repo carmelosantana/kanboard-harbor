@@ -71,13 +71,9 @@ class Plugin extends Base
      */
     private function hookAssets()
     {
-        // Add shadcn theme CSS
+        // Load palette tokens before component styles.
         $this->hook->on('template:layout:css', [
-            'template' => 'plugins/Harbor/Assets/css/theme-light.css'
-        ]);
-        
-        $this->hook->on('template:layout:css', [
-            'template' => 'plugins/Harbor/Assets/css/theme-dark.css'
+            'template' => 'plugins/Harbor/Assets/css/tokens.css'
         ]);
         
         $this->hook->on('template:layout:css', [
