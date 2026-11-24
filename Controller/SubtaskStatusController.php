@@ -7,6 +7,7 @@ use Kanboard\Core\Controller\AccessForbiddenException;
 use Kanboard\Core\Controller\PageNotFoundException;
 use Kanboard\Core\Security\Role;
 use Kanboard\Model\SubtaskModel;
+use Kanboard\Model\SubtaskTimeTrackingModel;
 use Pimple\Container;
 use Throwable;
 
@@ -63,7 +64,8 @@ class SubtaskStatusController extends BaseController
         }
 
         $timerUserId = (int) $subtask['user_id'] ?: $userId;
-        if ((int) $subtask['status'] !== $status) {
+        $previousStatus = (int) $subtask['status'];
+        if ($previousStatus !== $status) {
             $this->db->startTransaction();
             try {
                 if (!$this->subtaskModel->update(['id' => $id, 'status' => $status])) {
@@ -71,7 +73,11 @@ class SubtaskStatusController extends BaseController
                     $this->response->json(['error' => 'Failed to update subtask status'], 500);
                     return;
                 }
-                $this->subtaskTimeTrackingModel->toggleTimer($id, $timerUserId, $status);
+                if ($previousStatus === SubtaskModel::STATUS_INPROGRESS) {
+                    $this->stopTimers($id);
+                } else {
+                    $this->subtaskTimeTrackingModel->toggleTimer($id, $timerUserId, $status);
+                }
                 $this->db->closeTransaction();
             } catch (Throwable $exception) {
                 $this->db->cancelTransaction();
@@ -86,6 +92,17 @@ class SubtaskStatusController extends BaseController
             ]);
         } else {
             $this->response->status(200);
+        }
+    }
+
+    private function stopTimers(int $subtaskId): void
+    {
+        $timerUsers = $this->db->table(SubtaskTimeTrackingModel::TABLE)
+            ->eq('subtask_id', $subtaskId)
+            ->eq('end', 0)
+            ->findAllByColumn('user_id');
+        foreach (array_unique($timerUsers) as $timerUserId) {
+            $this->subtaskTimeTrackingModel->logEndTime($subtaskId, (int) $timerUserId);
         }
     }
 }

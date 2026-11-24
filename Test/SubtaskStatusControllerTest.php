@@ -6,6 +6,7 @@ use Kanboard\Core\Controller\AccessForbiddenException;
 use Kanboard\Core\Http\Request;
 use Kanboard\Core\Http\Response;
 use Kanboard\Core\Security\Role;
+use Kanboard\Model\SubtaskTimeTrackingModel;
 use Kanboard\Plugin\Harbor\Controller\SubtaskStatusController;
 use Kanboard\Plugin\Harbor\Plugin;
 use KanboardTests\units\Base;
@@ -35,24 +36,34 @@ class SubtaskStatusControllerTest extends Base
         $this->addMember();
         $model = $this->container['subtaskModel'];
         $tracker = $this->container['subtaskTimeTrackingModel'];
-        $this->assertTrue($tracker->logStartTime($this->subtaskId, 1));
+        $this->assertTrue($this->container['db']->table(SubtaskTimeTrackingModel::TABLE)->insert([
+            'subtask_id' => $this->subtaskId, 'user_id' => 1, 'start' => time() - 3600, 'end' => 0,
+        ]));
 
         $subtasks = $this->getMockBuilder(get_class($model))->setConstructorArgs([$this->container])
             ->onlyMethods(['update'])->getMock();
-        $subtasks->expects($this->once())->method('update')
-            ->with(['id' => $this->subtaskId, 'status' => 2])
-            ->willReturnCallback($model->update(...));
+        $subtasks->expects($this->exactly(2))->method('update')
+            ->willReturnCallback(function (array $values, bool $fireEvent = true) use ($model) {
+                if ($fireEvent) {
+                    $this->assertSame(['id' => $this->subtaskId, 'status' => 2], $values);
+                } else {
+                    $this->assertArrayHasKey('time_spent', $values);
+                }
+
+                return $model->update($values, $fireEvent);
+            });
         $timers = $this->getMockBuilder(get_class($tracker))->setConstructorArgs([$this->container])
-            ->onlyMethods(['toggleTimer'])->getMock();
-        $timers->expects($this->once())->method('toggleTimer')->with($this->subtaskId, 1, 2)
+            ->onlyMethods(['logEndTime'])->getMock();
+        $timers->expects($this->once())->method('logEndTime')->with($this->subtaskId, 1)
             ->willReturnCallback(function (...$args) use ($tracker, $model) {
                 $this->assertSame(2, (int) $model->getById($this->subtaskId)['status']);
 
-                return $tracker->toggleTimer(...$args);
+                return $tracker->logEndTime(...$args);
             });
         unset($this->container['subtaskModel'], $this->container['subtaskTimeTrackingModel']);
         $this->container['subtaskModel'] = $subtasks;
         $this->container['subtaskTimeTrackingModel'] = $timers;
+        $this->container['configModel']->save(['subtask_time_tracking' => 0]);
 
         [$controller, $response] = $this->request('done');
         $response->expects($this->exactly(2))->method('json')->with(['status' => 'done', 'timer' => false]);
@@ -61,6 +72,23 @@ class SubtaskStatusControllerTest extends Base
 
         $this->assertFalse($tracker->hasTimer($this->subtaskId, 1));
         $this->assertSame(2, (int) $model->getById($this->subtaskId)['status']);
+    }
+
+    public function testReturningToTodoClosesTimersThroughRepeatedTransitions(): void
+    {
+        $this->addMember();
+        $tracker = $this->container['subtaskTimeTrackingModel'];
+        $timerUserId = $this->container['userModel']->create(['username' => 'timer-owner']);
+        $this->assertTrue($tracker->logStartTime($this->subtaskId, $timerUserId));
+
+        $this->setStatus('todo', false);
+        $this->assertFalse($tracker->hasTimer($this->subtaskId, $timerUserId));
+
+        $this->setStatus('doing', true);
+        $this->assertTrue($tracker->hasTimer($this->subtaskId, 1));
+
+        $this->setStatus('todo', false);
+        $this->assertFalse($tracker->hasTimer($this->subtaskId, 1));
     }
 
     public function testNonMemberIsForbidden(): void
@@ -157,6 +185,17 @@ class SubtaskStatusControllerTest extends Base
             $this->assertSame((string) $this->taskId, $query['task_id']);
             $this->assertSame((string) $this->projectId, $query['project_id']);
         }
+    }
+
+    private function setStatus(string $status, bool $timer): void
+    {
+        [$controller, $response] = $this->request($status);
+        $response->expects($this->once())->method('json')->with(['status' => $status, 'timer' => $timer]);
+        $controller->set();
+        $this->assertSame(
+            SubtaskStatusController::STATUSES[$status],
+            (int) $this->container['subtaskModel']->getById($this->subtaskId)['status']
+        );
     }
 
     private function assertForbidden(bool $csrf = true, ?int $taskId = null): void
