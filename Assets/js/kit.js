@@ -231,5 +231,81 @@
         return controls;
     }
 
-    window.Kit = { popup: popup, roving: roving };
+    function toast(text, options) {
+        var region = document.querySelector('[data-slot="toaster"]');
+        if (!region) {
+            region = document.createElement('div');
+            region.setAttribute('data-slot', 'toaster');
+            region.setAttribute('role', 'status');
+            document.body.append(region);
+        }
+
+        var notice = document.createElement('div');
+        notice.setAttribute('data-slot', 'toast');
+        var message = document.createElement('span');
+        message.textContent = text;
+        notice.append(message);
+
+        var undo = options && options.undo;
+        var remaining = 6000;
+        var started;
+        var timer;
+        var hovered = false;
+        var focused = false;
+        var dismissed = false;
+
+        function dismiss() {
+            if (dismissed) return false;
+            dismissed = true;
+            clearTimeout(timer);
+            notice.remove();
+            return true;
+        }
+
+        function updateTimer() {
+            if (dismissed) return;
+            if (hovered || focused) {
+                if (timer !== undefined) {
+                    clearTimeout(timer);
+                    timer = undefined;
+                    remaining = Math.max(0, remaining - (Date.now() - started));
+                }
+            } else if (timer === undefined) {
+                started = Date.now();
+                timer = setTimeout(dismiss, remaining);
+            }
+        }
+
+        if (typeof undo === 'function') {
+            var button = document.createElement('button');
+            button.type = 'button';
+            button.textContent = 'Undo';
+            button.addEventListener('click', function () {
+                if (dismiss()) undo();
+            });
+            notice.append(button);
+        }
+
+        notice.addEventListener('pointerenter', function () {
+            hovered = true;
+            updateTimer();
+        });
+        notice.addEventListener('pointerleave', function () {
+            hovered = false;
+            updateTimer();
+        });
+        notice.addEventListener('focusin', function () {
+            focused = true;
+            updateTimer();
+        });
+        notice.addEventListener('focusout', function (event) {
+            focused = notice.contains(event.relatedTarget);
+            updateTimer();
+        });
+
+        region.append(notice);
+        updateTimer();
+    }
+
+    window.Kit = { popup: popup, roving: roving, toast: toast };
 })(window, document);
