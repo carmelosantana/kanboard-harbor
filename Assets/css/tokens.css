@@ -1,0 +1,250 @@
+/* critical:start */
+
+:root {
+  --background: hsl(210 50% 6%);
+  --foreground: hsl(30 25% 90%);
+  --card: hsl(210 45% 12%);
+  --primary: hsl(30 40% 72%);
+  --border: hsl(270 10% 25%);
+}
+
+html.theme-light {
+  --background: hsl(30 25% 97%);
+  --foreground: hsl(210 50% 10%);
+  --card: hsl(0 0% 100%);
+  --primary: hsl(30 45% 36%);
+  --border: hsl(270 10% 84%);
+}
+
+html.preset-shadcn {
+  --background: oklch(.145 0 0);
+  --foreground: oklch(.985 0 0);
+  --card: oklch(.205 0 0);
+  --primary: oklch(.922 0 0);
+  --border: oklch(1 0 0 / 12%);
+}
+
+html.preset-shadcn.theme-light {
+  --background: oklch(1 0 0);
+  --foreground: oklch(.145 0 0);
+  --card: oklch(1 0 0);
+  --primary: oklch(.205 0 0);
+  --border: oklch(.922 0 0);
+}
+
+html {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+/* critical:end */
+
+/* Each palette continues here. Keep the first-paint values in the critical region. */
+
+:root {
+  color-scheme: dark;
+
+  --card-foreground: var(--foreground);
+  --popover: var(--card);
+  --popover-foreground: var(--card-foreground);
+  --primary-foreground: hsl(210 50% 6%);
+  --secondary: hsl(210 35% 18%);
+  --secondary-foreground: var(--foreground);
+  --muted: hsl(270 10% 30%);
+  --muted-foreground: hsl(30 20% 75%);
+  --accent: hsl(350 15% 50%);
+  --accent-foreground: var(--background);
+  --destructive: hsl(0 62.8% 30.6%);
+  --destructive-foreground: hsl(0 0% 98%);
+  --destructive-text: hsl(0 75% 68%);
+  --input: var(--border);
+  --ring: var(--primary);
+  --input-surface: var(--card);
+  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a1a1a1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+
+  --row-line: color-mix(in srgb, var(--border) 45%, transparent);
+  --highlight: color-mix(in srgb, var(--primary) 18%, transparent);
+  --success: hsl(150 40% 45%);
+  --warning: hsl(40 70% 55%);
+  --chart-1: #3987e5;
+  --chart-2: #d95926;
+  --chart-3: #199e70;
+  --chart-4: #c98500;
+  --chart-5: #d55181;
+
+  --radius: 8px;
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --motion-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --motion-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --control-height: 2.25rem;
+  --density: 1;
+}
+
+html.theme-light {
+  color-scheme: light;
+
+  --card-foreground: var(--foreground);
+  --popover: var(--card);
+  --popover-foreground: var(--card-foreground);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(30 20% 92%);
+  --secondary-foreground: var(--foreground);
+  --muted: hsl(270 10% 88%);
+  --muted-foreground: hsl(210 15% 36%);
+  --accent: hsl(350 25% 42%);
+  --accent-foreground: var(--card);
+  --destructive: hsl(0 65% 42%);
+  --destructive-foreground: hsl(0 0% 98%);
+  --destructive-text: hsl(0 65% 42%);
+  --input: var(--border);
+  --ring: var(--primary);
+  --input-surface: var(--card);
+  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23737373' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+
+  --row-line: color-mix(in srgb, var(--border) 45%, transparent);
+  --highlight: color-mix(in srgb, var(--primary) 18%, transparent);
+  --success: hsl(150 45% 32%);
+  --warning: hsl(35 80% 38%);
+  --chart-1: #2a78d6;
+  --chart-2: #eb6834;
+  --chart-3: #1baf7a;
+  --chart-4: #eda100;
+  --chart-5: #e87ba4;
+
+  --radius: 8px;
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --motion-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --motion-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --control-height: 2.25rem;
+  --density: 1;
+}
+
+html.preset-shadcn {
+  color-scheme: dark;
+
+  --card-foreground: var(--foreground);
+  --popover: var(--card);
+  --popover-foreground: var(--card-foreground);
+  --primary-foreground: oklch(.205 0 0);
+  --secondary: oklch(.269 0 0);
+  --secondary-foreground: var(--foreground);
+  --muted: oklch(.269 0 0);
+  --muted-foreground: oklch(.708 0 0);
+  --accent: oklch(.32 0 0);
+  --accent-foreground: var(--foreground);
+  --destructive: oklch(.704 .191 22.216);
+  --destructive-foreground: var(--background);
+  --destructive-text: var(--destructive);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(.556 0 0);
+  --input-surface: oklch(1 0 0 / 4.5%);
+  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a1a1a1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+
+  --row-line: oklch(1 0 0 / 6%);
+  --highlight: oklch(.795 .184 86 / 16%);
+  --success: oklch(.72 .15 150);
+  --warning: oklch(.8 .15 80);
+  --chart-1: #3987e5;
+  --chart-2: #d95926;
+  --chart-3: #199e70;
+  --chart-4: #c98500;
+  --chart-5: #d55181;
+
+  --radius: 0.625rem;
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --motion-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --motion-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --control-height: 2.25rem;
+  --density: 1;
+}
+
+html.preset-shadcn.theme-light {
+  color-scheme: light;
+
+  --card-foreground: var(--foreground);
+  --popover: var(--card);
+  --popover-foreground: var(--card-foreground);
+  --primary-foreground: oklch(.985 0 0);
+  --secondary: oklch(.97 0 0);
+  --secondary-foreground: var(--foreground);
+  --muted: oklch(.97 0 0);
+  --muted-foreground: oklch(.556 0 0);
+  --accent: oklch(.94 0 0);
+  --accent-foreground: var(--foreground);
+  --destructive: oklch(.577 .245 27.325);
+  --destructive-foreground: var(--background);
+  --destructive-text: var(--destructive);
+  --input: oklch(.922 0 0);
+  --ring: oklch(.708 0 0);
+  --input-surface: transparent;
+  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23737373' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+
+  --row-line: oklch(.922 0 0 / 60%);
+  --highlight: oklch(.795 .184 86 / 22%);
+  --success: oklch(.52 .14 150);
+  --warning: oklch(.6 .14 70);
+  --chart-1: #2a78d6;
+  --chart-2: #eb6834;
+  --chart-3: #1baf7a;
+  --chart-4: #eda100;
+  --chart-5: #e87ba4;
+
+  --radius: 0.625rem;
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --motion-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --motion-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --control-height: 2.25rem;
+  --density: 1;
+}
