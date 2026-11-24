@@ -64,8 +64,16 @@ function harness() {
   }
 
   function key(target, key, options) {
-    const event = { key, target: document.activeElement, preventDefault() {}, stopPropagation() {}, ...options };
+    const event = {
+      key,
+      target: document.activeElement,
+      defaultPrevented: false,
+      preventDefault() { this.defaultPrevented = true; },
+      stopPropagation() {},
+      ...options,
+    };
     target.emit('keydown', event);
+    return event;
   }
 
   new Function('window', 'document', 'Date', src)(window, document, { now: () => now });
@@ -117,6 +125,23 @@ test('roving wraps, skips disabled items, and supports Home, End and typeahead',
   cleanup();
   h.key(list, 'Home');
   assert.equal(h.document.activeElement, items[3]);
+});
+
+test('typeahead handles the current menu item when it is the only prefix match', () => {
+  const h = harness();
+  const archive = h.element();
+  archive.setAttribute('role', 'menuitem');
+  archive.textContent = 'Archive';
+  const save = h.element();
+  save.setAttribute('role', 'menuitem');
+  save.textContent = 'Save';
+  const list = h.element([archive, save]);
+  h.Kit.roving(list);
+  archive.focus();
+
+  assert.equal(h.key(list, 'a').defaultPrevented, true);
+  assert.equal(h.key(list, 'r').defaultPrevented, true);
+  assert.equal(h.document.activeElement, archive);
 });
 
 test('Esc closes the active popup and restores focus to its anchor', () => {
