@@ -408,11 +408,77 @@ html:root:not(.theme-light) {
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.25);
   --shadow-md: 0 4px 8px -2px rgb(0 0 0 / 0.35), 0 2px 4px -2px rgb(0 0 0 / 0.25);
   --shadow-lg: 0 10px 20px -4px rgb(0 0 0 / 0.45), 0 4px 8px -4px rgb(0 0 0 / 0.3);
+  --scrollbar-thumb: rgb(255 255 255 / 15%);
+  --scrollbar-thumb-hover: rgb(255 255 255 / 25%);
 }
+
+/* Kanboard color id → accent. Kanboard injects `.task-board.color-<id>`
+   (0,2,0) inline; `:root` raises these to 0,3,0. */
+:root .color-yellow { --task-accent: oklch(0.86 0.15 95); }
+:root .color-blue { --task-accent: oklch(0.68 0.15 250); }
+:root .color-green { --task-accent: oklch(0.72 0.16 150); }
+:root .color-purple { --task-accent: oklch(0.65 0.18 300); }
+:root .color-red { --task-accent: oklch(0.66 0.2 25); }
+:root .color-orange { --task-accent: oklch(0.76 0.17 55); }
+:root .color-grey { --task-accent: oklch(0.65 0.02 250); }
+:root .color-brown { --task-accent: oklch(0.58 0.12 50); }
+:root .color-deep_orange { --task-accent: oklch(0.7 0.2 40); }
+:root .color-dark_grey { --task-accent: oklch(0.48 0.02 250); }
+:root .color-pink { --task-accent: oklch(0.72 0.19 350); }
+:root .color-teal { --task-accent: oklch(0.7 0.14 190); }
+:root .color-cyan { --task-accent: oklch(0.73 0.14 210); }
+:root .color-lime { --task-accent: oklch(0.82 0.17 125); }
+:root .color-light_green { --task-accent: oklch(0.79 0.17 140); }
+:root .color-amber { --task-accent: oklch(0.83 0.16 85); }
 
 html ::selection {
   background-color: var(--highlight);
   color: var(--foreground);
+}
+
+header {
+  background-color: var(--background, var(--header-background-color));
+  border-bottom: 1px solid var(--border, var(--table-border-color));
+}
+
+.sidebar {
+  background-color: var(--background, var(--body-background-color));
+}
+
+a {
+  color: var(--foreground, var(--link-color-primary));
+  text-decoration: none;
+}
+
+a:hover,
+a:focus-visible {
+  color: var(--foreground, var(--link-color-focus));
+  text-decoration: underline;
+}
+
+a:focus-visible,
+button:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--ring, var(--input-focus-border-color));
+  outline-offset: 2px;
+}
+
+html:not(.theme-light) ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+html:not(.theme-light) ::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+html:not(.theme-light) ::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb, GrayText);
+  border-radius: 9999px;
+}
+
+html:not(.theme-light) ::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scrollbar-thumb-hover, GrayText);
 }
 
 @media (prefers-reduced-motion: reduce) {

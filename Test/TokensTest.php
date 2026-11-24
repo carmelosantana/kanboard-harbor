@@ -89,9 +89,17 @@ class TokensTest extends TestCase
     {
         $directory = __DIR__ . '/../Assets/css/';
         $kit = file_get_contents($directory . 'kit.css');
-        $this->assertSame(0, preg_match('/^\h*--(?:shadow[\w-]*|ring-shadow):/m', $kit));
+        $this->assertSame(0, preg_match('/--(?:shadow[\w-]*|ring-shadow|task-accent)\s*:/', $kit));
         $this->assertFileDoesNotExist($directory . 'theme-light.css');
         $this->assertFileDoesNotExist($directory . 'theme-dark.css');
+    }
+
+    public function testThemeRetainsTheFocusRingForCoreControls(): void
+    {
+        $this->assertMatchesRegularExpression(
+            '/\[tabindex\]:focus-visible\s*\{\s*outline:\s*2px solid var\(--ring,/',
+            $this->tokenStylesheet()
+        );
     }
 
     public function testNoThemeSelectorKeysOnBody(): void
