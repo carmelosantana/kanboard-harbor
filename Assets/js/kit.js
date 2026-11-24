@@ -324,5 +324,159 @@
         updateTimer();
     }
 
+    var subtaskRow = '.subtasks-table tr[data-subtask-id]';
+    var subtaskMeta = '[data-slot="subtask-row"]';
+    var subtaskTrigger = '[data-slot="subtask-actions-trigger"]';
+    var subtaskCheck = '.js-subtask-toggle-status';
+    var subtaskActions = { todo: 'subtask.todo', doing: 'subtask.start', done: 'subtask.done' };
+    var subtaskIcons = { todo: 'fa-square-o', doing: 'fa-gears', done: 'fa-check-square-o' };
+    var subtaskToasts = {
+        todo: 'Subtask moved back to todo.',
+        doing: 'Subtask started.',
+        done: 'Subtask marked done.'
+    };
+    var lastSubtaskChange = new WeakMap();
+    var subtaskMenu;
+
+    function prepareSubtaskRows() {
+        document.querySelectorAll(subtaskRow).forEach(function (row) {
+            var metadata = row.querySelector(subtaskMeta);
+            var trigger = row.querySelector(subtaskTrigger);
+            var check = row.querySelector(subtaskCheck);
+            if (metadata && trigger && check && metadata.dataset.actions) {
+                row.dataset.state = metadata.dataset.state;
+                trigger.hidden = false;
+                check.setAttribute('aria-haspopup', 'menu');
+            }
+        });
+    }
+
+    function setSubtaskState(row, metadata, actions, state) {
+        row.dataset.state = metadata.dataset.state = state;
+        metadata.dataset.actions = actions.filter(function (action) {
+            return action.states.includes(state);
+        }).map(function (action) { return action.id; }).join(' ');
+    }
+
+    function updateSubtaskControls(row, state, running) {
+        var checkbox = row.querySelector(subtaskCheck);
+        var labels = row.querySelector(subtaskTrigger).dataset;
+        var icon = checkbox.querySelector('i');
+        icon.classList.remove(...Object.values(subtaskIcons));
+        icon.classList.add(subtaskIcons[state]);
+        checkbox.title = labels[state + 'Title'];
+
+        var timer = row.querySelector('.js-subtask-toggle-timer');
+        if (timer) {
+            var url = new URL(timer.href);
+            var next = running ? 'stop' : 'start';
+            if (url.searchParams.get('timer') !== next) {
+                url.searchParams.set('timer', next);
+                timer.href = url.href;
+                var timerIcon = timer.querySelector('i');
+                timerIcon.classList.remove('fa-pause', 'fa-play-circle-o');
+                timerIcon.classList.add(running ? 'fa-pause' : 'fa-play-circle-o');
+                timer.replaceChildren(timerIcon, running ? labels.stopTimer : labels.startTimer);
+                timer.parentNode.replaceChildren(timer);
+            }
+        }
+    }
+
+    async function postSubtaskStatus(row, metadata, actions, action, offerUndo) {
+        var previous = metadata.dataset.state;
+        if (previous === 'pending') return;
+
+        setSubtaskState(row, metadata, actions, 'pending');
+        row.setAttribute('aria-busy', 'true');
+
+        var response;
+        var result;
+        try {
+            response = await window.fetch(action.url, {
+                method: 'POST',
+                mode: 'same-origin',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                body: new URLSearchParams({ csrf_token: action.csrf_token })
+            });
+            if (!response.ok) throw new Error('Subtask POST failed');
+            result = await response.json();
+            if (!Object.hasOwn(subtaskActions, result.status) || typeof result.timer !== 'boolean') {
+                throw new Error('Invalid subtask response');
+            }
+        } catch {
+            setSubtaskState(row, metadata, actions, previous);
+            toast("Couldn't update the subtask. Try again.");
+            return;
+        } finally {
+            row.removeAttribute('aria-busy');
+        }
+
+        setSubtaskState(row, metadata, actions, result.status);
+        updateSubtaskControls(row, result.status, result.timer);
+        lastSubtaskChange.set(row, result);
+        var undo = offerUndo && actions.find(function (candidate) {
+            return candidate.id === subtaskActions[previous];
+        });
+        toast(subtaskToasts[result.status], undo && {
+            undo: function () {
+                if (lastSubtaskChange.get(row) === result) postSubtaskStatus(row, metadata, actions, undo, false);
+            }
+        });
+    }
+
+    function openSubtaskMenu(event, contextMenu) {
+        var row = event.target.closest(subtaskRow);
+        if (!row) return;
+
+        var metadata = row.querySelector(subtaskMeta);
+        var check = row.querySelector(subtaskCheck);
+        var anchor = contextMenu ? check : event.target.closest(subtaskCheck) || event.target.closest(subtaskTrigger);
+        if (!metadata || !check || !anchor || (!metadata.dataset.actions && metadata.dataset.state !== 'pending')) return;
+
+        // Core delegates checkbox clicks in the bubble phase.
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        if (metadata.dataset.state === 'pending') return;
+
+        var actions = JSON.parse(metadata.querySelector('template').content.textContent);
+        var panel = document.createElement('div');
+        if (subtaskMenu) {
+            subtaskMenu.controls.close(false);
+            subtaskMenu.panel.remove();
+        }
+
+        actions.forEach(function (action) {
+            if (!Object.values(subtaskActions).includes(action.id)) return;
+
+            var item = document.createElement('button');
+            item.type = 'button';
+            item.setAttribute('role', 'menuitem');
+            item.textContent = action.label;
+            item.disabled = !action.states.includes(metadata.dataset.state);
+            item.setAttribute('aria-disabled', String(item.disabled));
+            item.addEventListener('click', function () {
+                if (item.disabled) return;
+                controls.close();
+                postSubtaskStatus(row, metadata, actions, action, true);
+            });
+            panel.append(item);
+        });
+
+        document.body.append(panel);
+        var controls = popup(anchor, panel, { preset: 'menu' });
+        subtaskMenu = { controls: controls, panel: panel };
+    }
+
+    if (document.readyState) {
+        document.addEventListener('click', function (event) { openSubtaskMenu(event, false); }, true);
+        document.addEventListener('contextmenu', function (event) { openSubtaskMenu(event, true); }, true);
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', prepareSubtaskRows);
+        } else {
+            prepareSubtaskRows();
+        }
+        if (window.KB) window.KB.on('subtasks.reloaded', prepareSubtaskRows);
+    }
+
     window.Kit = { popup: popup, roving: roving, toast: toast };
 })(window, document);
