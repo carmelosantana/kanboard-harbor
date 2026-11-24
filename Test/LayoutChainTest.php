@@ -74,35 +74,70 @@ class LayoutChainTest extends Base
         return ['Steward first' => [true], 'Harbor first' => [false]];
     }
 
-    public function testMemberUsesTheCoreThemeAndConfiguredPreset(): void
+    /** @dataProvider memberThemes */
+    public function testMemberUsesTheCoreThemeAndConfiguredPreset(string $mode, string $class, string $scheme): void
     {
         $member = $this->container['userModel']->getById(1);
-        $member['theme'] = 'light';
+        $member['theme'] = $mode;
         $this->container['userSession']->initialize($member);
-        $this->container['configModel']->save(['harbor_preset' => 'shadcn', 'harbor_guest_theme' => 'auto']);
+        $this->container['configModel']->save(['harbor_preset' => 'shadcn', 'harbor_guest_theme' => 'light']);
         $this->registerHarbor();
 
         $html = $this->renderLayout();
+        $background = (new ThemeResolver())->resolve($mode, true, 'light', 'shadcn')['background'];
 
-        $this->assertStringContainsString('class="theme-light preset-shadcn"', $html);
-        $this->assertStringContainsString('style="color-scheme:light;background:oklch(1 0 0)"', $html);
-        $this->assertStringNotContainsString('theme-auto.js', $html);
+        $this->assertStringContainsString("class=\"$class preset-shadcn\"", $html);
+        $this->assertStringContainsString("style=\"color-scheme:$scheme;background:$background\"", $html);
+        $this->assertStringContainsString("<meta name=\"color-scheme\" content=\"$scheme\">", $html);
+        $this->assertSame($mode === 'auto' ? 1 : 0, substr_count($html, 'theme-auto.js'));
+    }
+
+    public static function memberThemes(): array
+    {
+        return [
+            'light' => ['light', 'theme-light', 'light'],
+            'dark' => ['dark', 'theme-dark', 'dark'],
+            'auto' => ['auto', 'theme-dark', 'light dark'],
+        ];
     }
 
     public function testAutoLayoutLoadsOneBlockingScriptImmediatelyAfterCriticalCss(): void
     {
         $this->container['configModel']->save(['harbor_guest_theme' => 'auto']);
         $this->registerHarbor();
+        $script = __DIR__ . '/../Assets/js/theme-auto.js';
 
+        $this->assertFileExists($script);
         $html = $this->renderLayout();
 
         $this->assertStringContainsString('<meta name="color-scheme" content="light dark">', $html);
         $this->assertStringContainsString('style="color-scheme:light dark;background:var(--background, hsl(210 50% 6%))"', $html);
         $this->assertMatchesRegularExpression(
-            '~</style>\n<script src="[^"]*plugins/Harbor/Assets/js/theme-auto\.js\?\d+"></script>~',
+            '~</style>\n<script src="[^"]*plugins/Harbor/Assets/js/theme-auto\.js\?' . filemtime($script) . '"></script>~',
             $html
         );
         $this->assertSame(1, substr_count($html, 'theme-auto.js'));
+    }
+
+    public function testWithoutCharsetTheCriticalBlockFollowsTheOpeningHead(): void
+    {
+        $previous = tempnam(sys_get_temp_dir(), 'harbor-layout-');
+        try {
+            file_put_contents($previous, '<html><head><title>Without charset</title></head><body></body></html>');
+            $this->registerSteward();
+            $this->container['template']->stewardFixture->previous = $previous;
+            $this->registerHarbor();
+
+            $html = $this->renderLayout();
+
+            $this->assertStringContainsString(
+                "<head>\n<meta name=\"color-scheme\" content=\"dark\">\n<style id=\"harbor-critical\">",
+                $html
+            );
+            $this->assertLessThan(strpos($html, '<title>'), strpos($html, '</style>'));
+        } finally {
+            unlink($previous);
+        }
     }
 
     public function testResolverBackgroundMatchesCriticalCssForEveryPalette(): void

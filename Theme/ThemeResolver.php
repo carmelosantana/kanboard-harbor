@@ -16,11 +16,12 @@ final class ThemeResolver
         $preset = isset(self::BACKGROUNDS[$preset]) ? $preset : 'newburgh';
         $paint = $mode === 'light' ? 'light' : 'dark';
         $autoScript = $mode === 'auto';
+        $background = self::BACKGROUNDS[$preset][$paint];
 
         return [
             'classes' => "theme-$paint preset-$preset",
             'colorScheme' => $autoScript ? 'light dark' : $paint,
-            'background' => self::BACKGROUNDS[$preset][$paint],
+            'background' => $autoScript ? "var(--background, $background)" : $background,
             'autoScript' => $autoScript,
         ];
     }

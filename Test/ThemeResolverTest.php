@@ -31,22 +31,22 @@ class ThemeResolverTest extends TestCase
 
         yield 'Newburgh member light' => ['light', true, 'dark', 'newburgh', 'theme-light preset-newburgh', 'light', $newburghLight, false];
         yield 'Newburgh member dark' => ['dark', true, 'light', 'newburgh', 'theme-dark preset-newburgh', 'dark', $newburghDark, false];
-        yield 'Newburgh member auto' => ['auto', true, 'dark', 'newburgh', 'theme-dark preset-newburgh', 'light dark', $newburghDark, true];
+        yield 'Newburgh member auto' => ['auto', true, 'dark', 'newburgh', 'theme-dark preset-newburgh', 'light dark', "var(--background, $newburghDark)", true];
         yield 'Newburgh guest with core light' => ['light', false, 'dark', 'newburgh', 'theme-dark preset-newburgh', 'dark', $newburghDark, false];
         yield 'Newburgh guest with core dark' => ['dark', false, 'dark', 'newburgh', 'theme-dark preset-newburgh', 'dark', $newburghDark, false];
         yield 'Newburgh guest with core auto' => ['auto', false, 'dark', 'newburgh', 'theme-dark preset-newburgh', 'dark', $newburghDark, false];
 
         yield 'Shadcn member light' => ['light', true, 'dark', 'shadcn', 'theme-light preset-shadcn', 'light', $shadcnLight, false];
         yield 'Shadcn member dark' => ['dark', true, 'light', 'shadcn', 'theme-dark preset-shadcn', 'dark', $shadcnDark, false];
-        yield 'Shadcn member auto' => ['auto', true, 'dark', 'shadcn', 'theme-dark preset-shadcn', 'light dark', $shadcnDark, true];
+        yield 'Shadcn member auto' => ['auto', true, 'dark', 'shadcn', 'theme-dark preset-shadcn', 'light dark', "var(--background, $shadcnDark)", true];
         yield 'Shadcn guest with core light' => ['light', false, 'dark', 'shadcn', 'theme-dark preset-shadcn', 'dark', $shadcnDark, false];
         yield 'Shadcn guest with core dark' => ['dark', false, 'dark', 'shadcn', 'theme-dark preset-shadcn', 'dark', $shadcnDark, false];
         yield 'Shadcn guest with core auto' => ['auto', false, 'dark', 'shadcn', 'theme-dark preset-shadcn', 'dark', $shadcnDark, false];
 
         yield 'Newburgh guest configured light' => ['dark', false, 'light', 'newburgh', 'theme-light preset-newburgh', 'light', $newburghLight, false];
-        yield 'Newburgh guest configured auto' => ['light', false, 'auto', 'newburgh', 'theme-dark preset-newburgh', 'light dark', $newburghDark, true];
+        yield 'Newburgh guest configured auto' => ['light', false, 'auto', 'newburgh', 'theme-dark preset-newburgh', 'light dark', "var(--background, $newburghDark)", true];
         yield 'Shadcn guest configured light' => ['dark', false, 'light', 'shadcn', 'theme-light preset-shadcn', 'light', $shadcnLight, false];
-        yield 'Shadcn guest configured auto' => ['light', false, 'auto', 'shadcn', 'theme-dark preset-shadcn', 'light dark', $shadcnDark, true];
+        yield 'Shadcn guest configured auto' => ['light', false, 'auto', 'shadcn', 'theme-dark preset-shadcn', 'light dark', "var(--background, $shadcnDark)", true];
 
         yield 'unknown member theme' => ['unknown', true, 'light', 'shadcn', 'theme-dark preset-shadcn', 'dark', $shadcnDark, false];
         yield 'missing member theme' => [null, true, 'light', 'newburgh', 'theme-dark preset-newburgh', 'dark', $newburghDark, false];
