@@ -40,4 +40,7 @@ if (preg_match('/<meta charset="utf-8">/i', $harborHtml, $harborMatch, PREG_OFFS
     $harborHtml = substr_replace($harborHtml, "\n" . $harborHead, $harborOffset + strlen($harborTag), 0);
 }
 
+$harborToaster = '<div data-slot="toaster" role="status" aria-live="polite"></div>';
+$harborHtml = preg_replace('~</body>(?=\s*(?:</html>)?\s*$)~i', $harborToaster . "\n$0", $harborHtml, 1);
+
 echo $harborHtml;
