@@ -147,7 +147,20 @@ test('anchored placement flips above and fits the viewport when there is no room
 
   h.document.emit('click', { target: h.element() });
   assert.equal(panel.getAttribute('data-state'), 'closed');
-  assert.equal(h.document.activeElement, anchor);
+  assert.equal(h.document.activeElement, panel);
+});
+
+test('an outside click leaves focus on the clicked control', () => {
+  const h = harness();
+  const anchor = h.element();
+  const panel = h.element();
+  const outside = h.element();
+  h.Kit.popup(anchor, panel, { preset: 'menu' });
+
+  outside.focus();
+  h.document.emit('click', { target: outside });
+  assert.equal(panel.getAttribute('data-state'), 'closed');
+  assert.equal(h.document.activeElement === outside, true);
 });
 
 test('dialog wraps Tab in both directions and keeps focus inside until it closes', () => {

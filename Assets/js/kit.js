@@ -158,7 +158,9 @@
         }
 
         function onClick(event) {
-            if ((tooltip || isActive()) && !anchor.contains(event.target) && !panel.contains(event.target)) close();
+            if ((tooltip || isActive()) && !anchor.contains(event.target) && !panel.contains(event.target)) {
+                close(false);
+            }
         }
 
         function open() {
@@ -190,9 +192,9 @@
             frame = window.requestAnimationFrame(function () { panel.removeAttribute('data-starting-style'); });
         }
 
-        function close() {
+        function close(returnFocus) {
             if (!opened) return;
-            var restoreFocus = isActive();
+            var restoreFocus = returnFocus !== false && isActive();
             opened = false;
             var closing = ++motion;
             if (!tooltip) popupStack.splice(popupStack.indexOf(controls), 1);
