@@ -86,11 +86,6 @@ class Plugin extends Base
             'template' => 'plugins/Harbor/Assets/css/login.css'
         ]);
 
-        // Add theme switching JavaScript
-        $this->hook->on('template:layout:js', [
-            'template' => 'plugins/Harbor/Assets/js/theme-switcher.js'
-        ]);
-        
         $this->hook->on('template:layout:js', [
             'template' => 'plugins/Harbor/Assets/js/enhancements.js'
         ]);
@@ -105,10 +100,8 @@ class Plugin extends Base
     {
         LayoutChain::register($this->template, 'Harbor:layout');
 
-        // Add theme toggle to page header dropdown
-        $this->hook->on('template:header:dropdown', [
-            'template' => 'Harbor:header/theme_toggle'
-        ]);
+        // Place the POST form beside the stock dropdown, which clones and removes its menu.
+        $this->template->setTemplateOverride('header/user_dropdown', 'Harbor:header/theme_toggle');
 
         // Login card header (Steward's logo or site name, else the product name, + subtitle)
         $this->hook->on('template:auth:login-form:before', [
@@ -143,8 +136,7 @@ class Plugin extends Base
      */
     private function addRoutes()
     {
-        $this->route->addRoute('harbor/theme/:mode', 'Harbor:ThemeController', 'setTheme');
-        $this->route->addRoute('harbor/theme', 'Harbor:ThemeController', 'getTheme');
+        $this->route->addRoute('harbor/theme/:mode', 'ThemeController', 'set', 'Harbor');
     }
 
     /**

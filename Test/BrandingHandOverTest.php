@@ -80,14 +80,6 @@ class BrandingHandOverTest extends Base
         $this->assertFalse(class_exists('Kanboard\Plugin\Harbor\Controller\SettingsController'));
     }
 
-    public function testThemeRoutesAndToggleStay()
-    {
-        $this->initializePlugin();
-
-        $this->assertSame('Harbor:ThemeController', $this->routedController('harbor/theme'));
-        $this->assertNotEmpty($this->container['hook']->getListeners('template:header:dropdown'));
-    }
-
     public function testNoHeaderTitleOverride()
     {
         $this->initializePlugin();

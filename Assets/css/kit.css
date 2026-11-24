@@ -1276,3 +1276,45 @@ code {
   border-color: color-mix(in srgb, var(--task-accent) 70%, black);
   border-radius: var(--radius-sm);
 }
+
+
+.harbor-theme-toggle {
+  position: relative;
+  display: inline-block;
+  margin-inline-end: var(--space-2, 0.5rem);
+}
+
+.harbor-theme-toggle > summary {
+  cursor: pointer;
+}
+
+.harbor-theme-toggle > form {
+  position: absolute;
+  inset-inline-end: 0;
+  z-index: 10;
+  min-width: 7rem;
+  padding: var(--space-1, 0.25rem);
+  border: 1px solid var(--border, #ddd);
+  border-radius: var(--radius-md, 0.375rem);
+  background: var(--popover, #fff);
+  color: var(--popover-foreground, #333);
+  box-shadow: var(--shadow-md, 0 2px 6px #0003);
+}
+
+.harbor-theme-toggle button {
+  display: block;
+  width: 100%;
+  padding: 0.25rem 0.5rem;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.harbor-theme-toggle button:hover,
+.harbor-theme-toggle button:focus-visible,
+.harbor-theme-toggle button[aria-pressed="true"] {
+  background: var(--accent, #eee);
+  color: var(--accent-foreground, #333);
+}

@@ -3,70 +3,48 @@
 namespace Kanboard\Plugin\Harbor\Controller;
 
 use Kanboard\Controller\BaseController;
+use Kanboard\Core\Controller\AccessForbiddenException;
 
-/**
- * Theme Controller
- *
- * Handles theme switching functionality for the Harbor plugin.
- *
- * @package Kanboard\Plugin\Harbor\Controller
- * @author  Carmelo Santana
- */
 class ThemeController extends BaseController
 {
-    /**
-     * Set user theme preference
-     *
-     * @access public
-     */
-    public function setTheme()
+    public function set(): void
     {
-        $this->checkCSRFParam();
-        
+        if (!$this->request->isPost()) {
+            $this->response->withHeader('Allow', 'POST')->status(405);
+            return;
+        }
+        $this->checkCSRFForm();
+
+        $userId = $this->userSession->getId();
+        if ($userId <= 0) {
+            throw new AccessForbiddenException();
+        }
+
         $mode = $this->request->getStringParam('mode');
-        $validModes = ['light', 'dark', 'system'];
-        
-        if (!in_array($mode, $validModes, true)) {
+        if (!in_array($mode, ['light', 'dark', 'auto'], true)) {
             $this->response->json(['error' => 'Invalid theme mode'], 400);
             return;
         }
-        
-        $userId = $this->userSession->getId();
-        
-        if ($userId) {
-            // Save theme preference to user metadata
-            $result = $this->userMetadataModel->save($userId, ['shadcn_theme_mode' => $mode]);
-            
-            if ($result) {
-                // Update session
-                $_SESSION['shadcn_theme_mode'] = $mode;
-                
-                $this->response->json(['success' => true, 'mode' => $mode]);
-            } else {
-                $this->response->json(['error' => 'Failed to save theme preference'], 500);
-            }
-        } else {
-            // For guest users, just set session
-            $_SESSION['shadcn_theme_mode'] = $mode;
+
+        // Core's update refreshes the session and clears its 2FA validation flag.
+        $postAuthValidated = $this->userSession->isPostAuthenticationValidated();
+        $saved = $this->userModel->update(['id' => $userId, 'theme' => $mode]);
+        if ($postAuthValidated) {
+            $this->userSession->setPostAuthenticationAsValidated();
+        }
+
+        if (!$saved) {
+            $this->response->json(['error' => 'Failed to save theme preference'], 500);
+        } elseif ($this->request->isAjax()) {
             $this->response->json(['success' => true, 'mode' => $mode]);
-        }
-    }
-    
-    /**
-     * Get current theme preference
-     *
-     * @access public
-     */
-    public function getTheme()
-    {
-        $userId = $this->userSession->getId();
-        
-        if ($userId) {
-            $mode = $this->userMetadataModel->get($userId, 'shadcn_theme_mode', 'dark');
         } else {
-            $mode = isset($_SESSION['shadcn_theme_mode']) ? $_SESSION['shadcn_theme_mode'] : 'dark';
+            $returnTo = $this->request->getRawValue('return_to');
+            // Accept only an origin-relative URL. Core sets a no-referrer policy.
+            if (!is_string($returnTo) || !preg_match('~^/(?!/)~', $returnTo)
+                || str_contains($returnTo, "\\") || preg_match('/[[:cntrl:]]/', $returnTo)) {
+                $returnTo = $this->helper->url->to('DashboardController', 'show');
+            }
+            $this->response->redirect($returnTo);
         }
-        
-        $this->response->json(['mode' => $mode]);
     }
 }
