@@ -1,7 +1,7 @@
 <?php
 
-use PHPUnit\Framework\TestCase;
 use Kanboard\Plugin\Harbor\Test\Support\Contrast;
+use PHPUnit\Framework\TestCase;
 
 class TokensTest extends TestCase
 {
@@ -33,8 +33,6 @@ class TokensTest extends TestCase
 
     public function testTextMeetsWcagAaContrastInEachPalette(): void
     {
-        require_once __DIR__ . '/Support/Contrast.php';
-
         $pairs = [
             ['foreground', 'background'],
             ['card-foreground', 'card'],
@@ -52,6 +50,39 @@ class TokensTest extends TestCase
                 );
             }
         }
+    }
+
+    public function testHighlightDiffersFromMutedInEachPalette(): void
+    {
+        foreach ($this->palettes() as $selector => $tokens) {
+            $highlight = $this->color($tokens, 'highlight');
+            $muted = $this->color($tokens, 'muted');
+            $this->assertNotSame($muted, $highlight, "$selector uses --muted for --highlight");
+        }
+    }
+
+    public function testCriticalRegionContainsOnlyFirstPaintCss(): void
+    {
+        $css = $this->tokenStylesheet();
+        $this->assertSame(1, preg_match('~\A/\* critical:start \*/(.*?)/\* critical:end \*/~s', $css, $region));
+        preg_match_all('/([^{}]+)\{([^}]*)\}/', $region[1], $rules, PREG_SET_ORDER);
+
+        $selectors = [];
+        foreach ($rules as [, $selector, $body]) {
+            $selector = trim($selector);
+            $selectors[] = $selector;
+            if ($selector === 'html') {
+                $this->assertSame('background: var(--background); color: var(--foreground);', preg_replace('/\s+/', ' ', trim($body)));
+                continue;
+            }
+            $this->assertEqualsCanonicalizing(
+                ['background', 'foreground', 'card', 'primary', 'border'],
+                array_keys($this->declarations($body)),
+                $selector
+            );
+            $this->assertSame(5, substr_count($body, ';'), $selector);
+        }
+        $this->assertSame([...self::PALETTES, 'html'], $selectors);
     }
 
     private function color(array $tokens, string $token): string
