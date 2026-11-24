@@ -104,6 +104,15 @@ class TokensTest extends TestCase
         );
     }
 
+    public function testTaskSummaryLinksOverrideCoreDarkBlack(): void
+    {
+        $kit = file_get_contents(__DIR__ . '/../Assets/css/kit.css');
+        $this->assertMatchesRegularExpression(
+            '/:root \\.task-summary-column a,\s*:root \\.task-summary-column a:hover\s*\\{[^}]*color:\s*var\\(--foreground\\)/',
+            $kit
+        );
+    }
+
     public function testThemeRetainsTheFocusRingForCoreControls(): void
     {
         $this->assertMatchesRegularExpression(

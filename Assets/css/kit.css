@@ -1330,6 +1330,11 @@ code {
 }
 
 /* Task detail summary */
+:root .task-summary-column a,
+:root .task-summary-column a:hover {
+  color: var(--foreground);
+}
+
 :root .task-summary-container {
   border: 1px solid var(--border);
   border-left: 3px solid var(--task-accent, var(--border));
