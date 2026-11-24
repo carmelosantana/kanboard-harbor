@@ -327,7 +327,7 @@
     var subtaskRow = '.subtasks-table tr[data-subtask-id]';
     var subtaskMeta = '[data-slot="subtask-row"]';
     var subtaskTrigger = '[data-slot="subtask-actions-trigger"]';
-    var subtaskCheck = '.js-subtask-toggle-status';
+    var subtaskCheck = '.js-subtask-toggle-status, .subtask-title a.js-modal-confirm';
     var subtaskActions = { todo: 'subtask.todo', doing: 'subtask.start', done: 'subtask.done' };
     var subtaskIcons = { todo: 'fa-square-o', doing: 'fa-gears', done: 'fa-check-square-o' };
     var subtaskToasts = {
@@ -337,6 +337,7 @@
     };
     var lastSubtaskChange = new WeakMap();
     var subtaskMenu;
+    var subtaskStartAllowed = null;
 
     function prepareSubtaskRows() {
         document.querySelectorAll(subtaskRow).forEach(function (row) {
@@ -351,10 +352,17 @@
         });
     }
 
+    function subtaskActionEnabled(action, state) {
+        if (action.id === subtaskActions.doing && subtaskStartAllowed !== null) {
+            return state === 'todo' && subtaskStartAllowed;
+        }
+        return action.states.includes(state);
+    }
+
     function setSubtaskState(row, metadata, actions, state) {
         row.dataset.state = metadata.dataset.state = state;
         metadata.dataset.actions = actions.filter(function (action) {
-            return action.states.includes(state);
+            return subtaskActionEnabled(action, state);
         }).map(function (action) { return action.id; }).join(' ');
     }
 
@@ -398,6 +406,10 @@
                 headers: { 'X-Requested-With': 'XMLHttpRequest' },
                 body: new URLSearchParams({ csrf_token: action.csrf_token })
             });
+            var startAllowed = response.headers?.get('X-Harbor-Can-Start-Subtask');
+            if (startAllowed === '0' || startAllowed === '1') {
+                subtaskStartAllowed = startAllowed === '1';
+            }
             if (!response.ok) throw new Error('Subtask POST failed');
             result = await response.json();
             if (!Object.hasOwn(subtaskActions, result.status) || typeof result.timer !== 'boolean') {
@@ -439,6 +451,7 @@
         if (metadata.dataset.state === 'pending') return;
 
         var actions = JSON.parse(metadata.querySelector('template').content.textContent);
+        setSubtaskState(row, metadata, actions, metadata.dataset.state);
         var panel = document.createElement('div');
         if (subtaskMenu) {
             subtaskMenu.controls.close(false);
@@ -452,7 +465,7 @@
             item.type = 'button';
             item.setAttribute('role', 'menuitem');
             item.textContent = action.label;
-            item.disabled = !action.states.includes(metadata.dataset.state);
+            item.disabled = !subtaskActionEnabled(action, metadata.dataset.state);
             item.setAttribute('aria-disabled', String(item.disabled));
             item.addEventListener('click', function () {
                 if (item.disabled) return;

@@ -218,6 +218,60 @@ class SubtaskStatusControllerTest extends Base
         }
     }
 
+    public function testSubtaskRestrictionDisablesStartInTheRenderedMenu(): void
+    {
+        $this->restrictSubtasks();
+        session_set('hasSubtaskInProgress', true);
+        (new Plugin($this->container))->initialize();
+        $html = $this->container['template']->render('subtask/table', [
+            'task' => $this->container['taskFinderModel']->getById($this->taskId),
+            'subtasks' => [$this->container['subtaskModel']->getByIdWithDetails($this->subtaskId)],
+            'editable' => true,
+        ]);
+
+        $this->assertStringContainsString('controller=SubtaskRestrictionController', $html);
+        preg_match('~<template>(.*?)</template>~', $html, $matches);
+        $menu = json_decode($matches[1], true, 512, JSON_THROW_ON_ERROR);
+        $this->assertSame('Start working', $menu[1]['label']);
+        $this->assertTrue($menu[1]['disabled']);
+        $this->assertSame([], $menu[1]['states']);
+        $this->assertStringContainsString('data-state="todo" data-actions="subtask.done"', $html);
+    }
+
+    public function testSubtaskRestrictionRejectsStartWhileAnotherIsInProgress(): void
+    {
+        $otherId = $this->restrictSubtasks();
+        [$controller, $response] = $this->request('doing');
+        $response->expects($this->once())->method('json')->with(['error' => 'Another subtask is already in progress'], 409);
+        $response->expects($this->once())->method('withHeader')->with('X-Harbor-Can-Start-Subtask', '0');
+        $controller->set();
+
+        $model = $this->container['subtaskModel'];
+        $this->assertSame(0, (int) $model->getById($this->subtaskId)['status']);
+        $this->assertFalse($this->container['subtaskTimeTrackingModel']->hasTimer($this->subtaskId, 1));
+        $this->assertSame(1, (int) $model->getById($otherId)['status']);
+
+        $targetId = $this->subtaskId;
+        $this->subtaskId = $otherId;
+        $this->setStatus('doing', false);
+        $this->setStatus('todo', false);
+        $this->subtaskId = $targetId;
+        $this->setStatus('doing', true);
+    }
+
+    private function restrictSubtasks(): int
+    {
+        $this->addMember();
+        $this->container['configModel']->save(['subtask_restriction' => 1]);
+        $this->container['memoryCache']->flush();
+        $model = $this->container['subtaskModel'];
+        $this->assertTrue($model->update(['id' => $this->subtaskId, 'status' => 0]));
+
+        return $model->create([
+            'title' => 'Already in progress', 'task_id' => $this->taskId, 'user_id' => 1, 'status' => 1,
+        ]);
+    }
+
     private function setStatus(string $status, bool $timer): void
     {
         [$controller, $response] = $this->request($status);

@@ -57,6 +57,11 @@ class Plugin extends Base
             'Harbor:subtask/row_actions',
             fn (array $subtask): array => [
                 'projectId' => $this->memoryCache->proxy($this->taskFinderModel, 'getProjectId', $subtask['task_id']),
+                'startAllowed' => !$this->memoryCache->proxy(
+                    $this->subtaskStatusModel,
+                    'hasSubtaskInProgress',
+                    $this->userSession->getId()
+                ),
             ]
         );
         
@@ -75,7 +80,7 @@ class Plugin extends Base
 
         foreach ([
             ['done', 'Mark done', 'd', 'status != done', 'done'],
-            ['start', 'Start working', 's', 'status == todo', 'doing'],
+            ['start', 'Start working', 's', 'status == todo and start_allowed == 1', 'doing'],
             ['todo', 'Back to todo', 't', 'status != todo', 'todo'],
         ] as [$id, $label, $key, $when, $status]) {
             $actions[] = [

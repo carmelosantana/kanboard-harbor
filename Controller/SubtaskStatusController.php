@@ -19,6 +19,8 @@ class SubtaskStatusController extends BaseController
         'done' => SubtaskModel::STATUS_DONE,
     ];
 
+    private const START_ELIGIBILITY_HEADER = 'X-Harbor-Can-Start-Subtask';
+
     public static function canSet(Container $container, int $projectId, int $userId): bool
     {
         if ($projectId <= 0 || $userId <= 0) {
@@ -70,6 +72,12 @@ class SubtaskStatusController extends BaseController
         $timerUserId = $assigneeId ?: $userId;
         $previousStatus = (int) $subtask['status'];
         if ($previousStatus !== $status) {
+            if ($status === SubtaskModel::STATUS_INPROGRESS
+                && $this->subtaskStatusModel->hasSubtaskInProgress($userId)) {
+                $this->response->withHeader(self::START_ELIGIBILITY_HEADER, '0');
+                $this->response->json(['error' => 'Another subtask is already in progress'], 409);
+                return;
+            }
             $values = ['id' => $id, 'status' => $status];
             if ($assigneeId === 0 && $status !== SubtaskModel::STATUS_TODO) {
                 $values['user_id'] = $userId;
@@ -95,6 +103,10 @@ class SubtaskStatusController extends BaseController
         }
 
         if ($this->request->isAjax()) {
+            $this->response->withHeader(
+                self::START_ELIGIBILITY_HEADER,
+                $this->subtaskStatusModel->hasSubtaskInProgress($userId) ? '0' : '1'
+            );
             $this->response->json([
                 'status' => $state,
                 'timer' => $this->subtaskTimeTrackingModel->hasTimer($id, $timerUserId),

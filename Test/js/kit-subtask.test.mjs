@@ -11,7 +11,7 @@ const actions = [
   { id: 'subtask.todo', label: 'Back to todo', disabled: false, states: ['doing', 'done'], url: '/todo', csrf_token: 'todo-token' },
 ];
 
-function harness() {
+function harness({ restricted = false } = {}) {
   function captureEvent() {
     return {
       prevented: false,
@@ -49,7 +49,7 @@ function harness() {
       removeAttribute(name) { attrs.delete(name); },
       hasAttribute(name) { return attrs.has(name); },
       closest(query) {
-        return query === selector ? this : this.parentNode?.closest(query);
+        return query.split(', ').includes(selector) ? this : this.parentNode?.closest(query);
       },
       querySelectorAll(query) {
         return this.children.filter(node => typeof node === 'object').flatMap(child => [
@@ -79,7 +79,7 @@ function harness() {
 
   const body = element('body');
   const row = element('tr', '.subtasks-table tr[data-subtask-id]');
-  const check = element('a', '.js-subtask-toggle-status');
+  const check = element('a', restricted ? '.subtask-title a.js-modal-confirm' : '.js-subtask-toggle-status');
   const checkIcon = element('i', 'i', ['fa-gears']);
   const trigger = element('button', '[data-slot="subtask-actions-trigger"]');
   trigger.hidden = true;
@@ -87,9 +87,13 @@ function harness() {
     doneTitle: 'Subtask completed', startTimer: 'Start timer', stopTimer: 'Stop timer',
   });
   const metadata = element('div', '[data-slot="subtask-row"]');
-  Object.assign(metadata.dataset, { state: 'doing', actions: 'subtask.done subtask.todo' });
+  Object.assign(metadata.dataset, restricted
+    ? { state: 'todo', actions: 'subtask.done' }
+    : { state: 'doing', actions: 'subtask.done subtask.todo' });
   const template = element('template', 'template');
-  template.content = { textContent: JSON.stringify(actions) };
+  template.content = { textContent: JSON.stringify(restricted
+    ? actions.map(action => action.id === 'subtask.start' ? { ...action, states: [] } : action)
+    : actions) };
   const timerContainer = element('span');
   const timer = element('a', '.js-subtask-toggle-timer');
   timer.href = 'http://kanboard.test/?timer=stop';
@@ -208,4 +212,30 @@ test('Undo posts the previous explicit status even if its menu item is now disab
   h.requests[1].resolve({ ok: true, json: async () => ({ status: 'doing', timer: true }) });
   await nextTurn();
   assert.equal(h.row.dataset.state, 'doing');
+});
+
+test('core’s restriction link still opens Harbor’s menu with Start working disabled', () => {
+  const h = harness({ restricted: true });
+  assert.equal(h.trigger.hidden, false);
+  const { event, items } = h.open(h.check);
+  assert.equal(event.prevented, true);
+  assert.deepEqual(items.map(item => item.disabled), [false, true, true]);
+});
+
+test('the next menu uses updated start eligibility after a status change', async () => {
+  const h = harness({ restricted: true });
+  h.open(h.check).items[0].emit('click');
+  h.requests[0].resolve({
+    ok: true,
+    headers: new Headers({ 'X-Harbor-Can-Start-Subtask': '1' }),
+    json: async () => ({ status: 'done', timer: false }),
+  });
+  await nextTurn();
+
+  const toast = h.body.children.at(-1).children[0];
+  toast.children[1].emit('click');
+  h.requests[1].resolve({ ok: true, json: async () => ({ status: 'todo', timer: false }) });
+  await nextTurn();
+
+  assert.equal(h.open(h.trigger).items[1].disabled, false);
 });

@@ -12,6 +12,7 @@ use Kanboard\Plugin\Harbor\Controller\SubtaskStatusController;
             'subtask_id' => (int) $subtask['id'],
             'task_id' => (int) $subtask['task_id'],
             'project_id' => (int) $projectId,
+            'start_allowed' => (int) $startAllowed,
         ]) ?>
         <button type="button" data-slot="subtask-actions-trigger"
             aria-label="<?= $this->text->e(t('Subtask actions')) ?>" aria-haspopup="menu" aria-expanded="false"
