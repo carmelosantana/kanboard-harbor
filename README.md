@@ -14,7 +14,7 @@ succeeds **ShadcnTheme**, which it replaces (`"replaces": ["ShadcnTheme"]`).
 | **Theme toggle** | Saved as Kanboard's own user theme preference (light, dark or automatic). It works without JavaScript. |
 | **Login** | A floating sign-in card, plus a six-box two-factor step (one field without JavaScript). Core field names, CSRF and hooks are unchanged. |
 | **Kit** | `tokens.css`, `kit.css` and `kit.js`: pill, callout, progress, skeleton, empty state, toolbar, popups (menu, popover, dialog, tooltip) and toasts with Undo. The `$this->kit` helper renders them. **Settings → Harbor → Style guide** shows every component. |
-| **Actions** | Plugins register actions through the `kit:actions` hook. Harbor renders them as a right-click and `⋯` menu, and re-checks permission whenever one runs. |
+| **Actions** | Plugins register actions through the `kit:actions` hook, and Harbor's own routes re-check permission through the registry on every run. In phase 1 only Harbor's subtask actions are drawn as a menu. The general menu for any plugin's actions, and the `/` palette, come in a later phase (spec D11). |
 | **Subtask status** | Clicking a subtask's checkbox opens a menu: Mark done, Start working, Back to todo. Each choice sets one status, with no cycling. Timers start and stop as in core. The row locks while the request is in flight, and an Undo toast follows. |
 
 ## Requirements
