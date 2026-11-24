@@ -15,9 +15,9 @@ use WeakMap;
 /**
  * Harbor Plugin (successor to ShadcnTheme)
  *
- * A modern Kanboard theme inspired by shadcn/ui design principles.
- * Features light/dark mode toggle with system preference detection,
- * beautiful typography, refined color palette, and improved UX.
+ * The suite's flagship theme and UI kit: Newburgh and Shadcn presets in light and
+ * dark, a server-rendered theme with no flash, the kit components and the
+ * kit:actions registry.
  *
  * @package  Kanboard\Plugin\Harbor
  * @author   Carmelo Santana <carmelo@carmelosantana.com>

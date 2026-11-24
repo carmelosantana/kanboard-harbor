@@ -1,87 +1,54 @@
-# ShadcnTheme — Kanboard Plugin
+# Harbor — Kanboard theme and UI kit
 
-A modern Kanboard theme inspired by [shadcn/ui](https://ui.shadcn.com/) design
-principles.  Ships dark mode as the default, with a per-user light / dark / system
-toggle, accessible task card colors and a branded login card. The site logo, favicon
-and name come from the [Steward](https://github.com/carmelosantana/kanboard-steward)
-plugin (recommended).
+Harbor is the flagship theme for Carmelo's Kanboard plugin suite and the UI kit the suite's plugins build on. It
+succeeds **ShadcnTheme**, which it replaces (`"replaces": ["ShadcnTheme"]`).
 
-> **Note:** Screenshots will be added in a follow-up.
-
----
+> **Status:** 2.0.0-dev. Phase 1 covers the foundation, the kit core and actions.
 
 ## Features
 
 | Feature | Detail |
 |---|---|
-| **Dark-first with no FOUC** | A synchronous script in `<head>` reads `localStorage` and sets the theme before first paint — no flash on page load. |
-| **Light / dark / system toggle** | Dropdown in the page header.  Preference stored per user in `user_metadata`; guest users fall back to the session. |
-| **shadcn/ui "neutral" design tokens** | Pure neutral-zinc palette with a near-white primary (near-black in light mode); color reserved for destructive + status. CSS custom properties (`--background`, `--foreground`, `--accent`, `--border`, `--radius`, etc.) plus `kbx-` primitive variables for a consistent palette across both themes. |
-| **Dark-mode task colors** | All Kanboard task card color classes are overridden in dark mode with perceptually appropriate, WCAG AA-compliant shades. |
-| **Header / navigation** | Top bar and sidebar correctly contrast in both light and dark themes. |
-| **Login card** | Centered card layout with Steward's logo or site name (or the product name without Steward) above the form. |
-
----
+| **No flash on load** | The server writes the theme class, `color-scheme`, the background and a small critical style into the page before any stylesheet loads. Only the "auto" theme runs a tiny blocking script. |
+| **Presets** | **Newburgh** (default, dark-first, from the madeinnewburgh.com palette) and **Shadcn** (neutral). Each has a light and a dark mode, and both pass WCAG AA for text. |
+| **Theme toggle** | Saved as Kanboard's own user theme preference (light, dark or automatic). It works without JavaScript. |
+| **Login** | A floating sign-in card, plus a six-box two-factor step (one field without JavaScript). Core field names, CSRF and hooks are unchanged. |
+| **Kit** | `tokens.css`, `kit.css` and `kit.js`: pill, callout, progress, skeleton, empty state, toolbar, popups (menu, popover, dialog, tooltip) and toasts with Undo. The `$this->kit` helper renders them. **Settings → Harbor → Style guide** shows every component. |
+| **Actions** | Plugins register actions through the `kit:actions` hook. Harbor renders them as a right-click and `⋯` menu, and re-checks permission whenever one runs. |
+| **Subtask status** | Clicking a subtask's checkbox opens a menu: Mark done, Start working, Back to todo. Each choice sets one status, with no cycling. Timers start and stop as in core. The row locks while the request is in flight, and an Undo toast follows. |
 
 ## Requirements
 
 - **Kanboard** >= 1.2.47
 - **PHP** >= 8.4
-- **Browser** — an evergreen browser that supports `:has()` and `color-mix()` (Chrome 105+, Firefox 121+, Safari 15.4+)
-
----
+- **Steward** >= 1.2.0 when Steward is installed (optional). Older Steward replaces Harbor's page layout.
+- Not together with **BattleLobby** (`"conflicts"`).
 
 ## Installation
 
-1. Download or clone this repository into your Kanboard `plugins/` directory:
+Install from ModMenu, or unzip a release into `plugins/Harbor`. On first sign-in, each user's ShadcnTheme theme
+choice is copied to Kanboard's theme preference once. On an install that used ShadcnTheme, users who never changed
+it keep dark. Disable ShadcnTheme after enabling Harbor.
 
-   ```
-   plugins/
-   └── ShadcnTheme/
-       ├── Plugin.php
-       ├── plugin.json
-       └── ...
-   ```
+## For plugin authors
 
-   The directory name **must** be `ShadcnTheme` (case-sensitive).
+- Use core markup plus the kit's `data-slot` components, and write colours as `var(--token, <fallback>)` so a
+  plugin still looks right without Harbor. `recommends` Harbor, never `requires` it.
+- Register CSS and JS only on your own routes, and inject no styles at runtime.
+- Register actions with `$this->hook->on('kit:actions', fn () => [...])`. Every action's route must go through
+  `harborActionRegistry->execute()` or call the same `can` check itself.
 
-2. In Kanboard, go to **Settings → Plugins** and confirm ShadcnTheme appears as
-   enabled.  No further configuration is required — the dark theme loads immediately.
-
----
-
-## Using the theme toggle
-
-The theme toggle appears in the user dropdown in the top-right of every page.
-Click it to cycle between **Dark**, **Light**, and **System** (follows the OS
-preference).  Your choice is saved per-user and remembered across sessions.
-
----
-
-## Logo, favicon and site name
-
-Branding lives in the [Steward](https://github.com/carmelosantana/kanboard-steward)
-plugin (1.0.0 or later); ShadcnTheme no longer has its own upload page. The login card
-shows Steward's logo, or its site name, and falls back to "Kanboard" without Steward.
-
-Upgrading from ShadcnTheme 1.1? Your uploaded logo and favicon stay where they were —
-use **Import** in Steward's branding settings to bring them over.
-
----
+Design spec: `docs/specs/2026-11-23-harbor-design-system-design.md` in the suite repository.
 
 ## Development
 
-Tests live in `Test/` and run against the Kanboard 1.2.47 core source:
+From the suite repository root:
 
-```bash
-# From the kanboard-plugins repo root:
-./testing/run-plugin-tests.sh ShadcnTheme
 ```
-
-See [`CHANGELOG.md`](CHANGELOG.md) for what shipped in each release.
-
----
+./testing/run-plugin-tests.sh Harbor
+node --test 'Harbor/Test/js/*.test.mjs'
+```
 
 ## License
 
-MIT — see [LICENSE](LICENSE) for full text.
+MIT
