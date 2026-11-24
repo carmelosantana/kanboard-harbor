@@ -157,6 +157,7 @@ class Plugin extends Base
     private function addRoutes()
     {
         $this->route->addRoute('harbor/theme/:mode', 'ThemeController', 'set', 'Harbor');
+        $this->route->addRoute('harbor/subtask/:subtask_id/status/:status', 'SubtaskStatusController', 'set', 'Harbor');
     }
 
     /**
