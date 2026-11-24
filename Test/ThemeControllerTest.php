@@ -5,6 +5,7 @@ require_once 'tests/units/Base.php';
 use Kanboard\Core\Controller\AccessForbiddenException;
 use Kanboard\Core\Http\Request;
 use Kanboard\Core\Http\Response;
+use Kanboard\Model\UserMetadataModel;
 use Kanboard\Plugin\Harbor\Controller\ThemeController;
 use Kanboard\Plugin\Harbor\Plugin;
 use KanboardTests\units\Base;
@@ -155,6 +156,21 @@ class ThemeControllerTest extends Base
 
         $this->assertSame('light', $users->getById(1)['theme']);
         $this->assertSame('1', (string) $this->container['userMetadataModel']->get(1, 'harbor_migrated_theme'));
+    }
+
+    public function testMigrationSkipsMetadataQueriesOnTheSecondBootstrap(): void
+    {
+        $metadata = $this->createMock(UserMetadataModel::class);
+        $metadata->expects($this->once())->method('exists')->with(1, 'harbor_migrated_theme')->willReturn(true);
+        $metadata->expects($this->never())->method('get');
+        $metadata->expects($this->never())->method('save');
+        unset($this->container['userMetadataModel']);
+        $this->container['userMetadataModel'] = $metadata;
+
+        (new Plugin($this->container))->initialize();
+        $this->container['userSession']->initialize($this->container['userModel']->getById(1));
+        $this->dispatcher->dispatch(new Event(), 'app.bootstrap');
+        $this->dispatcher->dispatch(new Event(), 'app.bootstrap');
     }
 
     private function prepareRequest(

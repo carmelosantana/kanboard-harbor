@@ -47,7 +47,11 @@ class Plugin extends Base
     {
         $userId = $this->userSession->getId();
         $marker = 'harbor_migrated_theme';
-        if ($userId <= 0 || $this->userMetadataModel->exists($userId, $marker)) {
+        if ($userId <= 0 || ($_SESSION[$marker] ?? null) === $userId) {
+            return;
+        }
+        if ($this->userMetadataModel->exists($userId, $marker)) {
+            $_SESSION[$marker] = $userId;
             return;
         }
 
@@ -55,13 +59,10 @@ class Plugin extends Base
         $theme = $legacyTheme === 'system' ? 'auto' : $legacyTheme;
         if (in_array($theme, ['dark', 'auto'], true)) {
             // Check the stored theme in the write itself in case another session changed it.
-            $saved = $this->db->table(UserModel::TABLE)
+            $this->db->table(UserModel::TABLE)
                 ->eq('id', $userId)
                 ->eq('theme', 'light')
                 ->update(['theme' => $theme]);
-            if (!$saved) {
-                return;
-            }
 
             $postAuthValidated = $this->userSession->isPostAuthenticationValidated();
             $this->userSession->refresh($userId);
@@ -70,7 +71,9 @@ class Plugin extends Base
             }
         }
 
-        $this->userMetadataModel->save($userId, [$marker => '1']);
+        if ($this->userMetadataModel->save($userId, [$marker => '1'])) {
+            $_SESSION[$marker] = $userId;
+        }
     }
 
     /**
