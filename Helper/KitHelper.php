@@ -17,7 +17,14 @@ class KitHelper extends Base
         $menu = [];
         $enabled = [];
         foreach ($actions as $action) {
-            $menu[] = array_intersect_key($action, array_flip(['id', 'label', 'key', 'disabled']));
+            $url = $this->actionUrl($action['route']);
+            if ($url === null) {
+                continue;
+            }
+            $menu[] = array_intersect_key($action, array_flip(['id', 'label', 'key', 'disabled', 'states'])) + [
+                'url' => $url,
+                'csrf_token' => $this->token->getCSRFToken(),
+            ];
             if (!$action['disabled']) {
                 $enabled[] = $action['id'];
             }
@@ -29,8 +36,33 @@ class KitHelper extends Base
 
         return '<div data-slot="' . $text->e($slot)
             . '" data-state="' . $text->e(is_scalar($state) ? $state : '')
-            . '" data-actions="' . implode(' ', $enabled) . '">'
+            . '" data-actions="' . $text->e(implode(' ', $enabled)) . '">'
             . '<template>' . $json . '</template></div>';
+    }
+
+    private function actionUrl(array|string $route): ?string
+    {
+        if (is_array($route)) {
+            [$controller, $action] = [$route[0] ?? null, $route[1] ?? null];
+            if (!is_string($controller) || !is_string($action)) {
+                return null;
+            }
+            $params = array_diff_key($route, [0 => true, 1 => true]);
+
+            // The clean subtask route needs only its path parameters. Keep the
+            // task and project IDs as query params for the controller to verify.
+            $context = array_intersect_key($params, ['task_id' => true, 'project_id' => true]);
+            if ($context && $this->route->findUrl($controller, $action, $params) === '') {
+                $path = $this->route->findUrl($controller, $action, array_diff_key($params, $context));
+                if ($path !== '') {
+                    return $this->helper->url->dir() . $path . '?' . http_build_query($context);
+                }
+            }
+
+            return $this->helper->url->to($controller, $action, $params);
+        }
+
+        return preg_match('~\A(?:/(?!/)|\?)[^\\\\[:cntrl:]]*\z~', $route) ? $route : null;
     }
 
     public function pill(string $label, string $tone = 'neutral'): string

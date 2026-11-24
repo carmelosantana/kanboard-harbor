@@ -12,20 +12,25 @@ class ActionRegistryTest extends Base
     public function testCollectsValidDescriptorsFromMultipleListenersAndLogsEachRejectionOnce(): void
     {
         $hook = $this->container['hook'];
-        $hook->on('kit:actions', fn () => [
-            $this->descriptor(['id' => "subtask.done\n"]),
-            $this->descriptor(['risk' => 'unknown']),
-            array_diff_key($this->descriptor(), ['stepUp' => true]),
-            $this->descriptor(['can' => false]),
-            $this->descriptor(),
-        ]);
+        $collected = 0;
+        $hook->on('kit:actions', function () use (&$collected) {
+            $collected++;
+            return [
+                $this->descriptor(['id' => "subtask.done\n"]),
+                $this->descriptor(['risk' => 'unknown']),
+                array_diff_key($this->descriptor(), ['stepUp' => true]),
+                $this->descriptor(['can' => false]),
+                $this->descriptor(['when' => 'status == done or owner_id == 1']),
+                $this->descriptor(),
+            ];
+        });
         $hook->on('kit:actions', fn () => [
             $this->descriptor(['id' => 'subtask.done', 'label' => 'Duplicate']),
             $this->descriptor(['id' => 'subtask.start']),
             $this->descriptor(['id' => 'task.close', 'slot' => 'task-row']),
         ]);
         $logger = $this->createMock(LoggerInterface::class);
-        $logger->expects($this->exactly(5))->method('warning')->with($this->stringContains('kit:actions'));
+        $logger->expects($this->exactly(6))->method('warning')->with($this->stringContains('kit:actions'));
         unset($this->container['logger']);
         $this->container['logger'] = $logger;
 
@@ -35,6 +40,7 @@ class ActionRegistryTest extends Base
             $this->assertSame(['subtask.done', 'subtask.start'], array_column($actions, 'id'));
             $this->assertSame('Mark done', $actions[0]['label']);
         }
+        $this->assertSame(1, $collected);
     }
 
     public function testStateGuardsDisableActionsAndPermissionsHideThem(): void
@@ -59,7 +65,6 @@ class ActionRegistryTest extends Base
             'subtask.start' => false,
             'subtask.todo' => true,
             'subtask.unknown' => true,
-            'subtask.malformed' => true,
             'subtask.view' => false,
         ], array_column($registry->forSlot('subtask-row', $entity, ['id' => 1]), 'disabled', 'id'));
 
@@ -95,6 +100,34 @@ class ActionRegistryTest extends Base
         );
     }
 
+    public function testThrowingPermissionIsLoggedAndDeniedOnRenderAndExecute(): void
+    {
+        $this->container['hook']->on('kit:actions', fn () => [$this->descriptor([
+            'can' => static fn () => throw new RuntimeException('Permission unavailable'),
+        ])]);
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->exactly(2))->method('warning')->with($this->stringContains('subtask.done'));
+        unset($this->container['logger']);
+        $this->container['logger'] = $logger;
+        $registry = new ActionRegistry($this->container);
+
+        $this->assertSame([], $registry->forSlot('subtask-row', [], []));
+        $this->assertNull($registry->execute('subtask.done', [], []));
+    }
+
+    public function testRouteContextComesFromTheEntityAtRenderAndExecute(): void
+    {
+        $this->container['hook']->on('kit:actions', fn () => [$this->descriptor([
+            'route' => ['SubtaskStatus', 'set', 'status' => 'done', 'task_id' => 99],
+        ])]);
+        $registry = new ActionRegistry($this->container);
+        $entity = ['status' => 'todo', 'subtask_id' => 4, 'task_id' => 5, 'project_id' => 6];
+        $expected = ['SubtaskStatus', 'set', 'status' => 'done', 'task_id' => 5, 'subtask_id' => 4, 'project_id' => 6];
+
+        $this->assertSame($expected, $registry->forSlot('subtask-row', $entity, [])[0]['route']);
+        $this->assertSame($expected, $registry->execute('subtask.done', $entity, []));
+    }
+
     public function testKitExposesOnlyPermittedActionsAsInertJson(): void
     {
         (new Plugin($this->container))->initialize();
@@ -102,9 +135,9 @@ class ActionRegistryTest extends Base
         $slot = 'subtask-row" data-unexpected="1';
         $label = '</template><strong>Done &amp; ready</strong>';
         $this->container['hook']->on('kit:actions', fn () => [
-            $this->descriptor(['slot' => $slot, 'label' => $label, 'can' => static fn ($entity, $user) => $user['id'] === 7]),
-            $this->descriptor(['id' => 'subtask.start', 'slot' => $slot, 'when' => 'status == done']),
-            $this->descriptor(['id' => 'subtask.hidden', 'slot' => $slot, 'can' => static fn () => false]),
+            $this->descriptor(['id' => 'test.done', 'slot' => $slot, 'label' => $label, 'can' => static fn ($entity, $user) => $user['id'] === 7]),
+            $this->descriptor(['id' => 'test.start', 'slot' => $slot, 'when' => 'status == done']),
+            $this->descriptor(['id' => 'test.hidden', 'slot' => $slot, 'can' => static fn () => false]),
         ]);
 
         $html = $this->container['template']->kit->actions($slot, ['status' => 'todo']);
@@ -113,17 +146,21 @@ class ActionRegistryTest extends Base
         $element = $document->getElementsByTagName('div')->item(0);
         $this->assertSame($slot, $element->getAttribute('data-slot'));
         $this->assertSame('todo', $element->getAttribute('data-state'));
-        $this->assertSame('subtask.done', $element->getAttribute('data-actions'));
+        $this->assertSame('test.done', $element->getAttribute('data-actions'));
         $this->assertFalse($element->hasAttribute('data-unexpected'));
         $this->assertSame(0, $document->getElementsByTagName('strong')->length);
         $this->assertSame(0, $document->getElementsByTagName('script')->length);
 
         $templates = $element->getElementsByTagName('template');
         $this->assertSame(1, $templates->length);
-        $this->assertSame([
-            ['id' => 'subtask.done', 'label' => $label, 'key' => 'd', 'disabled' => false],
-            ['id' => 'subtask.start', 'label' => 'Mark done', 'key' => 'd', 'disabled' => true],
-        ], json_decode($templates->item(0)->textContent, true, 512, JSON_THROW_ON_ERROR));
+        $menu = json_decode($templates->item(0)->textContent, true, 512, JSON_THROW_ON_ERROR);
+        $this->assertSame(['test.done', 'test.start'], array_column($menu, 'id'));
+        $this->assertSame([$label, 'Mark done'], array_column($menu, 'label'));
+        $this->assertSame([false, true], array_column($menu, 'disabled'));
+        foreach ($menu as $item) {
+            $this->assertSame('?controller=SubtaskStatus&action=set&status=done', $item['url']);
+            $this->assertTrue($this->container['token']->validateCSRFToken($item['csrf_token']));
+        }
     }
 
     private function descriptor(array $overrides = []): array

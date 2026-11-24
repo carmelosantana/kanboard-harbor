@@ -111,11 +111,52 @@ class SubtaskStatusControllerTest extends Base
     {
         $this->container['route']->enable();
         (new Plugin($this->container))->initialize();
+        $this->addMember();
 
         $this->assertSame(
             ['controller' => 'SubtaskStatusController', 'action' => 'set', 'plugin' => 'Harbor'],
             $this->container['route']->findRoute("harbor/subtask/{$this->subtaskId}/status/done")
         );
+
+        $html = $this->container['template']->kit->actions('subtask-row', [
+            'status' => 'doing',
+            'subtask_id' => $this->subtaskId,
+            'task_id' => $this->taskId,
+            'project_id' => $this->projectId,
+        ]);
+        preg_match('~<template>(.*?)</template>~', $html, $matches);
+        $menu = json_decode($matches[1], true, 512, JSON_THROW_ON_ERROR);
+        $this->assertSame(
+            "harbor/subtask/{$this->subtaskId}/status/done?task_id={$this->taskId}&project_id={$this->projectId}",
+            $menu[0]['url']
+        );
+    }
+
+    public function testSubtaskTableRendersWordStatesAndActionRoutes(): void
+    {
+        $this->addMember();
+        (new Plugin($this->container))->initialize();
+        $html = $this->container['template']->render('subtask/table', [
+            'task' => $this->container['taskFinderModel']->getById($this->taskId),
+            'subtasks' => $this->container['subtaskModel']->getAll($this->taskId),
+            'editable' => true,
+        ]);
+        $this->assertStringContainsString('class="js-subtask-toggle-status"', $html);
+        $this->assertStringContainsString('data-slot="subtask-row" data-state="doing" data-actions="subtask.done subtask.todo"', $html);
+        $this->assertStringContainsString('data-slot="subtask-actions-trigger"', $html);
+        $this->assertStringNotContainsString('data-state="1"', $html);
+        preg_match('~<template>(.*?)</template>~', $html, $matches);
+        $menu = json_decode($matches[1], true, 512, JSON_THROW_ON_ERROR);
+        $this->assertSame(['Mark done', 'Start working', 'Back to todo'], array_column($menu, 'label'));
+        $this->assertSame([false, true, false], array_column($menu, 'disabled'));
+        $this->assertSame([['todo', 'doing'], ['todo'], ['doing', 'done']], array_column($menu, 'states'));
+        foreach ($menu as $action) {
+            parse_str(parse_url($action['url'], PHP_URL_QUERY), $query);
+            $this->assertSame('Harbor', $query['plugin']);
+            $this->assertSame((string) $this->subtaskId, $query['subtask_id']);
+            $this->assertSame((string) $this->taskId, $query['task_id']);
+            $this->assertSame((string) $this->projectId, $query['project_id']);
+        }
     }
 
     private function assertForbidden(bool $csrf = true, ?int $taskId = null): void

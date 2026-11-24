@@ -7,6 +7,7 @@ use Kanboard\Core\Security\AuthenticationManager;
 use Kanboard\Core\Template;
 use Kanboard\Model\UserModel;
 use Kanboard\Plugin\Harbor\Action\ActionRegistry;
+use Kanboard\Plugin\Harbor\Controller\SubtaskStatusController;
 use Kanboard\Plugin\Harbor\Helper\KitHelper;
 use Kanboard\Plugin\Harbor\Theme\LayoutChain;
 use WeakMap;
@@ -37,6 +38,7 @@ class Plugin extends Base
     {
         $this->container['harborActionRegistry'] = static fn ($container) => new ActionRegistry($container);
         $this->helper->register('kit', KitHelper::class);
+        $this->hook->on('kit:actions', $this->subtaskActions(...));
 
         $this->migrateThemePreference();
         // At normal plugin load the session has yet to open.
@@ -49,9 +51,47 @@ class Plugin extends Base
         // Hook into template overrides
         $this->hookTemplates();
         $this->hook->on('template:config:sidebar', ['template' => 'Harbor:config/sidebar']);
+        $this->template->hook->attach('template:subtask:table:header:before-timetracking', 'Harbor:subtask/row_actions', ['header' => true]);
+        $this->template->hook->attachCallable(
+            'template:subtask:table:rows',
+            'Harbor:subtask/row_actions',
+            fn (array $subtask): array => [
+                'projectId' => $this->memoryCache->proxy($this->taskFinderModel, 'getProjectId', $subtask['task_id']),
+            ]
+        );
         
         // Add custom routes
         $this->addRoutes();
+    }
+
+    private function subtaskActions(): array
+    {
+        $actions = [];
+        $can = fn (array $entity, array $user): bool => SubtaskStatusController::canSet(
+            $this->container,
+            (int) ($entity['project_id'] ?? 0),
+            (int) ($user['id'] ?? 0)
+        );
+
+        foreach ([
+            ['done', 'Mark done', 'd', 'status != done', 'done'],
+            ['start', 'Start working', 's', 'status == todo', 'doing'],
+            ['todo', 'Back to todo', 't', 'status != todo', 'todo'],
+        ] as [$id, $label, $key, $when, $status]) {
+            $actions[] = [
+                'id' => 'subtask.' . $id,
+                'label' => t($label),
+                'slot' => 'subtask-row',
+                'key' => $key,
+                'when' => $when,
+                'route' => ['SubtaskStatusController', 'set', 'plugin' => 'Harbor', 'status' => $status],
+                'risk' => 'reversible',
+                'stepUp' => false,
+                'can' => $can,
+            ];
+        }
+
+        return $actions;
     }
 
     private function migrateThemePreference(): void

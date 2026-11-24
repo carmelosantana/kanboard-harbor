@@ -3,12 +3,17 @@
 namespace Kanboard\Plugin\Harbor\Action;
 
 use Kanboard\Core\Base;
+use Kanboard\Plugin\Harbor\Controller\SubtaskStatusController;
+use Throwable;
 
 class ActionRegistry extends Base
 {
     private const HOOK = 'kit:actions';
 
-    private array $loggedRejections = [];
+    private const CONDITION = '/\A([a-zA-Z_][a-zA-Z0-9_]*)\s*(==|!=)\s*([a-zA-Z0-9_.-]+)\z/';
+    private const CONTEXT_PARAMS = ['subtask_id' => true, 'task_id' => true, 'project_id' => true];
+
+    private ?array $descriptors = null;
 
     public function forSlot(string $slot, array $entity, array $user): array
     {
@@ -18,10 +23,24 @@ class ActionRegistry extends Base
                 continue;
             }
 
-            $descriptor['disabled'] = !$this->matchesWhen($descriptor['when'], $entity);
-            if ($descriptor['can']($entity, $user) === true) {
-                $actions[] = $descriptor;
+            if (!$this->can($descriptor, $entity, $user)) {
+                continue;
             }
+
+            $conditions = $descriptor['conditions'];
+            unset($descriptor['conditions']);
+            $descriptor['disabled'] = !$this->matchesWhen($conditions, $entity);
+            if ($slot === 'subtask-row') {
+                $descriptor['states'] = array_values(array_filter(
+                    array_keys(SubtaskStatusController::STATUSES),
+                    fn (string $state): bool => $this->matchesWhen(
+                        $conditions,
+                        ['state' => $state, 'status' => $state] + $entity
+                    )
+                ));
+            }
+            $descriptor['route'] = $this->fillRoute($descriptor['route'], $entity);
+            $actions[] = $descriptor;
         }
 
         return $actions;
@@ -30,26 +49,48 @@ class ActionRegistry extends Base
     public function execute(string $id, array $entity, array $user): array|string|null
     {
         $descriptor = $this->descriptors()[$id] ?? null;
-        if ($descriptor === null || $descriptor['can']($entity, $user) !== true) {
+        if ($descriptor === null || !$this->can($descriptor, $entity, $user)) {
             return null;
         }
 
-        return $descriptor['route'];
+        return $this->fillRoute($descriptor['route'], $entity);
     }
 
-    private function matchesWhen(string $when, array $entity): bool
+    private function fillRoute(array|string $route, array $entity): array|string
     {
-        $when = trim($when);
-        if ($when === '') {
-            return true;
+        return is_array($route) ? array_replace($route, array_intersect_key($entity, self::CONTEXT_PARAMS)) : $route;
+    }
+
+    private function can(array $descriptor, array $entity, array $user): bool
+    {
+        try {
+            return $descriptor['can']($entity, $user) === true;
+        } catch (Throwable $exception) {
+            $this->logger->warning('Harbor denied kit:actions permission for ' . $descriptor['id'] . '.', [
+                'exception' => $exception,
+            ]);
+            return false;
+        }
+    }
+
+    private function parseWhen(string $when): ?array
+    {
+        $conditions = [];
+        if (trim($when) !== '') {
+            foreach (preg_split('/\s+and\s+/', trim($when)) as $condition) {
+                if (!preg_match(self::CONDITION, trim($condition), $parts)) {
+                    return null;
+                }
+                $conditions[] = array_slice($parts, 1);
+            }
         }
 
-        foreach (preg_split('/\s+and\s+/', $when) as $condition) {
-            if (!preg_match('/\A([a-zA-Z_][a-zA-Z0-9_]*)\s*(==|!=)\s*([a-zA-Z0-9_.-]+)\z/', trim($condition), $parts)) {
-                return false;
-            }
+        return $conditions;
+    }
 
-            [, $field, $operator, $expected] = $parts;
+    private function matchesWhen(array $conditions, array $entity): bool
+    {
+        foreach ($conditions as [$field, $operator, $expected]) {
             $actual = $entity[$field] ?? null;
             if (!is_scalar($actual)) {
                 return false;
@@ -66,6 +107,10 @@ class ActionRegistry extends Base
 
     private function descriptors(): array
     {
+        if ($this->descriptors !== null) {
+            return $this->descriptors;
+        }
+
         $descriptors = [];
         foreach ($this->hook->getListeners(self::HOOK) as $listenerIndex => $listener) {
             $entries = is_callable($listener) ? $listener() : null;
@@ -75,15 +120,17 @@ class ActionRegistry extends Base
             }
 
             foreach ($entries as $entryIndex => $entry) {
-                if (!$this->isDescriptor($entry) || isset($descriptors[$entry['id']])) {
+                if (!$this->isDescriptor($entry) || isset($descriptors[$entry['id']])
+                    || ($conditions = $this->parseWhen($entry['when'])) === null) {
                     $this->logRejection($listenerIndex, $entryIndex);
                     continue;
                 }
+                $entry['conditions'] = $conditions;
                 $descriptors[$entry['id']] = $entry;
             }
         }
 
-        return $descriptors;
+        return $this->descriptors = $descriptors;
     }
 
     private function isDescriptor(mixed $entry): bool
@@ -104,12 +151,9 @@ class ActionRegistry extends Base
 
     private function logRejection(int $listener, int|string $entry): void
     {
-        if (!isset($this->loggedRejections[$listener][$entry])) {
-            $this->loggedRejections[$listener][$entry] = true;
-            $this->logger->warning('Harbor dropped an invalid or duplicate kit:actions descriptor.', [
-                'listener' => $listener,
-                'entry' => $entry,
-            ]);
-        }
+        $this->logger->warning('Harbor dropped an invalid or duplicate kit:actions descriptor.', [
+            'listener' => $listener,
+            'entry' => $entry,
+        ]);
     }
 }
