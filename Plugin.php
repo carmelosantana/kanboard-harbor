@@ -4,8 +4,10 @@ namespace Kanboard\Plugin\Harbor;
 
 use Kanboard\Core\Plugin\Base;
 use Kanboard\Core\Security\AuthenticationManager;
+use Kanboard\Core\Template;
 use Kanboard\Model\UserModel;
 use Kanboard\Plugin\Harbor\Theme\LayoutChain;
+use WeakMap;
 
 /**
  * Harbor Plugin (successor to ShadcnTheme)
@@ -21,6 +23,9 @@ use Kanboard\Plugin\Harbor\Theme\LayoutChain;
  */
 class Plugin extends Base
 {
+    /** @var WeakMap<Template, string>|null */
+    private static ?WeakMap $previousDropdowns = null;
+
     /**
      * Initialize the plugin
      *
@@ -105,15 +110,25 @@ class Plugin extends Base
      */
     private function hookTemplates()
     {
-        LayoutChain::register($this->template, 'Harbor:layout');
+        $template = $this->template;
+        LayoutChain::register($template, 'Harbor:layout');
 
-        // Place the POST form beside the stock dropdown, which clones and removes its menu.
-        $this->template->setTemplateOverride('header/user_dropdown', 'Harbor:header/theme_toggle');
+        // Place the POST form beside the dropdown, outside the menu cloned by core.
+        self::$previousDropdowns ??= new WeakMap();
+        if (!isset(self::$previousDropdowns[$template])) {
+            self::$previousDropdowns[$template] = $template->getTemplateFile('header/user_dropdown');
+            $template->setTemplateOverride('header/user_dropdown', 'Harbor:header/theme_toggle');
+        }
 
         // Login card header (Steward's logo or site name, else the product name, + subtitle)
         $this->hook->on('template:auth:login-form:before', [
             'template' => 'Harbor:auth/login_header'
         ]);
+    }
+
+    public static function previousUserDropdown(Template $template): string
+    {
+        return self::$previousDropdowns[$template];
     }
 
     /**

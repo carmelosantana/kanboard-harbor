@@ -106,6 +106,20 @@ class ThemeControllerTest extends Base
         $this->assertStringNotContainsString('<style', $html);
     }
 
+    public function testHeaderChainsThePreviouslyRegisteredDropdown(): void
+    {
+        $this->container['userSession']->initialize($this->container['userModel']->getById(1));
+        $template = $this->container['template'];
+        $template->setTemplateOverride('header/user_dropdown', 'Harbor:../Test/fixtures/user-dropdown');
+
+        (new Plugin($this->container))->initialize();
+        (new Plugin($this->container))->initialize();
+        $html = $template->render('header/user_dropdown', ['dropdownLabel' => 'Previous dropdown']);
+
+        $this->assertSame(1, substr_count($html, '<div id="fake-user-dropdown">Previous dropdown</div>'));
+        $this->assertSame(1, substr_count($html, 'class="harbor-theme-toggle"'));
+    }
+
     public function testLegacySystemThemeMigratesOnceAfterTheSessionOpens(): void
     {
         $metadata = $this->container['userMetadataModel'];

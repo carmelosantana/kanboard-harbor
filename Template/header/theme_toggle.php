@@ -1,4 +1,8 @@
-<?php if ($this->user->getId() > 0): ?>
+<?php
+
+use Kanboard\Plugin\Harbor\Plugin;
+
+if ($this->user->getId() > 0): ?>
     <?php
     $theme = $this->user->getTheme();
     $themeLabels = ['light' => t('Light'), 'dark' => t('Dark'), 'auto' => t('Auto')];
@@ -21,4 +25,4 @@
         </form>
     </details>
 <?php endif ?>
-<?= $this->render('kanboard:header/user_dropdown') ?>
+<?php include Plugin::previousUserDropdown($this); ?>
