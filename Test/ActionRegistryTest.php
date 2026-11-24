@@ -36,6 +36,38 @@ class ActionRegistryTest extends Base
         }
     }
 
+    public function testStateGuardsDisableActionsAndPermissionsHideThem(): void
+    {
+        $this->container['hook']->on('kit:actions', fn () => [
+            $this->descriptor(),
+            $this->descriptor([
+                'id' => 'subtask.start',
+                'when' => 'status == done and owner_id != 0',
+                'can' => static fn (array $entity, array $user): bool => $entity['owner_id'] === $user['id'],
+            ]),
+            $this->descriptor(['id' => 'subtask.todo', 'when' => 'status == done and owner_id == 0']),
+            $this->descriptor(['id' => 'subtask.unknown', 'when' => 'missing != done']),
+            $this->descriptor(['id' => 'subtask.malformed', 'when' => 'status == done or owner_id == 1']),
+            $this->descriptor(['id' => 'subtask.view', 'when' => '']),
+        ]);
+        $registry = new ActionRegistry($this->container);
+        $entity = ['status' => 'done', 'owner_id' => 1];
+
+        $this->assertSame([
+            'subtask.done' => true,
+            'subtask.start' => false,
+            'subtask.todo' => true,
+            'subtask.unknown' => true,
+            'subtask.malformed' => true,
+            'subtask.view' => false,
+        ], array_column($registry->forSlot('subtask-row', $entity, ['id' => 1]), 'disabled', 'id'));
+
+        $this->assertNotContains('subtask.start', array_column(
+            $registry->forSlot('subtask-row', $entity, ['id' => 2]),
+            'id'
+        ));
+    }
+
     private function descriptor(array $overrides = []): array
     {
         return array_replace([

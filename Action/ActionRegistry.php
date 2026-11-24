@@ -12,10 +12,41 @@ class ActionRegistry extends Base
 
     public function forSlot(string $slot, array $entity, array $user): array
     {
-        return array_values(array_filter(
-            $this->descriptors(),
-            static fn (array $descriptor): bool => $descriptor['slot'] === $slot
-        ));
+        $actions = [];
+        foreach ($this->descriptors() as $descriptor) {
+            if ($descriptor['slot'] !== $slot) {
+                continue;
+            }
+
+            $descriptor['disabled'] = !$this->matchesWhen($descriptor['when'], $entity);
+            if ($descriptor['can']($entity, $user) === true) {
+                $actions[] = $descriptor;
+            }
+        }
+
+        return $actions;
+    }
+
+    private function matchesWhen(string $when, array $entity): bool
+    {
+        $when = trim($when);
+        if ($when === '') {
+            return true;
+        }
+
+        foreach (preg_split('/\s+and\s+/', $when) as $condition) {
+            if (!preg_match('/\A([a-zA-Z_][a-zA-Z0-9_]*)\s*(==|!=)\s*([a-zA-Z0-9_.-]+)\z/', trim($condition), $parts)) {
+                return false;
+            }
+
+            [, $field, $operator, $expected] = $parts;
+            $actual = $entity[$field] ?? null;
+            if (!is_scalar($actual) || (((string) $actual === $expected) !== ($operator === '=='))) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private function descriptors(): array
