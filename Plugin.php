@@ -93,10 +93,6 @@ class Plugin extends Base
         $this->hook->on('template:layout:css', [
             'template' => 'plugins/Harbor/Assets/css/login.css'
         ]);
-
-        $this->hook->on('template:layout:js', [
-            'template' => 'plugins/Harbor/Assets/js/enhancements.js'
-        ]);
     }
 
     /**
