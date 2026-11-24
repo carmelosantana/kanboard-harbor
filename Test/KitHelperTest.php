@@ -26,6 +26,60 @@ class KitHelperTest extends Base
         }
     }
 
+    public function testSubtaskProgressCombinesCompletionWithTheTimeBudget(): void
+    {
+        (new Plugin($this->container))->initialize();
+        $kit = $this->container['template']->kit;
+
+        $over = $kit->progress(4, 6, 9.2, 6);
+        $this->assertStringContainsString('data-state="over" style="--pct:100%"', $over);
+        $this->assertStringContainsString('4 of 6 subtasks', $over);
+        $this->assertStringContainsString('9.2h / 6h · over budget', $over);
+
+        $measured = $kit->progress(3, 5, 4.5, 8);
+        $this->assertStringContainsString('data-state="measured" style="--pct:60%"', $measured);
+        $this->assertStringContainsString('aria-valuenow="60"', $measured);
+        $this->assertStringContainsString('data-state="done" style="--pct:100%"', $kit->progress(7, 7, 3, 4));
+        $this->assertStringContainsString('data-state="measured" style="--pct:0%"', $kit->progress(0, 0, 0, 0));
+
+        $loading = $kit->progress(0, null, 0, 0);
+        $this->assertStringContainsString('data-state="indeterminate"', $loading);
+        $this->assertStringNotContainsString('aria-valuenow', $loading);
+    }
+
+    public function testKitEscapesUserControlledTextAndAttributes(): void
+    {
+        (new Plugin($this->container))->initialize();
+        $kit = $this->container['template']->kit;
+        $input = '"><img src=x onerror=alert(1)>';
+        $escaped = '&quot;&gt;&lt;img src=x onerror=alert(1)&gt;';
+
+        $components = [
+            [$kit->pill($input, $input), 2],
+            [$kit->callout($input, $input, $input), 3],
+            [$kit->empty($input, $input, $input), 3],
+            [$kit->toolbar([
+                'query' => $input,
+                'searchName' => $input,
+                'searchLabel' => $input,
+                'submitLabel' => $input,
+                'params' => [$input => $input],
+                'selects' => [['name' => $input, 'label' => $input, 'value' => $input, 'options' => [$input => $input]]],
+                'chips' => [['name' => $input, 'label' => $input, 'value' => $input, 'checked' => true]],
+                'resultCount' => $input,
+            ]), 15],
+        ];
+
+        foreach ($components as [$html, $count]) {
+            $this->assertStringNotContainsString('<img', $html);
+            $this->assertSame($count, substr_count($html, $escaped));
+        }
+
+        $this->assertStringContainsString('data-kind="row"', $kit->skeleton($input));
+        $button = '<button type="button">Clear filters</button>';
+        $this->assertStringContainsString($button, $kit->empty('No matches', 'Try another word.', static fn () => $button));
+    }
+
     public function testKitStylesExposeSlotsAndPopupStates(): void
     {
         $css = file_get_contents(__DIR__ . '/../Assets/css/kit.css');
