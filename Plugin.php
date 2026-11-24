@@ -268,7 +268,7 @@ class Plugin extends Base
      */
     public function getPluginVersion(): string
     {
-        return '2.0.0-dev';
+        return '2.0.0-beta.1';
     }
 
     /**

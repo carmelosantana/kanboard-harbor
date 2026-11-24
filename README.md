@@ -3,7 +3,7 @@
 Harbor is the flagship theme for Carmelo's Kanboard plugin suite and the UI kit the suite's plugins build on. It
 succeeds **ShadcnTheme**, which it replaces (`"replaces": ["ShadcnTheme"]`).
 
-> **Status:** 2.0.0-dev. Phase 1 covers the foundation, the kit core and actions.
+> **Status:** 2.0.0-beta.1. Phase 1 covers the foundation, the kit core and actions.
 
 ## Features
 
