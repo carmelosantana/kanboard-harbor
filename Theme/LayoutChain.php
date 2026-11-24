@@ -25,4 +25,16 @@ final class LayoutChain
     {
         return self::$previousPaths[$template];
     }
+
+    public static function criticalCss(): string
+    {
+        static $criticalCss;
+        if ($criticalCss === null) {
+            $tokens = file_get_contents(__DIR__ . '/../Assets/css/tokens.css');
+            preg_match('~/\* critical:start \*/(.*?)/\* critical:end \*/~s', $tokens, $match);
+            $criticalCss = trim($match[1]);
+        }
+
+        return $criticalCss;
+    }
 }

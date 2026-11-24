@@ -3,6 +3,7 @@
 namespace Kanboard\Plugin\Harbor;
 
 use Kanboard\Core\Plugin\Base;
+use Kanboard\Plugin\Harbor\Theme\LayoutChain;
 
 /**
  * Harbor Plugin (successor to ShadcnTheme)
@@ -102,6 +103,8 @@ class Plugin extends Base
      */
     private function hookTemplates()
     {
+        LayoutChain::register($this->template, 'Harbor:layout');
+
         // Inject synchronous no-FOUC script in <head> before first paint
         $this->hook->on('template:layout:head', [
             'template' => 'Harbor:layout/head'
