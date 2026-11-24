@@ -105,11 +105,6 @@ class Plugin extends Base
     {
         LayoutChain::register($this->template, 'Harbor:layout');
 
-        // Inject synchronous no-FOUC script in <head> before first paint
-        $this->hook->on('template:layout:head', [
-            'template' => 'Harbor:layout/head'
-        ]);
-
         // Add theme toggle to page header dropdown
         $this->hook->on('template:header:dropdown', [
             'template' => 'Harbor:header/theme_toggle'

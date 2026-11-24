@@ -95,15 +95,19 @@ class BrandingHandOverTest extends Base
         $this->assertStringNotContainsString('ShadcnTheme', $this->container['template']->getTemplateFile('header/title'));
     }
 
-    public function testHeadEmitsNoFaviconEvenWithAnOldUpload()
+    public function testLayoutKeepsCoreFaviconEvenWithAnOldUpload()
     {
         $this->container['configModel']->save(['shadcn_favicon_path' => 'shadcn-theme/favicon.png']);
         $this->container['memoryCache']->flush();
+        $this->initializePlugin();
 
-        $html = $this->container['template']->render('Harbor:layout/head', []);
+        $html = $this->container['template']->render('layout', [
+            'no_layout' => true,
+            'content_for_layout' => '',
+        ]);
 
-        $this->assertStringContainsString('theme-preload.js', $html);
-        $this->assertStringNotContainsString('rel="icon"', $html);
+        $this->assertStringContainsString('assets/img/adaptive-favicon.svg', $html);
+        $this->assertStringNotContainsString('shadcn-theme/favicon.png', $html);
         $this->assertStringNotContainsString('serveAsset', $html);
     }
 

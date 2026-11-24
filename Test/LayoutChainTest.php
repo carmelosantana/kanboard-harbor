@@ -144,6 +144,15 @@ class LayoutChainTest extends Base
         }
     }
 
+    public function testLegacyPreloadIsRemoved(): void
+    {
+        $this->registerHarbor();
+
+        $this->assertSame([], $this->container['hook']->getListeners('template:layout:head'));
+        $this->assertFileDoesNotExist(__DIR__ . '/../Template/layout/head.php');
+        $this->assertFileDoesNotExist(__DIR__ . '/../Assets/js/theme-preload.js');
+    }
+
     private function registerSteward(): void
     {
         $this->container['helper']->register('stewardFixture', FakeStewardLayoutHelper::class);
