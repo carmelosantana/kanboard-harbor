@@ -96,6 +96,24 @@ class SubtaskStatusControllerTest extends Base
         $this->assertForbidden();
     }
 
+    public function testActionPermissionCanDenyAProjectMember(): void
+    {
+        $this->addMember();
+        $this->container['hook']->on('kit:actions', static fn () => [[
+            'id' => 'subtask.done',
+            'label' => 'Mark done',
+            'slot' => 'subtask-row',
+            'key' => 'd',
+            'when' => 'status != done',
+            'route' => ['SubtaskStatusController', 'set', 'plugin' => 'Harbor', 'status' => 'done'],
+            'risk' => 'reversible',
+            'stepUp' => false,
+            'can' => static fn (): bool => false,
+        ]]);
+
+        $this->assertForbidden();
+    }
+
     public function testStartingUnassignedSubtaskAssignsAndTracksTheCurrentUser(): void
     {
         $this->addMember();
@@ -308,6 +326,9 @@ class SubtaskStatusControllerTest extends Base
 
     private function request(string $status, bool $csrf = true, ?int $taskId = null, string $method = 'POST'): array
     {
+        if (!isset($this->container['harborActionRegistry'])) {
+            (new Plugin($this->container))->initialize();
+        }
         unset($this->container['request'], $this->container['response']);
         $query = ['subtask_id' => $this->subtaskId, 'status' => $status];
         if ($taskId !== null) {

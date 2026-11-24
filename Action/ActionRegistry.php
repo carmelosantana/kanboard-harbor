@@ -6,6 +6,12 @@ use Kanboard\Core\Base;
 use Kanboard\Plugin\Harbor\Controller\SubtaskStatusController;
 use Throwable;
 
+/**
+ * Collects action descriptors from the kit:actions hook.
+ *
+ * Every action route must call execute() and reject a null result, or run the
+ * same descriptor's can callback itself before performing the action.
+ */
 class ActionRegistry extends Base
 {
     private const HOOK = 'kit:actions';

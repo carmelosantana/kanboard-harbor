@@ -63,17 +63,32 @@ class SubtaskStatusController extends BaseController
         $projectId = (int) $this->taskFinderModel->getProjectId($taskId);
         $userId = (int) $this->userSession->getId();
         if (filter_var($this->request->getStringParam('task_id', $taskId), FILTER_VALIDATE_INT) !== $taskId
-            || filter_var($this->request->getStringParam('project_id', $projectId), FILTER_VALIDATE_INT) !== $projectId
-            || !self::canSet($this->container, $projectId, $userId)) {
+            || filter_var($this->request->getStringParam('project_id', $projectId), FILTER_VALIDATE_INT) !== $projectId) {
+            throw new AccessForbiddenException();
+        }
+
+        $previousStatus = (int) $subtask['status'];
+        $startAllowed = !$this->subtaskStatusModel->hasSubtaskInProgress($userId);
+        $entity = [
+            'status' => array_search($previousStatus, self::STATUSES, true),
+            'subtask_id' => $id,
+            'task_id' => $taskId,
+            'project_id' => $projectId,
+            'start_allowed' => (int) $startAllowed,
+        ];
+        $actionId = match ($state) {
+            'todo' => 'subtask.todo',
+            'doing' => 'subtask.start',
+            'done' => 'subtask.done',
+        };
+        if ($this->harborActionRegistry->execute($actionId, $entity, $this->userSession->getAll() ?? []) === null) {
             throw new AccessForbiddenException();
         }
 
         $assigneeId = (int) $subtask['user_id'];
         $timerUserId = $assigneeId ?: $userId;
-        $previousStatus = (int) $subtask['status'];
         if ($previousStatus !== $status) {
-            if ($status === SubtaskModel::STATUS_INPROGRESS
-                && $this->subtaskStatusModel->hasSubtaskInProgress($userId)) {
+            if ($status === SubtaskModel::STATUS_INPROGRESS && !$startAllowed) {
                 $this->response->withHeader(self::START_ELIGIBILITY_HEADER, '0');
                 $this->response->json(['error' => 'Another subtask is already in progress'], 409);
                 return;
