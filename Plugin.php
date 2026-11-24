@@ -46,6 +46,7 @@ class Plugin extends Base
         
         // Hook into template overrides
         $this->hookTemplates();
+        $this->hook->on('template:config:sidebar', ['template' => 'Harbor:config/sidebar']);
         
         // Add custom routes
         $this->addRoutes();

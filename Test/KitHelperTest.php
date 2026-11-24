@@ -2,11 +2,42 @@
 
 require_once 'tests/units/Base.php';
 
+use Kanboard\Core\Controller\Runner;
+use Kanboard\Core\Http\Response;
+use Kanboard\Core\Security\Role;
+use Kanboard\Core\Session\SessionManager;
 use Kanboard\Plugin\Harbor\Plugin;
 use KanboardTests\units\Base;
 
 class KitHelperTest extends Base
 {
+    public function testNonAdminGetsA403FromTheStyleGuide(): void
+    {
+        $response = $this->prepareStyleGuideRequest(Role::APP_USER);
+        $response->expects($this->once())->method('html')->with(
+            $this->stringContains('Access Forbidden'),
+            403
+        );
+
+        (new Runner($this->container))->execute();
+    }
+
+    public function testAdminCanOpenTheStyleGuideFromTheSettingsSidebar(): void
+    {
+        $response = $this->prepareStyleGuideRequest(Role::APP_ADMIN);
+        $response->expects($this->once())->method('html')->with($this->callback(function (string $html): bool {
+            $this->assertStringContainsString('Style guide', $html);
+            $this->assertMatchesRegularExpression('~<a\b[^>]*\bhref="[^"]*Harbor[^"]*"[^>]*>Style guide</a>~', $html);
+            foreach (['pill', 'callout', 'progress', 'skeleton', 'empty', 'toolbar'] as $slot) {
+                $this->assertStringContainsString('data-slot="' . $slot . '"', $html);
+            }
+
+            return true;
+        }));
+
+        (new Runner($this->container))->execute();
+    }
+
     public function testTemplatesCanRenderAllSixKitSlots(): void
     {
         (new Plugin($this->container))->initialize();
@@ -108,5 +139,28 @@ class KitHelperTest extends Base
         $toaster = '<div data-slot="toaster" role="status" aria-live="polite"></div>';
         $this->assertSame(1, substr_count($html, $toaster));
         $this->assertMatchesRegularExpression('~<body\b.*' . preg_quote($toaster, '~') . '\s*</body>~s', $html);
+    }
+
+    private function prepareStyleGuideRequest(string $role): Response
+    {
+        (new Plugin($this->container))->initialize();
+        $userId = $role === Role::APP_ADMIN ? 1 : $this->container['userModel']->create([
+            'username' => 'kit-member',
+            'role' => $role,
+        ]);
+        $user = $this->container['userModel']->getById($userId);
+        $this->container['userSession']->initialize($user);
+        $this->container['sessionManager'] = $this->createMock(SessionManager::class);
+        $this->container['request']->setParams([
+            'controller' => 'HarborStyleGuideController',
+            'action' => 'show',
+            'plugin' => 'Harbor',
+        ]);
+        $this->container['router']->dispatch();
+
+        $response = $this->createMock(Response::class);
+        $this->container['response'] = $response;
+
+        return $response;
     }
 }

@@ -71,13 +71,12 @@ class BrandingHandOverTest extends Base
         $this->assertNotContains(Role::APP_PUBLIC, $this->container['applicationAccessMap']->getRoles('SettingsController', 'serveAsset'));
     }
 
-    public function testNoSettingsRoutesOrSidebar()
+    public function testNoLegacyBrandingSettingsRoutes()
     {
         $this->initializePlugin();
 
         $this->assertSame('DashboardController', $this->routedController('shadcn-theme/settings'));
         $this->assertSame('DashboardController', $this->routedController('shadcn-theme/upload'));
-        $this->assertSame([], $this->container['hook']->getListeners('template:config:sidebar'));
         $this->assertFalse(class_exists('Kanboard\Plugin\Harbor\Controller\SettingsController'));
     }
 
