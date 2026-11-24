@@ -8,7 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.0.0-dev] - Unreleased
 
 ### Changed
-- ShadcnTheme becomes Harbor: new name, namespace and routes (`harbor/theme`). ShadcnTheme 1.x is superseded.
+- Harbor succeeds ShadcnTheme 1.x with a new name, namespace, and theme route (`harbor/theme/:mode`, POST).
+- The theme toggle now saves the preference in Kanboard's core `theme` column.
+- Harbor migrates `shadcn_theme_mode` once per user when the core theme is `light`.
+  A user who chose core `light` and had ShadcnTheme set to `dark` moves to `dark`.
+  The legacy `system` setting becomes `auto`.
+- CSS previously injected by JavaScript now lives in `kit.css`.
 
 ## [1.2.0] - 2026-11-20
 
