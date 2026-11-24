@@ -38,6 +38,7 @@ class TokensTest extends TestCase
             ['card-foreground', 'card'],
             ['muted-foreground', 'background'],
             ['primary-foreground', 'primary'],
+            ['accent-foreground', 'accent'],
         ];
 
         foreach ($this->palettes() as $selector => $tokens) {
@@ -92,6 +93,15 @@ class TokensTest extends TestCase
         $this->assertSame(0, preg_match('/--(?:shadow[\w-]*|ring-shadow|task-accent)\s*:/', $kit));
         $this->assertFileDoesNotExist($directory . 'theme-light.css');
         $this->assertFileDoesNotExist($directory . 'theme-dark.css');
+    }
+
+    public function testActiveSidebarRowUsesTheAccentForeground(): void
+    {
+        $kit = file_get_contents(__DIR__ . '/../Assets/css/kit.css');
+        $this->assertMatchesRegularExpression(
+            '/:root \\.sidebar > ul li\\.active a\s*\\{[^}]*color:\s*var\\(--accent-foreground\\)/',
+            $kit
+        );
     }
 
     public function testThemeRetainsTheFocusRingForCoreControls(): void

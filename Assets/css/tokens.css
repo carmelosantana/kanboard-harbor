@@ -52,7 +52,7 @@ html {
   --secondary-foreground: var(--foreground);
   --muted: hsl(270 10% 30%);
   --muted-foreground: hsl(30 20% 75%);
-  --accent: hsl(350 15% 50%);
+  --accent: hsl(350 15% 54%);
   --accent-foreground: var(--background);
   --destructive: hsl(0 62.8% 30.6%);
   --destructive-foreground: hsl(0 0% 98%);

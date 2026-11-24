@@ -931,7 +931,7 @@ ul.listing ul,
 
 :root .sidebar > ul li:hover a,
 :root .sidebar > ul li.active a {
-  color: var(--foreground);
+  color: var(--accent-foreground);
   font-weight: 500;
   text-decoration: none;
 }
@@ -1326,7 +1326,7 @@ code {
 
 :root .task-board-icons-row .task-date-today {
   background-color: var(--accent);
-  color: var(--foreground);
+  color: var(--accent-foreground);
 }
 
 /* Task detail summary */
