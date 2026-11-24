@@ -198,6 +198,26 @@ test('an outside click leaves focus on the clicked control', () => {
   assert.equal(h.document.activeElement === outside, true);
 });
 
+test('Tab and Shift+Tab dismiss a menu after focus moves naturally', () => {
+  for (const shiftKey of [false, true]) {
+    const h = harness();
+    const anchor = h.element();
+    const item = h.element();
+    item.setAttribute('role', 'menuitem');
+    const menu = h.element([item]);
+    const next = h.element();
+    h.Kit.popup(anchor, menu, { preset: 'menu' });
+
+    const event = h.key(h.document, 'Tab', { shiftKey });
+    assert.equal(event.defaultPrevented, false);
+    assert.equal(menu.inert, false);
+    next.focus();
+    h.frame();
+    assert.equal(menu.getAttribute('data-state'), 'closed');
+    assert.equal(h.document.activeElement, next);
+  }
+});
+
 test('dialog wraps Tab in both directions and keeps focus inside until it closes', () => {
   const h = harness();
   const anchor = h.element();

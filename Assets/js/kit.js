@@ -151,6 +151,12 @@
                     var next = event.shiftKey ? items[items.length - 1] : items[0];
                     (next || panel).focus();
                 }
+            } else if (preset === 'menu' && event.key === 'Tab' && panel.contains(event.target)) {
+                // Let the browser move focus before making the menu inert.
+                var tabbing = motion;
+                window.requestAnimationFrame(function () {
+                    if (motion === tabbing) close(false);
+                });
             }
         }
 
