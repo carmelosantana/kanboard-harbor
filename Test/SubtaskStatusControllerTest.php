@@ -127,6 +127,12 @@ class SubtaskStatusControllerTest extends Base
         $this->assertForbidden();
     }
 
+    public function testApplicationAdminCanSetStatusWithoutProjectMembership(): void
+    {
+        $this->container['userSession']->initialize(['id' => 1, 'role' => Role::APP_ADMIN]);
+        $this->setStatus('done', false);
+    }
+
     public function testMismatchedTaskIsForbidden(): void
     {
         $this->addMember();

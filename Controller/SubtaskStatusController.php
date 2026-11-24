@@ -24,6 +24,9 @@ class SubtaskStatusController extends BaseController
         if ($projectId <= 0 || $userId <= 0) {
             return false;
         }
+        if ((int) $container['userSession']->getId() === $userId && $container['userSession']->isAdmin()) {
+            return true;
+        }
 
         $role = $container['projectUserRoleModel']->getUserRole($projectId, $userId);
         if ($container['role']->isCustomProjectRole($role)) {
