@@ -1,6 +1,7 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
+use Kanboard\Plugin\Harbor\Test\Support\Contrast;
 
 class TokensTest extends TestCase
 {
@@ -27,6 +28,44 @@ class TokensTest extends TestCase
         foreach ($palettes as $selector => $tokens) {
             $this->assertSame([], array_values(array_diff($required, array_keys($tokens))), $selector);
             $this->assertEqualsCanonicalizing(array_keys($palettes[':root']), array_keys($tokens), $selector);
+        }
+    }
+
+    public function testTextMeetsWcagAaContrastInEachPalette(): void
+    {
+        require_once __DIR__ . '/Support/Contrast.php';
+
+        $pairs = [
+            ['foreground', 'background'],
+            ['card-foreground', 'card'],
+            ['muted-foreground', 'background'],
+            ['primary-foreground', 'primary'],
+        ];
+
+        foreach ($this->palettes() as $selector => $tokens) {
+            foreach ($pairs as [$text, $surface]) {
+                $ratio = Contrast::ratio($this->color($tokens, $text), $this->color($tokens, $surface));
+                $this->assertGreaterThanOrEqual(
+                    4.5,
+                    $ratio,
+                    sprintf('%s: --%s on --%s has %.2f:1 contrast', $selector, $text, $surface, $ratio)
+                );
+            }
+        }
+    }
+
+    private function color(array $tokens, string $token): string
+    {
+        $seen = [];
+        while (true) {
+            $this->assertArrayHasKey($token, $tokens);
+            $this->assertArrayNotHasKey($token, $seen, "Circular color alias --$token");
+            $seen[$token] = true;
+            $value = $tokens[$token];
+            if (!preg_match('/^var\(--([\w-]+)\)$/', $value, $match)) {
+                return $value;
+            }
+            $token = $match[1];
         }
     }
 
