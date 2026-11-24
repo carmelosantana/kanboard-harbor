@@ -1,5 +1,5 @@
 /*!
- * ShadcnTheme - Theme Switcher
+ * Harbor - Theme Switcher
  * Modern theme switching with system preference detection
  * Author: Carmelo Santana <carmelo@carmelosantana.com>
  * License: MIT

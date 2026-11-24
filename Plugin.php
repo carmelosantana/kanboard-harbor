@@ -1,20 +1,20 @@
 <?php
 
-namespace Kanboard\Plugin\ShadcnTheme;
+namespace Kanboard\Plugin\Harbor;
 
 use Kanboard\Core\Plugin\Base;
 
 /**
- * ShadcnTheme Plugin
+ * Harbor Plugin (successor to ShadcnTheme)
  *
  * A modern Kanboard theme inspired by shadcn/ui design principles.
  * Features light/dark mode toggle with system preference detection,
  * beautiful typography, refined color palette, and improved UX.
  *
- * @package  Kanboard\Plugin\ShadcnTheme
+ * @package  Kanboard\Plugin\Harbor
  * @author   Carmelo Santana <carmelo@carmelosantana.com>
  * @license  MIT License
- * @link     https://github.com/carmelosantana/kanboard-shadcn-theme
+ * @link     https://github.com/carmelosantana/kanboard-harbor
  */
 class Plugin extends Base
 {
@@ -73,29 +73,29 @@ class Plugin extends Base
     {
         // Add shadcn theme CSS
         $this->hook->on('template:layout:css', [
-            'template' => 'plugins/ShadcnTheme/Assets/css/shadcn-light.css'
+            'template' => 'plugins/Harbor/Assets/css/theme-light.css'
         ]);
         
         $this->hook->on('template:layout:css', [
-            'template' => 'plugins/ShadcnTheme/Assets/css/shadcn-dark.css'
+            'template' => 'plugins/Harbor/Assets/css/theme-dark.css'
         ]);
         
         $this->hook->on('template:layout:css', [
-            'template' => 'plugins/ShadcnTheme/Assets/css/shadcn-core.css'
+            'template' => 'plugins/Harbor/Assets/css/kit.css'
         ]);
 
         // Login card styles (injected on every page; rules are scoped to .form-login)
         $this->hook->on('template:layout:css', [
-            'template' => 'plugins/ShadcnTheme/Assets/css/shadcn-login.css'
+            'template' => 'plugins/Harbor/Assets/css/login.css'
         ]);
 
         // Add theme switching JavaScript
         $this->hook->on('template:layout:js', [
-            'template' => 'plugins/ShadcnTheme/Assets/js/theme-switcher.js'
+            'template' => 'plugins/Harbor/Assets/js/theme-switcher.js'
         ]);
         
         $this->hook->on('template:layout:js', [
-            'template' => 'plugins/ShadcnTheme/Assets/js/shadcn-enhancements.js'
+            'template' => 'plugins/Harbor/Assets/js/enhancements.js'
         ]);
     }
 
@@ -108,17 +108,17 @@ class Plugin extends Base
     {
         // Inject synchronous no-FOUC script in <head> before first paint
         $this->hook->on('template:layout:head', [
-            'template' => 'ShadcnTheme:layout/head'
+            'template' => 'Harbor:layout/head'
         ]);
 
         // Add theme toggle to page header dropdown
         $this->hook->on('template:header:dropdown', [
-            'template' => 'ShadcnTheme:header/theme_toggle'
+            'template' => 'Harbor:header/theme_toggle'
         ]);
 
         // Login card header (Steward's logo or site name, else the product name, + subtitle)
         $this->hook->on('template:auth:login-form:before', [
-            'template' => 'ShadcnTheme:auth/login_header'
+            'template' => 'Harbor:auth/login_header'
         ]);
     }
 
@@ -149,8 +149,8 @@ class Plugin extends Base
      */
     private function addRoutes()
     {
-        $this->route->addRoute('theme/set/:mode', 'ShadcnTheme:ThemeController', 'setTheme');
-        $this->route->addRoute('theme/get', 'ShadcnTheme:ThemeController', 'getTheme');
+        $this->route->addRoute('harbor/theme/:mode', 'Harbor:ThemeController', 'setTheme');
+        $this->route->addRoute('harbor/theme', 'Harbor:ThemeController', 'getTheme');
     }
 
     /**
@@ -160,7 +160,7 @@ class Plugin extends Base
      */
     public function getPluginName(): string
     {
-        return 'ShadcnTheme';
+        return 'Harbor';
     }
 
     /**
@@ -170,7 +170,7 @@ class Plugin extends Base
      */
     public function getPluginDescription(): string
     {
-        return 'Modern Kanboard theme inspired by shadcn/ui design principles with light/dark mode toggle and system preference detection.';
+        return 'The suite\'s flagship theme and UI kit: Newburgh and Shadcn presets, light and dark, no-flicker loading.';
     }
 
     /**
@@ -190,7 +190,7 @@ class Plugin extends Base
      */
     public function getPluginVersion(): string
     {
-        return '1.2.0';
+        return '2.0.0-dev';
     }
 
     /**
@@ -210,7 +210,7 @@ class Plugin extends Base
      */
     public function getPluginHomepage(): string
     {
-        return 'https://github.com/carmelosantana/kanboard-shadcn-theme';
+        return 'https://github.com/carmelosantana/kanboard-harbor';
     }
 
     /**

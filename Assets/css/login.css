@@ -1,5 +1,5 @@
 /*!
- * ShadcnTheme Login Card
+ * Harbor Login Card
  * Centered auth card for the Kanboard login page
  * Author: Carmelo Santana <carmelo@carmelosantana.com>
  * License: MIT
@@ -74,12 +74,12 @@ body:has(.form-login) .container {
    FORM ELEMENTS
    ================================ */
 
-/* Labels — type and spacing come from shadcn-core.css. */
+/* Labels — type and spacing come from kit.css. */
 .form-login label:not(:has(input[type="checkbox"])) {
   display: block;
 }
 
-/* Inputs take their size and focus ring from shadcn-core.css; here they
+/* Inputs take their size and focus ring from kit.css; here they
    only stretch to the card width. */
 .form-login input[type="text"],
 .form-login input[type="password"],

@@ -1,5 +1,5 @@
 /*!
- * ShadcnTheme — theme preload (no-FOUC)
+ * Harbor — theme preload (no-FOUC)
  *
  * Loaded as a BLOCKING external <script> in <head> (see Template/layout/head.php)
  * so it runs before the browser's first paint. It stamps the resolved theme class

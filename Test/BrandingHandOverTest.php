@@ -9,7 +9,7 @@ require_once 'tests/units/Base.php';
 
 use Kanboard\Core\Base as CoreBase;
 use Kanboard\Core\Security\Role;
-use Kanboard\Plugin\ShadcnTheme\Plugin;
+use Kanboard\Plugin\Harbor\Plugin;
 use KanboardTests\units\Base;
 
 /** Stands in for Steward's `stewardBranding` helper. */
@@ -59,7 +59,7 @@ class BrandingHandOverTest extends Base
 
     private function loginHeader(): string
     {
-        return $this->container['template']->render('ShadcnTheme:auth/login_header', []);
+        return $this->container['template']->render('Harbor:auth/login_header', []);
     }
 
     public function testNoServeAssetRoute()
@@ -77,14 +77,14 @@ class BrandingHandOverTest extends Base
         $this->assertSame('DashboardController', $this->routedController('shadcn-theme/settings'));
         $this->assertSame('DashboardController', $this->routedController('shadcn-theme/upload'));
         $this->assertSame([], $this->container['hook']->getListeners('template:config:sidebar'));
-        $this->assertFalse(class_exists('Kanboard\Plugin\ShadcnTheme\Controller\SettingsController'));
+        $this->assertFalse(class_exists('Kanboard\Plugin\Harbor\Controller\SettingsController'));
     }
 
     public function testThemeRoutesAndToggleStay()
     {
         $this->initializePlugin();
 
-        $this->assertSame('ShadcnTheme:ThemeController', $this->routedController('theme/get'));
+        $this->assertSame('Harbor:ThemeController', $this->routedController('harbor/theme'));
         $this->assertNotEmpty($this->container['hook']->getListeners('template:header:dropdown'));
     }
 
@@ -100,7 +100,7 @@ class BrandingHandOverTest extends Base
         $this->container['configModel']->save(['shadcn_favicon_path' => 'shadcn-theme/favicon.png']);
         $this->container['memoryCache']->flush();
 
-        $html = $this->container['template']->render('ShadcnTheme:layout/head', []);
+        $html = $this->container['template']->render('Harbor:layout/head', []);
 
         $this->assertStringContainsString('theme-preload.js', $html);
         $this->assertStringNotContainsString('rel="icon"', $html);
@@ -158,15 +158,6 @@ class BrandingHandOverTest extends Base
 
         $this->assertSame('shadcn-theme/logo.png', $this->container['configModel']->getOption('shadcn_logo_path'));
         $this->assertSame('shadcn-theme/favicon.png', $this->container['configModel']->getOption('shadcn_favicon_path'));
-    }
-
-    public function testVersionIs120Everywhere()
-    {
-        $json = json_decode(file_get_contents(__DIR__.'/../plugin.json'), true);
-
-        $this->assertSame('1.2.0', (new Plugin($this->container))->getPluginVersion());
-        $this->assertSame('1.2.0', $json['version']);
-        $this->assertStringContainsString('## [1.2.0] - 2026-11-20', file_get_contents(__DIR__.'/../CHANGELOG.md'));
     }
 
     public function testRecommendsSteward()

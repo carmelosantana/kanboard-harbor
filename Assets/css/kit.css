@@ -1,10 +1,10 @@
 /*!
- * ShadcnTheme Core CSS
+ * Harbor Core CSS
  * Modern Kanboard theme inspired by shadcn/ui design principles
  * Author: Carmelo Santana <carmelo@carmelosantana.com>
  * License: MIT
  *
- * Colors live in shadcn-light.css / shadcn-dark.css (tokens only). Everything
+ * Colors live in theme-light.css / theme-dark.css (tokens only). Everything
  * about size, spacing and shape lives here, once, for both themes.
  */
 
@@ -998,7 +998,7 @@ code {
    contrasting check glyph (dark check on the near-white fill in dark mode,
    light check on the near-black fill in light mode). So --primary is kept as
    the accent here. The login page uses a custom appearance:none checkbox whose
-   check is drawn manually — that one is fixed separately in shadcn-login.css
+   check is drawn manually — that one is fixed separately in login.css
    (mask-image + --primary-foreground) so its check follows the token per theme. */
 /* kbx-checkbox — styled checkbox */
 .kbx-checkbox {

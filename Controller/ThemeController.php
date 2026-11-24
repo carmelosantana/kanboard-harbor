@@ -1,15 +1,15 @@
 <?php
 
-namespace Kanboard\Plugin\ShadcnTheme\Controller;
+namespace Kanboard\Plugin\Harbor\Controller;
 
 use Kanboard\Controller\BaseController;
 
 /**
  * Theme Controller
  *
- * Handles theme switching functionality for the ShadcnTheme plugin.
+ * Handles theme switching functionality for the Harbor plugin.
  *
- * @package Kanboard\Plugin\ShadcnTheme\Controller
+ * @package Kanboard\Plugin\Harbor\Controller
  * @author  Carmelo Santana
  */
 class ThemeController extends BaseController

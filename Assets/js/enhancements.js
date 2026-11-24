@@ -1,5 +1,5 @@
 /*!
- * ShadcnTheme - UI Enhancements
+ * Harbor - UI Enhancements
  * Modern UI improvements inspired by shadcn/ui
  * Author: Carmelo Santana <carmelo@carmelosantana.com>
  * License: MIT

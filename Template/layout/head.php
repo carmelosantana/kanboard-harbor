@@ -5,4 +5,4 @@
  * cache when the file changes. */
 $shadcnPreloadFile = dirname(__DIR__, 2) . '/Assets/js/theme-preload.js';
 ?>
-<script src="<?= $this->url->dir() ?>plugins/ShadcnTheme/Assets/js/theme-preload.js?<?= @filemtime($shadcnPreloadFile) ?>"></script>
+<script src="<?= $this->url->dir() ?>plugins/Harbor/Assets/js/theme-preload.js?<?= @filemtime($shadcnPreloadFile) ?>"></script>

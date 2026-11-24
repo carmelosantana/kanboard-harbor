@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Unit tests for ShadcnTheme ThemeController.
+ * Unit tests for Harbor ThemeController.
  *
  * Covers:
  *  - getTheme() returns 'dark' (default) when no preference stored
@@ -10,7 +10,7 @@
  *  - getTheme() for a guest user (userId = 0) falls back to $_SESSION
  *  - setTheme() for a guest user writes to $_SESSION
  *
- * Run via: ./testing/run-plugin-tests.sh ShadcnTheme
+ * Run via: ./testing/run-plugin-tests.sh Harbor
  *
  * Strategy: we do NOT exercise the JSON response path (response->json() calls header()
  * which is fatal in CLI). Instead we test the model layer directly — the same
@@ -23,7 +23,7 @@ require_once 'tests/units/Base.php';
 use KanboardTests\units\Base;
 use Kanboard\Core\Controller\AccessForbiddenException;
 use Kanboard\Model\UserMetadataModel;
-use Kanboard\Plugin\ShadcnTheme\Controller\ThemeController;
+use Kanboard\Plugin\Harbor\Controller\ThemeController;
 
 class ThemeControllerTest extends Base
 {

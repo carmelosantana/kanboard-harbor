@@ -2,7 +2,7 @@
 
 require_once 'tests/units/Base.php';
 
-use Kanboard\Plugin\ShadcnTheme\Plugin;
+use Kanboard\Plugin\Harbor\Plugin;
 use KanboardTests\units\Base;
 
 class PluginTest extends Base
@@ -22,18 +22,37 @@ class PluginTest extends Base
     public function testPluginVersionValue()
     {
         $plugin = new Plugin($this->container);
-        $this->assertSame('1.2.0', $plugin->getPluginVersion());
+        $this->assertSame('2.0.0-dev', $plugin->getPluginVersion());
     }
 
     public function testPluginNameValue()
     {
         $plugin = new Plugin($this->container);
-        $this->assertSame('ShadcnTheme', $plugin->getPluginName());
+        $this->assertSame('Harbor', $plugin->getPluginName());
     }
 
     public function testPluginAuthor()
     {
         $plugin = new Plugin($this->container);
         $this->assertNotEmpty($plugin->getPluginAuthor());
+    }
+
+    private function manifest(): array
+    {
+        return json_decode((string) file_get_contents(__DIR__ . '/../plugin.json'), true);
+    }
+
+    public function testVersionMatchesPluginJson()
+    {
+        $plugin = new Plugin($this->container);
+        $this->assertSame($this->manifest()['version'], $plugin->getPluginVersion());
+    }
+
+    public function testDeclaresReplacesShadcnTheme()
+    {
+        $m = $this->manifest();
+        $this->assertSame('Harbor', $m['name']);
+        $this->assertSame(['ShadcnTheme'], $m['replaces']);
+        $this->assertSame(['BattleLobby'], $m['conflicts']);
     }
 }
