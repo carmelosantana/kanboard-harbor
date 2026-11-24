@@ -8,6 +8,7 @@ use Kanboard\Core\Http\Response;
 use Kanboard\Plugin\Harbor\Controller\ThemeController;
 use Kanboard\Plugin\Harbor\Plugin;
 use KanboardTests\units\Base;
+use Symfony\Contracts\EventDispatcher\Event;
 
 class ThemeControllerTest extends Base
 {
@@ -102,6 +103,58 @@ class ThemeControllerTest extends Base
         }
         $this->assertStringContainsString('dropdown-menu-link-icon', $html);
         $this->assertStringNotContainsString('<style', $html);
+    }
+
+    public function testLegacySystemThemeMigratesOnceAfterTheSessionOpens(): void
+    {
+        $metadata = $this->container['userMetadataModel'];
+        $users = $this->container['userModel'];
+        $session = $this->container['userSession'];
+        $metadata->save(1, ['shadcn_theme_mode' => 'system']);
+        (new Plugin($this->container))->initialize();
+
+        $this->assertFalse($metadata->exists(1, 'harbor_migrated_theme'));
+        $session->initialize($users->getById(1));
+        $session->setPostAuthenticationAsValidated();
+        $this->dispatcher->dispatch(new Event(), 'app.bootstrap');
+
+        $this->assertSame('auto', $users->getById(1)['theme']);
+        $this->assertSame('auto', $session->getTheme());
+        $this->assertSame('1', (string) $metadata->get(1, 'harbor_migrated_theme'));
+        $this->assertTrue($session->isPostAuthenticationValidated());
+
+        $users->update(['id' => 1, 'theme' => 'light']);
+        $metadata->save(1, ['shadcn_theme_mode' => 'dark']);
+        $this->dispatcher->dispatch(new Event(), 'app.bootstrap');
+
+        $this->assertSame('light', $users->getById(1)['theme']);
+        $this->assertSame('light', $session->getTheme());
+    }
+
+    public function testMigrationPreservesDarkEvenWhenTheSessionStillSaysLight(): void
+    {
+        $metadata = $this->container['userMetadataModel'];
+        $users = $this->container['userModel'];
+        $oldSession = $users->getById(1);
+        $users->update(['id' => 1, 'theme' => 'dark']);
+        $this->container['userSession']->initialize($oldSession);
+        $metadata->save(1, ['shadcn_theme_mode' => 'system']);
+
+        (new Plugin($this->container))->initialize();
+
+        $this->assertSame('dark', $users->getById(1)['theme']);
+        $this->assertSame('1', (string) $metadata->get(1, 'harbor_migrated_theme'));
+    }
+
+    public function testMigrationMarksAnAccountWithoutLegacyMetadata(): void
+    {
+        $users = $this->container['userModel'];
+        (new Plugin($this->container))->initialize();
+        $this->container['userSession']->initialize($users->getById(1));
+        $this->dispatcher->dispatch(new Event(), 'auth.success');
+
+        $this->assertSame('light', $users->getById(1)['theme']);
+        $this->assertSame('1', (string) $this->container['userMetadataModel']->get(1, 'harbor_migrated_theme'));
     }
 
     private function prepareRequest(

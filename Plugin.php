@@ -3,6 +3,8 @@
 namespace Kanboard\Plugin\Harbor;
 
 use Kanboard\Core\Plugin\Base;
+use Kanboard\Core\Security\AuthenticationManager;
+use Kanboard\Model\UserModel;
 use Kanboard\Plugin\Harbor\Theme\LayoutChain;
 
 /**
@@ -26,8 +28,10 @@ class Plugin extends Base
      */
     public function initialize()
     {
-        // Initialize theme preferences
-        $this->initializeTheme();
+        $this->migrateThemePreference();
+        // At normal plugin load the session has yet to open.
+        $this->on('app.bootstrap', $this->migrateThemePreference(...));
+        $this->on(AuthenticationManager::EVENT_SUCCESS, $this->migrateThemePreference(...));
         
         // Hook into CSS and JS assets
         $this->hookAssets();
@@ -35,34 +39,38 @@ class Plugin extends Base
         // Hook into template overrides
         $this->hookTemplates();
         
-        // Hook into user preferences
-        $this->hookUserPreferences();
-        
         // Add custom routes
         $this->addRoutes();
     }
 
-    /**
-     * Initialize theme configuration
-     *
-     * @return void
-     */
-    private function initializeTheme()
+    private function migrateThemePreference(): void
     {
-        // Check if user has theme preference stored
-        $currentUserId = $this->userSession->getId();
-        if ($currentUserId) {
-            $themePreference = $this->userMetadataModel->get(
-                $currentUserId,
-                'shadcn_theme_mode',
-                'dark'
-            );
-
-            // Set theme mode in session for JavaScript access
-            $_SESSION['shadcn_theme_mode'] = $themePreference;
-        } else {
-            $_SESSION['shadcn_theme_mode'] = 'dark';
+        $userId = $this->userSession->getId();
+        $marker = 'harbor_migrated_theme';
+        if ($userId <= 0 || $this->userMetadataModel->exists($userId, $marker)) {
+            return;
         }
+
+        $legacyTheme = $this->userMetadataModel->get($userId, 'shadcn_theme_mode');
+        $theme = $legacyTheme === 'system' ? 'auto' : $legacyTheme;
+        if (in_array($theme, ['dark', 'auto'], true)) {
+            // Check the stored theme in the write itself in case another session changed it.
+            $saved = $this->db->table(UserModel::TABLE)
+                ->eq('id', $userId)
+                ->eq('theme', 'light')
+                ->update(['theme' => $theme]);
+            if (!$saved) {
+                return;
+            }
+
+            $postAuthValidated = $this->userSession->isPostAuthenticationValidated();
+            $this->userSession->refresh($userId);
+            if ($postAuthValidated) {
+                $this->userSession->setPostAuthenticationAsValidated();
+            }
+        }
+
+        $this->userMetadataModel->save($userId, [$marker => '1']);
     }
 
     /**
@@ -107,26 +115,6 @@ class Plugin extends Base
         $this->hook->on('template:auth:login-form:before', [
             'template' => 'Harbor:auth/login_header'
         ]);
-    }
-
-    /**
-     * Hook user preference handling
-     *
-     * @return void
-     */
-    private function hookUserPreferences()
-    {
-        // Add theme preference to user metadata when changed
-        $this->hook->on('model:user-metadata:save', function($userId, $key, $value) {
-            if ($key === 'shadcn_theme_mode') {
-                // Validate theme mode
-                if (!in_array($value, ['light', 'dark', 'system'], true)) {
-                    $value = 'system';
-                }
-                return $value;
-            }
-            return null;
-        });
     }
 
     /**
