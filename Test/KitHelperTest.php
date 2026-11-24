@@ -128,6 +128,14 @@ class KitHelperTest extends Base
         $this->assertMatchesRegularExpression('/prefers-reduced-motion: reduce[^}]+data-starting-style[^}]+animation: none/s', $css);
     }
 
+    public function testLoadingAndPopupMotionPreserveLayout(): void
+    {
+        $css = file_get_contents(__DIR__ . '/../Assets/css/kit.css');
+
+        $this->assertMatchesRegularExpression('/\[data-slot="skeleton"\]\s*\{[^}]*animation: harbor-skeleton-reveal 300ms steps\(1, end\)/', $css);
+        $this->assertMatchesRegularExpression('/@keyframes harbor-popup-in\s*\{[^}]*\}[^}]*to\s*\{[^}]*transform: none/', $css);
+    }
+
     public function testLayoutRendersOneEmptyPoliteToasterInsideTheBody(): void
     {
         (new Plugin($this->container))->initialize();

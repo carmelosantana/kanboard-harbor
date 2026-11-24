@@ -74,11 +74,11 @@ h6 { font-size: 0.8125rem; line-height: 1.45; font-weight: 600; }
 ) {
   box-sizing: border-box;
   max-width: 100%;
-  border: 1px solid var(--input);
-  border-radius: var(--radius-md);
-  background-color: var(--input-surface);
-  color: var(--foreground);
-  box-shadow: var(--shadow-xs);
+  border: 1px solid var(--input, #ccc);
+  border-radius: var(--radius-md, .375rem);
+  background-color: var(--input-surface, #fff);
+  color: var(--foreground, #333);
+  box-shadow: var(--shadow-xs, none);
   font-size: var(--control-font-size);
   line-height: 1.25rem;
   padding: 0.25rem var(--control-px);
@@ -102,7 +102,7 @@ h6 { font-size: 0.8125rem; line-height: 1.45; font-weight: 600; }
   input[type="tel"],
   select:not([multiple])
 ) {
-  height: var(--control-height);
+  height: var(--control-height, 2.25rem);
   min-height: 0;
 }
 
@@ -128,7 +128,7 @@ h6 { font-size: 0.8125rem; line-height: 1.45; font-weight: 600; }
 }
 
 :root :is(input, textarea)::placeholder {
-  color: var(--muted-foreground);
+  color: var(--muted-foreground, #555);
   opacity: 1;
 }
 
@@ -146,9 +146,9 @@ h6 { font-size: 0.8125rem; line-height: 1.45; font-weight: 600; }
   select,
   textarea
 ):focus {
-  color: var(--foreground);
-  border-color: var(--ring);
-  box-shadow: var(--ring-shadow);
+  color: var(--foreground, #333);
+  border-color: var(--ring, #2472a4);
+  box-shadow: var(--ring-shadow, 0 0 0 2px #2472a4);
   outline: none;
 }
 
@@ -1541,6 +1541,12 @@ code {
   padding: var(--space-3, .75rem);
   border: 1px solid var(--row-line, #ddd);
   border-radius: var(--radius-lg, .5rem);
+  animation: harbor-skeleton-reveal 300ms steps(1, end) both;
+}
+
+@keyframes harbor-skeleton-reveal {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 [data-slot="skeleton"][data-kind="row"] {
@@ -1638,15 +1644,8 @@ code {
   font-variant-numeric: tabular-nums;
 }
 
-:root :is([data-slot="control"], [data-slot="toolbar-search"]):is(input, select, textarea) {
-  background-color: var(--input-surface, #fff);
-  border-color: var(--input, #ccc);
-  color: var(--foreground, #333);
-}
-
-:root :is(input, select, textarea)[data-slot="control"]:focus,
-:root [data-slot="toolbar-search"]:focus {
-  border-color: var(--ring, #2472a4);
+[data-slot="toolbar"] [data-slot="control"] {
+  margin: 0;
 }
 
 :is([data-slot="tabs"], [data-slot="segmented"]) {
@@ -1753,7 +1752,7 @@ body:has([data-popup-preset="dialog"]:not([hidden]))::before {
 }
 
 :is([data-slot="popup"], [data-popup-preset]):is([data-starting-style], [data-state="open"]) {
-  animation: harbor-popup-in var(--motion-fast, 150ms ease-out) both;
+  animation: harbor-popup-in var(--motion-fast, 150ms ease-out);
 }
 
 :is([data-slot="popup"], [data-popup-preset])[data-ending-style] {
@@ -1762,7 +1761,7 @@ body:has([data-popup-preset="dialog"]:not([hidden]))::before {
 
 @keyframes harbor-popup-in {
   from { opacity: 0; transform: translateY(-.25rem); }
-  to { opacity: 1; transform: translateY(0); }
+  to { opacity: 1; transform: none; }
 }
 
 @keyframes harbor-popup-out {
