@@ -97,6 +97,10 @@ class Plugin extends Base
             'template' => 'plugins/Harbor/Assets/css/kit.css'
         ]);
 
+        $this->hook->on('template:layout:js', [
+            'template' => 'plugins/Harbor/Assets/js/kit.js',
+        ]);
+
         // Core's asset hook takes static paths. Register them after the router dispatches.
         $this->on('app.bootstrap', function (): void {
             $controller = $this->router->getController();
