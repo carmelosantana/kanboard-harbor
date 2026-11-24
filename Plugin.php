@@ -26,8 +26,13 @@ use WeakMap;
  */
 class Plugin extends Base
 {
+    private const LEGACY_THEME_KEY = 'shadcn_theme_mode';
+
     /** @var WeakMap<Template, string>|null */
     private static ?WeakMap $previousDropdowns = null;
+
+    /** @var WeakMap<\PicoDb\Database, bool>|null */
+    private static ?WeakMap $shadcnHistory = null;
 
     /**
      * Initialize the plugin
@@ -111,7 +116,11 @@ class Plugin extends Base
             return;
         }
 
-        $legacyTheme = $this->userMetadataModel->get($userId, 'shadcn_theme_mode');
+        $legacyTheme = $this->userMetadataModel->get($userId, self::LEGACY_THEME_KEY, null);
+        if ($legacyTheme === null && $this->hasShadcnHistory()
+            && !$this->userMetadataModel->exists($userId, self::LEGACY_THEME_KEY)) {
+            $legacyTheme = 'dark';
+        }
         $theme = $legacyTheme === 'system' ? 'auto' : $legacyTheme;
         if (in_array($theme, ['dark', 'auto'], true)) {
             // Check the stored theme in the write itself in case another session changed it.
@@ -130,6 +139,23 @@ class Plugin extends Base
         if ($this->userMetadataModel->save($userId, [$marker => '1'])) {
             $_SESSION[$marker] = $userId;
         }
+    }
+
+    private function hasShadcnHistory(): bool
+    {
+        self::$shadcnHistory ??= new WeakMap();
+        return self::$shadcnHistory[$this->db] ??= $this->detectShadcnHistory();
+    }
+
+    private function detectShadcnHistory(): bool
+    {
+        foreach (array_keys($this->configModel->getAll()) as $option) {
+            if (str_starts_with($option, 'shadcn_')) {
+                return true;
+            }
+        }
+
+        return $this->db->table('user_has_metadata')->eq('name', self::LEGACY_THEME_KEY)->exists();
     }
 
     /**

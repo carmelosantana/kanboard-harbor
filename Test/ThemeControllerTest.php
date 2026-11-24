@@ -161,15 +161,56 @@ class ThemeControllerTest extends Base
         $this->assertSame('1', (string) $metadata->get(1, 'harbor_migrated_theme'));
     }
 
-    public function testMigrationMarksAnAccountWithoutLegacyMetadata(): void
-    {
+    /** @dataProvider noLegacyPreferenceCases */
+    public function testMigrationMarksAnAccountWithoutLegacyMetadata(
+        ?string $option,
+        bool $anotherUserHasLegacyTheme,
+        string $coreTheme,
+        string $expectedTheme
+    ): void {
         $users = $this->container['userModel'];
+        $metadata = $this->container['userMetadataModel'];
+        if ($option !== null) {
+            $this->assertTrue($this->container['configModel']->save([$option => '']));
+        }
+        if ($anotherUserHasLegacyTheme) {
+            $otherUserId = $users->create(['username' => 'legacy-user']);
+            $this->assertGreaterThan(1, $otherUserId);
+            $this->assertTrue($metadata->save($otherUserId, ['shadcn_theme_mode' => 'system']));
+        }
+        $users->update(['id' => 1, 'theme' => $coreTheme]);
+
         (new Plugin($this->container))->initialize();
         $this->container['userSession']->initialize($users->getById(1));
         $this->dispatcher->dispatch(new Event(), 'auth.success');
 
+        $this->assertSame($expectedTheme, $users->getById(1)['theme']);
+        $this->assertSame($expectedTheme, $this->container['userSession']->getTheme());
+        $this->assertSame('1', (string) $metadata->get(1, 'harbor_migrated_theme'));
+    }
+
+    public static function noLegacyPreferenceCases(): array
+    {
+        return [
+            'legacy config option' => ['shadcn_logo_path', false, 'light', 'dark'],
+            'another user has legacy metadata' => [null, true, 'light', 'dark'],
+            'fresh install' => [null, false, 'light', 'light'],
+            'unrelated config option' => ['shadcnXlogo_path', false, 'light', 'light'],
+            'core dark already chosen' => ['shadcn_logo_path', false, 'dark', 'dark'],
+        ];
+    }
+
+    public function testMigrationPreservesExplicitLegacyLight(): void
+    {
+        $users = $this->container['userModel'];
+        $metadata = $this->container['userMetadataModel'];
+        $metadata->save(1, ['shadcn_theme_mode' => 'light']);
+        $this->container['userSession']->initialize($users->getById(1));
+
+        (new Plugin($this->container))->initialize();
+
         $this->assertSame('light', $users->getById(1)['theme']);
-        $this->assertSame('1', (string) $this->container['userMetadataModel']->get(1, 'harbor_migrated_theme'));
+        $this->assertSame('1', (string) $metadata->get(1, 'harbor_migrated_theme'));
     }
 
     public function testMigrationSkipsMetadataQueriesOnTheSecondBootstrap(): void

@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Harbor migrates `shadcn_theme_mode` once per user when the core theme is `light`.
   A user who chose core `light` and had ShadcnTheme set to `dark` moves to `dark`.
   The legacy `system` setting becomes `auto`.
+- On upgrades with a saved `shadcn_` configuration option or any user's legacy
+  theme metadata, accounts without a legacy theme preference and still on core
+  `light` move to `dark` to keep ShadcnTheme's default. Existing core `dark` and
+  `auto` preferences are preserved, and fresh installs retain the core theme.
 - CSS previously injected by JavaScript now lives in `kit.css`.
 
 ## [1.2.0] - 2026-11-20
