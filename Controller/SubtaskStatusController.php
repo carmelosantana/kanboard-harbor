@@ -63,12 +63,18 @@ class SubtaskStatusController extends BaseController
             throw new AccessForbiddenException();
         }
 
-        $timerUserId = (int) $subtask['user_id'] ?: $userId;
+        $assigneeId = (int) $subtask['user_id'];
+        $timerUserId = $assigneeId ?: $userId;
         $previousStatus = (int) $subtask['status'];
         if ($previousStatus !== $status) {
+            $values = ['id' => $id, 'status' => $status];
+            if ($assigneeId === 0 && $status !== SubtaskModel::STATUS_TODO) {
+                $values['user_id'] = $userId;
+            }
+
             $this->db->startTransaction();
             try {
-                if (!$this->subtaskModel->update(['id' => $id, 'status' => $status])) {
+                if (!$this->subtaskModel->update($values)) {
                     $this->db->cancelTransaction();
                     $this->response->json(['error' => 'Failed to update subtask status'], 500);
                     return;

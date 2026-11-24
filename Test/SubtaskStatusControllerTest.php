@@ -96,6 +96,31 @@ class SubtaskStatusControllerTest extends Base
         $this->assertForbidden();
     }
 
+    public function testStartingUnassignedSubtaskAssignsAndTracksTheCurrentUser(): void
+    {
+        $this->addMember();
+        $model = $this->container['subtaskModel'];
+        $tracker = $this->container['subtaskTimeTrackingModel'];
+        $this->assertTrue($model->update(['id' => $this->subtaskId, 'status' => 0, 'user_id' => 0]));
+
+        $this->setStatus('doing', true);
+        $this->assertSame(1, (int) $model->getById($this->subtaskId)['user_id']);
+        $this->assertTrue($tracker->hasTimer($this->subtaskId, 1));
+
+        $this->setStatus('done', false);
+        $this->assertFalse($tracker->hasTimer($this->subtaskId, 1));
+    }
+
+    public function testCompletingUnassignedSubtaskAssignsTheCurrentUser(): void
+    {
+        $this->addMember();
+        $model = $this->container['subtaskModel'];
+        $this->assertTrue($model->update(['id' => $this->subtaskId, 'status' => 0, 'user_id' => 0]));
+
+        $this->setStatus('done', false);
+        $this->assertSame(1, (int) $model->getById($this->subtaskId)['user_id']);
+    }
+
     public function testViewerIsForbidden(): void
     {
         $this->container['projectUserRoleModel']->addUser($this->projectId, 1, Role::PROJECT_VIEWER);
