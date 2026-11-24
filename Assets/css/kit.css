@@ -4,21 +4,14 @@
  * Author: Carmelo Santana <carmelo@carmelosantana.com>
  * License: MIT
  *
- * Colors live in theme-light.css / theme-dark.css (tokens only). Everything
- * about size, spacing and shape lives here, once, for both themes.
+ * Preset tokens live in tokens.css and are shared by the component rules.
  */
 
 /* ============================================================
-   LAYER 1 — TOKENS / RADIUS / TYPE
+   LAYER 1 — CONTROLS / TYPE
    ============================================================ */
 
 :root {
-  /* Radius scale (shadcn: lg = --radius, md = -2px, sm = -4px) */
-  --radius: 0.625rem;
-  --radius-lg: var(--radius);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-sm: calc(var(--radius) - 4px);
-
   /* Form controls — ONE height for inputs, selects, buttons, tabs and the
      filter bar (shadcn h-9). Change it here and every control follows. */
   --control-height: 2.25rem;
@@ -29,36 +22,12 @@
   --font-sans: "Geist", "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
 
-  /* Spacing scale (4px base unit) */
-  --space-1: 0.25rem;
-  --space-2: 0.5rem;
-  --space-3: 0.75rem;
-  --space-4: 1rem;
-  --space-5: 1.25rem;
-  --space-6: 1.5rem;
-  --space-8: 2rem;
-  --space-10: 2.5rem;
-  --space-12: 3rem;
-  --space-16: 4rem;
-  --space-20: 5rem;
-
-  /* Shadows — shadcn keeps these faint */
-  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-  --shadow: var(--shadow-sm);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-
-  /* Focus ring — border goes to --ring, plus a 3px halo at 50% */
-  --ring-shadow: 0 0 0 3px color-mix(in oklch, var(--ring) 50%, transparent);
-
   /* Task color accents (Kanboard color ids). Cards stay neutral; the color
      shows as a thin left rail and a faint tint. */
   --task-tint: 6%;
 
-  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: var(--motion-fast, 150ms cubic-bezier(0.4, 0, 0.2, 1));
+  --transition-base: var(--motion-base, 200ms cubic-bezier(0.4, 0, 0.2, 1));
 }
 
 body {

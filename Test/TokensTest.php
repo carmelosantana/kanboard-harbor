@@ -85,6 +85,24 @@ class TokensTest extends TestCase
         $this->assertSame([...self::PALETTES, 'html'], $selectors);
     }
 
+    public function testColorsAreConsolidatedInTheTokenStylesheet(): void
+    {
+        $directory = __DIR__ . '/../Assets/css/';
+        $kit = file_get_contents($directory . 'kit.css');
+        $this->assertSame(0, preg_match('/^\h*--(?:shadow[\w-]*|ring-shadow):/m', $kit));
+        $this->assertFileDoesNotExist($directory . 'theme-light.css');
+        $this->assertFileDoesNotExist($directory . 'theme-dark.css');
+    }
+
+    public function testNoThemeSelectorKeysOnBody(): void
+    {
+        foreach (glob(__DIR__ . '/../Assets/css/*.css') as $file) {
+            $css = preg_replace('~/\*.*?\*/~s', '', file_get_contents($file));
+            $match = preg_match('/(?:\A|[{},])\s*body(?:\.theme-|:not\(\s*\.theme-)/i', $css);
+            $this->assertSame(0, $match, basename($file) . ' keys a theme selector on body');
+        }
+    }
+
     private function color(array $tokens, string $token): string
     {
         $seen = [];
