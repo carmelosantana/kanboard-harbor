@@ -1,194 +1,102 @@
-/*!
- * Harbor Login Card
- * Centered auth card for the Kanboard login page
- * Author: Carmelo Santana <carmelo@carmelosantana.com>
- * License: MIT
- *
- * Selectors are taken directly from kanboard-1.2.47/app/Template/auth/index.php:
- *   .form-login         — the top-level login container (line 1)
- *   .btn.btn-blue       — the "Sign in" submit button (line 31)
- *   .form-actions       — wrapper div around the submit button (line 30)
- *   .reset-password     — "Forgot password?" link container (lines 33-36)
- *   input[type=checkbox]— remember_me checkbox inside <label> (line 27)
- *   .alert.alert-error  — validation error banner (lines 5-7)
- *   .form-required      — asterisk next to required field labels (rendered by form helper)
- */
-
-/* ================================
-   LOGIN PAGE LAYOUT — full-viewport center
-   ================================ */
-
-/*
- * Kanboard's layout wraps the auth template in #main + .container.
- * On the login page those containers should not use their default board layout,
- * so we convert the body to a flex centering stage.
- */
-body:has(.form-login) {
+.harbor-auth.stage {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
   min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
-  background-color: var(--background);
-  /* Subtle neutral spotlight to give depth (hueless) */
-  background-image: radial-gradient(
-    ellipse 80% 50% at 50% -10%,
-    oklch(0.556 0 0 / 8%) 0%,
-    transparent 60%
-  );
+  padding: var(--space-4, 1rem);
+  box-sizing: border-box;
+  background: var(--background, var(--body-background-color));
 }
 
-/* Push #main / .container to fill and center */
-body:has(.form-login) #main,
-body:has(.form-login) .container {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-4);
-  /* Remove any max-width that would off-center the card */
-  max-width: none !important;
-  width: 100%;
-}
-
-/* ================================
-   AUTH CARD
-   ================================ */
-
-.form-login {
-  width: 100%;
-  max-width: 380px;
-  background-color: var(--card);
-  color: var(--card-foreground);
-  border: 1px solid var(--border);
-  border-radius: calc(var(--radius) * 1.5);
-  box-shadow: var(--shadow-lg);
-  padding: var(--space-8) var(--space-8);
-
-  /* Stacking context so inner elements stack in column */
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-/* ================================
-   FORM ELEMENTS
-   ================================ */
-
-/* Labels — type and spacing come from kit.css. */
-.form-login label:not(:has(input[type="checkbox"])) {
-  display: block;
-}
-
-/* Inputs take their size and focus ring from kit.css; here they
-   only stretch to the card width. */
-.form-login input[type="text"],
-.form-login input[type="password"],
-.form-login input[type="email"] {
-  display: block;
-  width: 100%;
-}
-
-/* Required asterisk — accent-colored instead of raw browser default */
-.form-login .form-required {
-  color: var(--destructive);
-  font-size: 0.75rem;
-  margin-left: 0.2em;
-  vertical-align: super;
-}
-
-/* ================================
-   REMEMBER ME CHECKBOX
-   ================================ */
-
-.form-login label:has(input[type="checkbox"]) {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: 0.875rem;
-  color: var(--muted-foreground);
-  cursor: pointer;
-  margin-top: var(--space-2);
-  user-select: none;
-}
-
-/* ================================
-   SIGN IN BUTTON
-   ================================ */
-
-.form-login .form-actions {
-  margin-top: var(--space-4);
-}
-
-.form-login .form-actions .btn.btn-blue,
-.form-login .btn.btn-blue[type="submit"] {
-  width: 100%;
-}
-
-/* ================================
-   FORGOT PASSWORD LINK
-   ================================ */
-
-.form-login .reset-password {
-  text-align: center;
-  margin-top: var(--space-3);
-}
-
-.form-login .reset-password a {
-  font-size: 0.8125rem;
-  color: var(--muted-foreground);
-  text-decoration: none;
-  transition: color var(--transition-fast);
-}
-
-.form-login .reset-password a:hover {
-  color: var(--primary);
-  text-decoration: underline;
-}
-
-/* ================================
-   VALIDATION ERROR BANNER
-   ================================ */
-
-.form-login .alert.alert-error {
-  background-color: color-mix(in oklch, var(--destructive) 15%, transparent);
-  color: var(--destructive);
-  border: 1px solid color-mix(in oklch, var(--destructive) 40%, transparent);
-  border-radius: var(--radius);
-  padding: 0.625rem 0.875rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  margin-bottom: var(--space-2);
-}
-
-/* ================================
-   LIGHT THEME ADJUSTMENTS
-   ================================ */
-
-html.theme-light .form-login {
-  box-shadow: var(--shadow-md), 0 0 0 1px var(--border);
-}
-
-/* Slightly tinted page background in light mode for contrast with the white card */
-html.theme-light body:has(.form-login) {
-  background-color: var(--secondary, var(--body-background-color));
-}
-
-/* Title heading added via a login partial (template:auth:login-form:before) */
-.form-login .auth-card-header {
-  text-align: center;
-  margin-bottom: var(--space-4);
-}
-
-.form-login .auth-card-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  letter-spacing: -0.025em;
-  color: var(--card-foreground);
-  margin: 0 0 var(--space-1) 0;
-}
-
-.form-login .auth-card-description {
-  font-size: 0.875rem;
-  color: var(--muted-foreground);
+.harbor-auth > .float {
+  box-sizing: border-box;
+  width: min(100%, 22rem);
+  max-width: none;
   margin: 0;
+  padding: var(--space-6, 1.5rem);
+  border: 1px solid var(--border, var(--input-border-color));
+  border-radius: calc(var(--radius-lg, .625rem) * 1.5);
+  box-shadow: var(--shadow-lg, none);
+  background: var(--card, var(--body-background-color));
+  color: var(--card-foreground, var(--color-primary));
+}
+
+.harbor-auth-brand {
+  margin-bottom: var(--space-4, 1rem);
+  text-align: center;
+}
+
+.harbor-auth-brand img {
+  display: block;
+  max-width: 100%;
+  max-height: 4rem;
+  margin: 0 auto var(--space-2, .5rem);
+}
+
+/* Steward can also render its branding through the core login hook. */
+.harbor-auth > .float > .steward-login-brand {
+  display: none;
+}
+
+.harbor-auth-brand p {
+  font-weight: 600;
+}
+
+.harbor-auth-brand h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.harbor-auth label:not(:has(input)) {
+  display: block;
+}
+
+.harbor-auth label:has(input[type="checkbox"]) {
+  display: inline-flex;
+  align-items: center;
+}
+
+.harbor-auth :is(input[type="text"], input[type="password"]) {
+  width: 100%;
+}
+
+.harbor-auth .form-actions {
+  justify-content: center;
+}
+
+.harbor-auth .form-actions > button {
+  width: 100%;
+}
+
+.harbor-auth .reset-password {
+  text-align: center;
+  margin: var(--space-3, .75rem) 0 0;
+}
+
+.harbor-auth [data-code-digits] {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-inline-size: 0;
+}
+
+.harbor-code-digits {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: var(--space-2, .5rem);
+}
+
+.harbor-code-digits input {
+  min-width: 0;
+  text-align: center;
+}
+
+.harbor-auth .callout-error,
+.harbor-auth .callout > .alert-error {
+  padding: var(--space-3, .75rem);
+  margin-bottom: var(--space-3, .75rem);
+  border: 1px solid var(--destructive, var(--alert-border-color-error));
+  border-radius: var(--radius-md, .5rem);
+  background: color-mix(in srgb, var(--destructive, var(--alert-background-color-error)) 12%, transparent);
+  color: var(--destructive-text, var(--alert-color-error));
 }

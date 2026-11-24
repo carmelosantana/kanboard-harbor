@@ -97,10 +97,20 @@ class Plugin extends Base
             'template' => 'plugins/Harbor/Assets/css/kit.css'
         ]);
 
-        // Login card styles (injected on every page; rules are scoped to .form-login)
-        $this->hook->on('template:layout:css', [
-            'template' => 'plugins/Harbor/Assets/css/login.css'
-        ]);
+        // Core's asset hook takes static paths. Register them after the router dispatches.
+        $this->on('app.bootstrap', function (): void {
+            $controller = $this->router->getController();
+            if (in_array($controller, ['AuthController', 'TwoFactorController'], true)) {
+                $this->hook->on('template:layout:css', [
+                    'template' => 'plugins/Harbor/Assets/css/login.css',
+                ]);
+            }
+            if ($controller === 'TwoFactorController' && $this->router->getAction() === 'code') {
+                $this->hook->on('template:layout:js', [
+                    'template' => 'plugins/Harbor/Assets/js/login-code.js',
+                ]);
+            }
+        });
     }
 
     /**
@@ -120,10 +130,8 @@ class Plugin extends Base
             $template->setTemplateOverride('header/user_dropdown', 'Harbor:header/theme_toggle');
         }
 
-        // Login card header (Steward's logo or site name, else the product name, + subtitle)
-        $this->hook->on('template:auth:login-form:before', [
-            'template' => 'Harbor:auth/login_header'
-        ]);
+        $template->setTemplateOverride('auth/index', 'Harbor:auth/index');
+        $template->setTemplateOverride('twofactor/check', 'Harbor:twofactor/check');
     }
 
     public static function previousUserDropdown(Template $template): string

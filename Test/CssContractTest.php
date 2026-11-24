@@ -36,14 +36,13 @@ class CssContractTest extends Base
         }
     }
 
-    public function testPluginRegistersTheTokenStylesheetBeforeTheKitAndLogin(): void
+    public function testPluginRegistersTheTokenStylesheetBeforeTheKit(): void
     {
         (new Plugin($this->container))->initialize();
 
         $this->assertSame([
             'plugins/Harbor/Assets/css/tokens.css',
             'plugins/Harbor/Assets/css/kit.css',
-            'plugins/Harbor/Assets/css/login.css',
         ], array_column($this->container['hook']->getListeners('template:layout:css'), 'template'));
     }
 }

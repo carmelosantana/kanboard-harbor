@@ -57,9 +57,10 @@ class BrandingHandOverTest extends Base
         $this->container['helper']->register('stewardBranding', FakeStewardBrandingHelper::class);
     }
 
-    private function loginHeader(): string
+    private function loginPage(): string
     {
-        return $this->container['template']->render('Harbor:auth/login_header', []);
+        $this->initializePlugin();
+        return $this->container['template']->render('auth/index', ['values' => [], 'errors' => []]);
     }
 
     public function testNoServeAssetRoute()
@@ -108,9 +109,9 @@ class BrandingHandOverTest extends Base
         $this->container['configModel']->save(['shadcn_logo_path' => 'shadcn-theme/logo.png']);
         $this->container['memoryCache']->flush();
 
-        $html = $this->loginHeader();
+        $html = $this->loginPage();
 
-        $this->assertStringContainsString('<h1 class="auth-card-title">Kanboard</h1>', $html);
+        $this->assertStringContainsString('<p>Kanboard</p>', $html);
         $this->assertStringNotContainsString('<img', $html);
     }
 
@@ -118,27 +119,27 @@ class BrandingHandOverTest extends Base
     {
         $this->useSteward('?controller=BrandingController&amp;action=image&amp;slot=logo', 'Acme & Co');
 
-        $html = $this->loginHeader();
+        $html = $this->loginPage();
 
         $this->assertStringContainsString('<img src="?controller=BrandingController&amp;action=image&amp;slot=logo"', $html);
         $this->assertStringContainsString('alt="Acme &amp; Co"', $html);
-        $this->assertStringNotContainsString('auth-card-title', $html);
+        $this->assertStringNotContainsString('<p>Acme &amp; Co</p>', $html);
     }
 
     public function testLoginCardShowsStewardSiteNameWithoutLogo()
     {
         $this->useSteward('', 'Acme & Co');
 
-        $this->assertStringContainsString('<h1 class="auth-card-title">Acme &amp; Co</h1>', $this->loginHeader());
+        $this->assertStringContainsString('<p>Acme &amp; Co</p>', $this->loginPage());
     }
 
     public function testLoginCardFallsBackToProductNameWhenStewardBrandingIsOff()
     {
         $this->useSteward('', '');
 
-        $html = $this->loginHeader();
+        $html = $this->loginPage();
 
-        $this->assertStringContainsString('<h1 class="auth-card-title">Kanboard</h1>', $html);
+        $this->assertStringContainsString('<p>Kanboard</p>', $html);
         $this->assertStringNotContainsString('<img', $html);
     }
 
