@@ -46,7 +46,13 @@ function harness() {
       removeAttribute(name) { attrs.delete(name); },
       hasAttribute(name) { return attrs.has(name); },
       contains(node) { return node === this || children.some(child => child.contains(node)); },
-      querySelectorAll() { return children; },
+      querySelectorAll(selector) {
+        if (selector === '[role="menuitem"]') {
+          return children.filter(child => child.getAttribute('role') === 'menuitem');
+        }
+        // Other fixtures use focusable children.
+        return children;
+      },
       getBoundingClientRect() { return rect; },
       getClientRects() { return [rect]; },
       style: { setProperty(name, value) { values.set(name, value); } },
@@ -78,17 +84,20 @@ test('roving wraps, skips disabled items, and supports Home, End and typeahead',
   const h = harness();
   const items = ['Archive', 'Disabled', 'Save', 'Send'].map(label => {
     const item = h.element();
+    item.setAttribute('role', 'menuitem');
     item.textContent = label;
     return item;
   });
   items[1].setAttribute('aria-disabled', 'true');
-  const list = h.element(items);
+  const other = h.element();
+  const list = h.element([items[0], other, ...items.slice(1)]);
   const cleanup = h.Kit.roving(list);
 
   items[0].focus();
   h.key(list, 'ArrowDown');
   assert.equal(h.document.activeElement, items[2]);
   assert.deepEqual(items.map(item => item.tabIndex), [-1, -1, 0, -1]);
+  assert.equal(other.tabIndex, 0);
   h.key(list, 'ArrowUp');
   assert.equal(h.document.activeElement, items[0]);
   h.key(list, 'ArrowUp');
@@ -114,6 +123,7 @@ test('Esc closes the active popup and restores focus to its anchor', () => {
   const h = harness();
   const anchor = h.element();
   const item = h.element();
+  item.setAttribute('role', 'menuitem');
   const panel = h.element([item]);
   panel.hidden = true;
   h.Kit.popup(anchor, panel, { preset: 'menu' });
@@ -219,6 +229,7 @@ test('a tooltip inside a dialog leaves the dialog focus trap active', () => {
 test('an open tooltip leaves outside click dismissal active for a menu', () => {
   const h = harness();
   const item = h.element();
+  item.setAttribute('role', 'menuitem');
   const menu = h.element([item]);
   const tooltip = h.element();
   h.Kit.popup(h.element(), menu, { preset: 'menu' });
