@@ -3,6 +3,7 @@
 require_once 'tests/units/Base.php';
 
 use Kanboard\Plugin\Harbor\Action\ActionRegistry;
+use Kanboard\Plugin\Harbor\Plugin;
 use KanboardTests\units\Base;
 use Psr\Log\LoggerInterface;
 
@@ -92,6 +93,37 @@ class ActionRegistryTest extends Base
             ['SubtaskStatus', 'set', 'status' => 'done'],
             $registry->execute('subtask.done', $entity, $user)
         );
+    }
+
+    public function testKitExposesOnlyPermittedActionsAsInertJson(): void
+    {
+        (new Plugin($this->container))->initialize();
+        $this->container['userSession']->initialize(['id' => 7]);
+        $slot = 'subtask-row" data-unexpected="1';
+        $label = '</template><strong>Done &amp; ready</strong>';
+        $this->container['hook']->on('kit:actions', fn () => [
+            $this->descriptor(['slot' => $slot, 'label' => $label, 'can' => static fn ($entity, $user) => $user['id'] === 7]),
+            $this->descriptor(['id' => 'subtask.start', 'slot' => $slot, 'when' => 'status == done']),
+            $this->descriptor(['id' => 'subtask.hidden', 'slot' => $slot, 'can' => static fn () => false]),
+        ]);
+
+        $html = $this->container['template']->kit->actions($slot, ['status' => 'todo']);
+        $document = new DOMDocument();
+        $document->loadHTML($html, LIBXML_NOERROR | LIBXML_NOWARNING);
+        $element = $document->getElementsByTagName('div')->item(0);
+        $this->assertSame($slot, $element->getAttribute('data-slot'));
+        $this->assertSame('todo', $element->getAttribute('data-state'));
+        $this->assertSame('subtask.done', $element->getAttribute('data-actions'));
+        $this->assertFalse($element->hasAttribute('data-unexpected'));
+        $this->assertSame(0, $document->getElementsByTagName('strong')->length);
+        $this->assertSame(0, $document->getElementsByTagName('script')->length);
+
+        $templates = $element->getElementsByTagName('template');
+        $this->assertSame(1, $templates->length);
+        $this->assertSame([
+            ['id' => 'subtask.done', 'label' => $label, 'key' => 'd', 'disabled' => false],
+            ['id' => 'subtask.start', 'label' => 'Mark done', 'key' => 'd', 'disabled' => true],
+        ], json_decode($templates->item(0)->textContent, true, 512, JSON_THROW_ON_ERROR));
     }
 
     private function descriptor(array $overrides = []): array

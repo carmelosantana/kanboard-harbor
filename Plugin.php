@@ -6,6 +6,7 @@ use Kanboard\Core\Plugin\Base;
 use Kanboard\Core\Security\AuthenticationManager;
 use Kanboard\Core\Template;
 use Kanboard\Model\UserModel;
+use Kanboard\Plugin\Harbor\Action\ActionRegistry;
 use Kanboard\Plugin\Harbor\Helper\KitHelper;
 use Kanboard\Plugin\Harbor\Theme\LayoutChain;
 use WeakMap;
@@ -34,6 +35,7 @@ class Plugin extends Base
      */
     public function initialize()
     {
+        $this->container['harborActionRegistry'] = static fn ($container) => new ActionRegistry($container);
         $this->helper->register('kit', KitHelper::class);
 
         $this->migrateThemePreference();

@@ -7,6 +7,32 @@ use Kanboard\Core\Base;
 
 class KitHelper extends Base
 {
+    public function actions(string $slot, array $entity): string
+    {
+        $actions = $this->container['harborActionRegistry']->forSlot(
+            $slot,
+            $entity,
+            $this->userSession->getAll() ?? []
+        );
+        $menu = [];
+        $enabled = [];
+        foreach ($actions as $action) {
+            $menu[] = array_intersect_key($action, array_flip(['id', 'label', 'key', 'disabled']));
+            if (!$action['disabled']) {
+                $enabled[] = $action['id'];
+            }
+        }
+
+        $state = $entity['state'] ?? $entity['status'] ?? '';
+        $text = $this->helper->text;
+        $json = json_encode($menu, JSON_HEX_TAG | JSON_HEX_AMP | JSON_INVALID_UTF8_SUBSTITUTE | JSON_THROW_ON_ERROR);
+
+        return '<div data-slot="' . $text->e($slot)
+            . '" data-state="' . $text->e(is_scalar($state) ? $state : '')
+            . '" data-actions="' . implode(' ', $enabled) . '">'
+            . '<template>' . $json . '</template></div>';
+    }
+
     public function pill(string $label, string $tone = 'neutral'): string
     {
         return $this->template->render('Harbor:kit/pill', compact('label', 'tone'));
