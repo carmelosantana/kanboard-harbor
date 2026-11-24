@@ -127,7 +127,7 @@ class SubtaskStatusController extends BaseController
                 'timer' => $this->subtaskTimeTrackingModel->hasTimer($id, $timerUserId),
             ]);
         } else {
-            $this->response->status(200);
+            $this->response->redirect($this->helper->url->to('TaskViewController', 'show', ['task_id' => $taskId]));
         }
     }
 

@@ -67,11 +67,26 @@ class SubtaskStatusControllerTest extends Base
 
         [$controller, $response] = $this->request('done');
         $response->expects($this->exactly(2))->method('json')->with(['status' => 'done', 'timer' => false]);
+        $response->expects($this->never())->method('redirect');
         $controller->set();
         $controller->set();
 
         $this->assertFalse($tracker->hasTimer($this->subtaskId, 1));
         $this->assertSame(2, (int) $model->getById($this->subtaskId)['status']);
+    }
+
+    public function testPlainPostRedirectsToTheSubtasksTask(): void
+    {
+        $this->addMember();
+        [$controller, $response] = $this->request('done', ajax: false);
+        $response->expects($this->never())->method('json');
+        $response->expects($this->once())->method('redirect')->with(
+            "/?controller=TaskViewController&action=show&task_id={$this->taskId}"
+        );
+
+        $controller->set();
+
+        $this->assertSame(2, (int) $this->container['subtaskModel']->getById($this->subtaskId)['status']);
     }
 
     public function testReturningToTodoClosesTimersThroughRepeatedTransitions(): void
@@ -324,7 +339,13 @@ class SubtaskStatusControllerTest extends Base
         $this->container['projectUserRoleModel']->addUser($this->projectId, 1, Role::PROJECT_MEMBER);
     }
 
-    private function request(string $status, bool $csrf = true, ?int $taskId = null, string $method = 'POST'): array
+    private function request(
+        string $status,
+        bool $csrf = true,
+        ?int $taskId = null,
+        string $method = 'POST',
+        bool $ajax = true
+    ): array
     {
         if (!isset($this->container['harborActionRegistry'])) {
             (new Plugin($this->container))->initialize();
@@ -335,10 +356,16 @@ class SubtaskStatusControllerTest extends Base
             $query['task_id'] = $taskId;
         }
 
-        $this->container['request'] = new Request($this->container, [
-            'REQUEST_METHOD' => $method,
-            'HTTP_X_REQUESTED_WITH' => 'XMLHttpRequest',
-        ], $query, $csrf ? ['csrf_token' => $this->container['token']->getCSRFToken()] : []);
+        $server = ['REQUEST_METHOD' => $method, 'PHP_SELF' => '/index.php'];
+        if ($ajax) {
+            $server['HTTP_X_REQUESTED_WITH'] = 'XMLHttpRequest';
+        }
+        $this->container['request'] = new Request(
+            $this->container,
+            $server,
+            $query,
+            $csrf ? ['csrf_token' => $this->container['token']->getCSRFToken()] : []
+        );
         $response = $this->createMock(Response::class);
         $this->container['response'] = $response;
 
