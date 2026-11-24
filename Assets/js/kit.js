@@ -132,6 +132,10 @@
         }
 
         function onKey(event) {
+            if (tooltip) {
+                if (event.key === 'Escape') close();
+                return;
+            }
             if (!isActive() || event.defaultPrevented) return;
             if (event.key === 'Escape') {
                 event.preventDefault();
@@ -154,7 +158,7 @@
         }
 
         function onClick(event) {
-            if (isActive() && !anchor.contains(event.target) && !panel.contains(event.target)) close();
+            if ((tooltip || isActive()) && !anchor.contains(event.target) && !panel.contains(event.target)) close();
         }
 
         function open() {
@@ -174,7 +178,7 @@
             }
 
             place();
-            popupStack.push(controls);
+            if (!tooltip) popupStack.push(controls);
             document.addEventListener('keydown', onKey, true);
             document.addEventListener('click', onClick, true);
             window.addEventListener('resize', place);
@@ -191,7 +195,7 @@
             var restoreFocus = isActive();
             opened = false;
             var closing = ++motion;
-            popupStack.splice(popupStack.indexOf(controls), 1);
+            if (!tooltip) popupStack.splice(popupStack.indexOf(controls), 1);
             document.removeEventListener('keydown', onKey, true);
             document.removeEventListener('click', onClick, true);
             document.removeEventListener('focusin', onFocus);

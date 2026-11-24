@@ -185,3 +185,33 @@ test('a tooltip opens without moving focus', () => {
   assert.equal(h.document.activeElement, anchor);
   assert.equal(panel.getAttribute('data-state'), 'open');
 });
+
+test('a tooltip inside a dialog leaves the dialog focus trap active', () => {
+  const h = harness();
+  const first = h.element();
+  const last = h.element();
+  const tooltip = h.element();
+  h.Kit.popup(h.element(), h.element([first, last]), { preset: 'dialog' });
+  last.focus();
+  h.Kit.popup(last, tooltip, { preset: 'tooltip' });
+
+  h.key(h.document, 'Tab');
+  assert.equal(h.document.activeElement, first);
+  h.element().focus();
+  assert.equal(h.document.activeElement, first);
+  h.key(h.document, 'Escape');
+  assert.equal(tooltip.getAttribute('data-state'), 'closed');
+});
+
+test('an open tooltip leaves outside click dismissal active for a menu', () => {
+  const h = harness();
+  const item = h.element();
+  const menu = h.element([item]);
+  const tooltip = h.element();
+  h.Kit.popup(h.element(), menu, { preset: 'menu' });
+  h.Kit.popup(item, tooltip, { preset: 'tooltip' });
+
+  h.document.emit('click', { target: h.element() });
+  assert.equal(menu.getAttribute('data-state'), 'closed');
+  assert.equal(tooltip.getAttribute('data-state'), 'closed');
+});
