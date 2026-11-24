@@ -5,6 +5,7 @@
     var focusable = 'a[href], button, input, select, textarea, summary, [tabindex], [contenteditable="true"]';
     var popupStack = [];
     var popupRoles = { menu: 'menu', popover: 'dialog', dialog: 'dialog', tooltip: 'tooltip' };
+    var toasterFocusOwner;
 
     function enabledMenuItem(item) {
         return item.getAttribute('aria-disabled') !== 'true' && !item.disabled && !item.hidden;
@@ -287,7 +288,10 @@
             button.type = 'button';
             button.textContent = 'Undo';
             button.addEventListener('click', function () {
-                if (dismiss()) undo();
+                var previous = notice.contains(document.activeElement) && toasterFocusOwner;
+                if (!dismiss()) return;
+                if (previous && previous.isConnected) previous.focus({ preventScroll: true });
+                undo();
             });
             notice.append(button);
         }
@@ -300,7 +304,8 @@
             hovered = false;
             updateTimer();
         });
-        notice.addEventListener('focusin', function () {
+        notice.addEventListener('focusin', function (event) {
+            if (!region.contains(event.relatedTarget)) toasterFocusOwner = event.relatedTarget;
             focused = true;
             updateTimer();
         });

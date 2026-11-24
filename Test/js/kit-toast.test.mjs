@@ -16,8 +16,17 @@ function harness() {
         child.parent = this;
       },
       remove() {
+        if (this.contains(document.activeElement)) document.activeElement = body;
         const siblings = this.parent.children;
         siblings.splice(siblings.indexOf(this), 1);
+      },
+      get isConnected() { return body.contains(this); },
+      focus() {
+        const relatedTarget = document.activeElement;
+        document.activeElement = this;
+        for (let node = this; node; node = node.parent) {
+          node.emit('focusin', { relatedTarget });
+        }
       },
       setAttribute(name, value) { this.attrs.set(name, value); },
       contains(target) { return target === this || this.children.some(child => child.contains(target)); },
@@ -33,6 +42,7 @@ function harness() {
   const body = element('body');
   const document = {
     body,
+    activeElement: null,
     createElement: element,
     querySelector(selector) {
       assert.equal(selector, '[data-slot="toaster"]');
@@ -59,7 +69,7 @@ function harness() {
   new Function('window', 'document', 'setTimeout', 'clearTimeout', 'Date', src)(
     window, document, schedule, id => timers.delete(id), { now: () => now },
   );
-  return { Kit: window.Kit, body, advance, timers };
+  return { Kit: window.Kit, body, document, element, advance, timers };
 }
 
 test('toasts share one status region and Undo dismisses its toast and calls back once', () => {
@@ -89,6 +99,37 @@ test('toasts share one status region and Undo dismisses its toast and calls back
   h.advance(1);
   assert.equal(region.children.length, 0);
   assert.equal(h.timers.size, 0);
+});
+
+test('Undo restores the last focus owner outside the toaster', () => {
+  const h = harness();
+  const trigger = h.element('button');
+  const previous = h.element('button');
+  h.body.append(trigger);
+  h.body.append(previous);
+  trigger.focus();
+  h.Kit.toast('First change.', { undo() {} });
+  h.Kit.toast('Second change.', { undo() {} });
+  const [, , region] = h.body.children;
+  const [first, second] = region.children;
+
+  previous.focus();
+  first.children[1].focus();
+  second.children[1].focus();
+  second.children[1].emit('click');
+  assert.equal(h.document.activeElement === previous, true);
+});
+
+test('Undo leaves focus alone when there was no previous owner', () => {
+  const h = harness();
+  h.Kit.toast('Changed.', { undo() {} });
+  const [region] = h.body.children;
+  const [toast] = region.children;
+  const button = toast.children[1];
+
+  button.focus();
+  button.emit('click');
+  assert.equal(h.document.activeElement, h.body);
 });
 
 test('the six-second countdown pauses during focus and resumes with its remaining time', () => {
