@@ -1611,7 +1611,13 @@ code {
   flex-basis: 100%;
 }
 
+[data-slot="toolbar-actions"] {
+  margin-inline-start: auto;
+}
+
 [data-slot="chip"] {
+  display: inline-flex;
+  align-items: center;
   padding: .25rem .625rem;
   border: 1px solid var(--border, #ddd);
   border-radius: 999px;
@@ -1621,6 +1627,7 @@ code {
 }
 
 [data-slot="chip"][aria-pressed="true"],
+[data-slot="chip"]:has(:checked),
 [data-slot="chip"]:hover {
   background: var(--highlight, #e2eff7);
 }

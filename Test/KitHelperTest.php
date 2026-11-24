@@ -7,6 +7,25 @@ use KanboardTests\units\Base;
 
 class KitHelperTest extends Base
 {
+    public function testTemplatesCanRenderAllSixKitSlots(): void
+    {
+        (new Plugin($this->container))->initialize();
+        $kit = $this->container['template']->kit;
+
+        $components = [
+            'pill' => $kit->pill('Current', 'success'),
+            'callout' => $kit->callout('Try again', 'The request failed.', 'error'),
+            'progress' => $kit->progress(3, 5, 4.5, 8),
+            'skeleton' => $kit->skeleton('row'),
+            'empty' => $kit->empty('No matches', 'Try another word.', ''),
+            'toolbar' => $kit->toolbar([]),
+        ];
+
+        foreach ($components as $slot => $html) {
+            $this->assertStringContainsString('data-slot="' . $slot . '"', $html);
+        }
+    }
+
     public function testKitStylesExposeSlotsAndPopupStates(): void
     {
         $css = file_get_contents(__DIR__ . '/../Assets/css/kit.css');
