@@ -5,6 +5,27 @@ All notable changes to Harbor (formerly ShadcnTheme) are documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-11-25
+
+### Added
+
+- Newburgh and Shadcn presets in light and dark, with the theme applied before first paint. The theme toggle saves to Kanboard's user preference.
+- A floating sign-in card and a six-box two-factor code entry with a single-field fallback.
+- A shared UI kit and style guide covering form controls, tabs, popups, feedback, toolbars, avatars, copy buttons, keyboard hints, actions, and the shortcut sheet.
+- Route-scoped kit modules for the floating board, activity, floating surfaces, chat, charts, operations, and navigation.
+- A per-user **Comfortable** or **Compact** density choice in the Theme menu, applied from the first paint.
+
+### Changed
+
+- Harbor succeeds ShadcnTheme. Use ModMenu's **Migrate** action to switch and carry over the theme preference.
+- The layout and user menu work with other plugins' template wrappers, including Steward 1.2.0 or later. Harbor restyles the header and project navigation over Kanboard's markup.
+- The subtask menu sets an explicit status and offers Undo. The action registry checks permissions again on execution.
+
+### Fixed
+
+- A throwing `kit:actions` listener is isolated so forms, menus, the shortcut sheet, and action execution can still use the other listeners.
+- The live log viewer shows **Disconnected** when the stream can no longer reconnect.
+
 ## [2.0.0-beta.2] - 2026-11-25
 
 ### Added

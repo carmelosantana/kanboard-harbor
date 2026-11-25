@@ -1,7 +1,7 @@
 {
     "name": "Harbor",
     "description": "The suite's flagship theme and UI kit: Newburgh and Shadcn presets, light and dark, no-flicker loading.",
-    "version": "2.0.0-beta.2",
+    "version": "2.0.0",
     "author": "Carmelo Santana",
     "license": "MIT",
     "homepage": "https://github.com/carmelosantana/kanboard-harbor",
