@@ -59,6 +59,10 @@ class StyleGuideTest extends Base
                     "//section//*[@data-slot='chat-thread']//*[@data-slot='chat-message'][@data-from='$from']"
                 )->length, "chat-message from $from");
             }
+            foreach ($xpath->query("//section//*[@data-slot='activity-row']") as $row) {
+                $this->assertGreaterThan(0, $xpath->query('.//strong', $row)->length, 'Activity sentence emphasis');
+                $this->assertStringNotContainsString('&lt;strong&gt;', $document->saveHTML($row));
+            }
 
             return true;
         }));
