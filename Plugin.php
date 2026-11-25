@@ -44,6 +44,11 @@ class Plugin extends Base
         $this->hook->on('kit:modules', static fn (string $controller, ?string $plugin): array =>
             $controller === 'BoardViewController' && $plugin === null ? ['board'] : []
         );
+        $this->hook->on('kit:modules', static fn (string $controller, ?string $plugin): array =>
+            $controller === 'HarborStyleGuideController' && $plugin === 'Harbor'
+                ? ['board', 'activity', 'float', 'chat', 'charts', 'ops', 'nav']
+                : []
+        );
 
         $this->migrateThemePreference();
         // At normal plugin load the session has yet to open.
@@ -263,7 +268,7 @@ class Plugin extends Base
      */
     public function getPluginVersion(): string
     {
-        return '2.0.0-beta.1';
+        return '2.0.0-beta.2';
     }
 
     /**

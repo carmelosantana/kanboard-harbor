@@ -22,7 +22,7 @@ class PluginTest extends Base
     public function testPluginVersionValue()
     {
         $plugin = new Plugin($this->container);
-        $this->assertSame('2.0.0-beta.1', $plugin->getPluginVersion());
+        $this->assertSame('2.0.0-beta.2', $plugin->getPluginVersion());
     }
 
     public function testPluginNameValue()

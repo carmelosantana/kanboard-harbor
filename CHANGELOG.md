@@ -5,6 +5,22 @@ All notable changes to Harbor (formerly ShadcnTheme) are documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0-beta.2] - 2026-11-25
+
+### Added
+
+- Route-scoped surface assets through the `kit:modules` hook and examples in the Harbor style guide.
+- Floating board columns and cards on Kanboard’s board, activity rows and heatmaps, floating stages and chat.
+- Stat tiles, sparklines, line charts with accessible tables, and capacity usage bars.
+- Status badges, audit tables, job step lists, service tiles, SSE logs, approval countdowns, and typed confirmation.
+- Breadcrumbs, a date-range picker, deferred skeletons, avatars with presence, copy buttons, and keyboard shortcuts.
+
+### Changed
+
+- Restyled Kanboard’s header and project navigation over core markup.
+- Chain the Harbor layout and user-menu extensions with other plugins’ template wrappers.
+- Let Escape dismiss tooltips and use shared state colours and token fallbacks across the kit.
+
 ## [2.0.0-beta.1] - 2026-11-24
 
 ### Changed
