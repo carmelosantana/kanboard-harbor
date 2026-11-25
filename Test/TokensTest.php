@@ -62,51 +62,78 @@ class TokensTest extends TestCase
         }
     }
 
-    public function testPillTextMeetsWcagAaContrastInEachPalette(): void
+    public function testPillTextAndCalloutTitlesMeetWcagAaContrastInEachPalette(): void
     {
         $kit = $this->kitStylesheet();
-        $this->assertSame(1, preg_match('/^\[data-slot="pill"\]\h*\{([^}]*)\}/m', $kit, $pill));
-        $this->assertSame(1, preg_match(
-            '/background:\s*color-mix\(in srgb, var\(--c, [^)]+\) ([\d.]+)%, transparent\);/',
-            $pill[1],
-            $mix
-        ));
-        $tintWeight = (float) $mix[1] / 100;
-        $this->assertSame(1, preg_match(
-            '/\bcolor:\s*color-mix\(in srgb, var\(--c, [^)]+\) ([\d.]+)%, var\(--([\w-]+), [^)]+\)\);/',
-            $pill[1],
-            $textMix
-        ));
-        $textWeight = (float) $textMix[1] / 100;
+        $pill = '[data-slot="pill"]';
+        $callout = '[data-slot="callout"]';
+        $calloutTitle = $callout . ' > strong';
+        [$pillTint] = $this->colorMix($this->kitRule($kit, $pill), 'background', $pill, true);
+        [$calloutTint, $calloutSurface] = $this->colorMix($this->kitRule($kit, $callout), 'background', $callout);
+        $components = [
+            'pill' => [$pill, $pillTint, ['background', 'card']],
+            'callout title' => [$calloutTitle, $calloutTint, [$calloutSurface]],
+        ];
         $palettes = $this->palettes();
         $failures = [];
 
-        foreach (['neutral', 'info', 'success', 'warning', 'error'] as $tone) {
-            $selector = ':is([data-slot="pill"], [data-slot="callout"])';
-            if ($tone !== 'neutral') {
-                $selector .= '[data-tone="' . $tone . '"]';
-            }
-            $this->assertSame(1, preg_match(
-                '/^' . preg_quote($selector, '/') . '\h*\{\s*--c:\s*var\(--([\w-]+), [^)]+\);/m',
-                $kit,
-                $rule
-            ));
+        foreach ($components as $component => [$selector, $tintWeight, $surfaces]) {
+            $textRule = $this->kitRule($kit, $selector);
+            // Measure a plain tone color too, so dropping the text mix reports the resulting contrast.
+            [$textWeight, $textBase] = preg_match('/(?:^|\n)\h*color:\s*var\(--c, [^)]+\);/', $textRule)
+                ? [1.0, null]
+                : $this->colorMix($textRule, 'color', $selector);
 
-            foreach ($palettes as $palette => $tokens) {
-                $tint = $this->color($tokens, $rule[1]);
-                $foreground = $this->color($tokens, $textMix[2]);
-                $textLuminance = $this->mixedLuminance($tint, $foreground, $textWeight);
-                foreach (['background', 'card'] as $surface) {
-                    $backgroundLuminance = $this->mixedLuminance($tint, $this->color($tokens, $surface), $tintWeight);
-                    $ratio = (max($textLuminance, $backgroundLuminance) + 0.05)
-                        / (min($textLuminance, $backgroundLuminance) + 0.05);
-                    if ($ratio < 4.5) {
-                        $failures[] = sprintf('%s: %s pill on --%s has %.2f:1 contrast', $palette, $tone, $surface, $ratio);
+            foreach (['neutral', 'info', 'success', 'warning', 'error'] as $tone) {
+                $toneSelector = ':is([data-slot="pill"], [data-slot="callout"])';
+                if ($tone !== 'neutral') {
+                    $toneSelector .= '[data-tone="' . $tone . '"]';
+                }
+                $this->assertSame(1, preg_match(
+                    '/--c:\s*var\(--([\w-]+), [^)]+\);/',
+                    $this->kitRule($kit, $toneSelector),
+                    $rule
+                ), "Missing --c declaration for $toneSelector");
+
+                foreach ($palettes as $palette => $tokens) {
+                    $tint = $this->color($tokens, $rule[1]);
+                    $foreground = $textBase === null ? $tint : $this->color($tokens, $textBase);
+                    foreach ($surfaces as $surface) {
+                        $ratio = Contrast::mixedRatio(
+                            $tint,
+                            $foreground,
+                            $textWeight,
+                            $this->color($tokens, $surface),
+                            $tintWeight
+                        );
+                        if ($ratio < 4.5) {
+                            $failures[] = sprintf('%s: %s %s on --%s has %.2f:1 contrast', $palette, $tone, $component, $surface, $ratio);
+                        }
                     }
                 }
             }
         }
-        $this->assertSame([], $failures, 'All pill tones must meet 4.5:1 contrast');
+        $this->assertSame([], $failures, 'All pill tones and callout titles must meet 4.5:1 contrast');
+    }
+
+    private function kitRule(string $kit, string $selector): string
+    {
+        $pattern = '/^' . preg_quote($selector, '/') . '(?:,\n[^{}\n]+)*\h*\{([^}]*)\}/m';
+        $this->assertNotEmpty(preg_match_all($pattern, $kit, $rules), "Missing CSS rule for $selector");
+
+        return implode("\n", $rules[1]);
+    }
+
+    private function colorMix(string $rule, string $property, string $selector, bool $transparentBase = false): array
+    {
+        $base = $transparentBase ? 'transparent' : 'var\(--([\w-]+), [^)]+\)';
+        $this->assertSame(1, preg_match(
+            '/(?:^|\n)\h*' . $property . ':\s*color-mix\(in srgb, var\(--c, [^)]+\) ([\d.]+)%, ' . $base . '\);/',
+            $rule,
+            $mix
+        ), "Missing $property color-mix declaration for $selector");
+
+        return [(float) $mix[1] / 100, $mix[2] ?? null];
     }
 
     public function testCriticalRegionContainsOnlyFirstPaintCss(): void
@@ -198,26 +225,6 @@ class TokensTest extends TestCase
             }
             $token = $match[1];
         }
-    }
-
-    private function mixedLuminance(string $tint, string $base, float $weight): float
-    {
-        // Reuse the opaque contrast check's conversion before mixing in encoded sRGB.
-        $linearSrgb = new ReflectionMethod(Contrast::class, 'linearSrgb');
-        $encode = static fn (float $channel): float => $channel <= 0.0031308
-            ? 12.92 * $channel
-            : 1.055 * $channel ** (1 / 2.4) - 0.055;
-        [$red, $green, $blue] = array_map(
-            static function (float $tintChannel, float $baseChannel) use ($weight, $encode): float {
-                $channel = $encode($tintChannel) * $weight + $encode($baseChannel) * (1 - $weight);
-
-                return $channel <= 0.04045 ? $channel / 12.92 : (($channel + 0.055) / 1.055) ** 2.4;
-            },
-            $linearSrgb->invoke(null, $tint),
-            $linearSrgb->invoke(null, $base)
-        );
-
-        return 0.2126 * $red + 0.7152 * $green + 0.0722 * $blue;
     }
 
     private function palettes(): array

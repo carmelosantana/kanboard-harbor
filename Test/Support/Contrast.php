@@ -10,18 +10,58 @@ final class Contrast
 
     public static function ratio(string $foreground, string $background): float
     {
-        $foregroundLuminance = self::luminance($foreground);
-        $backgroundLuminance = self::luminance($background);
+        return self::luminanceRatio(
+            self::luminance(self::linearSrgb($foreground)),
+            self::luminance(self::linearSrgb($background))
+        );
+    }
 
+    public static function mixedRatio(
+        string $tone,
+        string $foreground,
+        float $foregroundToneWeight,
+        string $background,
+        float $backgroundToneWeight
+    ): float {
+        $toneChannels = self::linearSrgb($tone);
+
+        return self::luminanceRatio(
+            self::mixedLuminance($toneChannels, self::linearSrgb($foreground), $foregroundToneWeight),
+            self::mixedLuminance($toneChannels, self::linearSrgb($background), $backgroundToneWeight)
+        );
+    }
+
+    private static function luminanceRatio(float $foregroundLuminance, float $backgroundLuminance): float
+    {
         return (max($foregroundLuminance, $backgroundLuminance) + 0.05)
             / (min($foregroundLuminance, $backgroundLuminance) + 0.05);
     }
 
-    private static function luminance(string $color): float
+    private static function mixedLuminance(array $tone, array $base, float $weight): float
     {
-        [$red, $green, $blue] = self::linearSrgb($color);
+        // CSS color-mix(in srgb, ...) interpolates gamma-encoded channels.
+        $encode = static fn (float $channel): float => $channel <= 0.0031308
+            ? 12.92 * $channel
+            : 1.055 * $channel ** (1 / 2.4) - 0.055;
 
+        return self::luminance(array_map(
+            static fn (float $toneChannel, float $baseChannel): float => self::linearChannel(
+                $encode($toneChannel) * $weight + $encode($baseChannel) * (1 - $weight)
+            ),
+            $tone,
+            $base
+        ));
+    }
+
+    private static function luminance(array $channels): float
+    {
+        [$red, $green, $blue] = $channels;
         return 0.2126 * $red + 0.7152 * $green + 0.0722 * $blue;
+    }
+
+    private static function linearChannel(float $channel): float
+    {
+        return $channel <= 0.04045 ? $channel / 12.92 : (($channel + 0.055) / 1.055) ** 2.4;
     }
 
     private static function linearSrgb(string $color): array
@@ -46,7 +86,7 @@ final class Contrast
             $sector = fmod($offset + $hue / 30, 12);
             $channel = $lightness - $amplitude * max(-1, min($sector - 3, 9 - $sector, 1));
 
-            return $channel <= 0.04045 ? $channel / 12.92 : (($channel + 0.055) / 1.055) ** 2.4;
+            return self::linearChannel($channel);
         }, [0, 8, 4]);
     }
 
