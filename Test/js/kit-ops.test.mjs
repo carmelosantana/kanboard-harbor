@@ -200,6 +200,26 @@ test('retains the newest 5000 log lines and counts all received lines', () => {
   assert.equal(count.textContent, '5005 lines');
 });
 
+test('trimming at the log cap keeps the same lines in view while paused', () => {
+  const { Kit, sources } = loadOps();
+  const { el, body, pause, jump } = logFixture();
+  Kit.logViewer(el);
+  const append = data => sources[0].dispatchEvent(new MessageEvent('message', { data }));
+  append(Array.from({ length: 5000 }, (_, index) => `line ${index + 1}`).join('\n'));
+
+  body.scrollTop = 203;
+  body.dispatchEvent(new Event('scroll'));
+  assert.equal(pause['aria-pressed'], 'true');
+
+  const visibleLine = () => body.childNodes[Math.floor(body.scrollTop / 20)].textContent;
+  const before = visibleLine();
+  append('line 5001\nline 5002');
+
+  assert.equal(body.scrollTop, 163);
+  assert.equal(visibleLine(), before);
+  assert.equal(jump.hidden, false);
+});
+
 test('a terminal EventSource error shows the disconnected status', () => {
   const { Kit, sources } = loadOps();
   const { el, body, status } = logFixture();

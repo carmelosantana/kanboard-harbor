@@ -142,3 +142,7 @@
   overflow: auto;
   overflow-anchor: none;
 }
+
+[data-slot="log-viewer"][data-state="closed"] > [data-log-status] {
+  font-weight: 600;
+}

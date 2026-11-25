@@ -70,7 +70,15 @@
       for (const line of incoming.slice(-maxLogLines)) {
         body.append(document.createTextNode(line + '\n'));
       }
-      while (body.childNodes.length > maxLogLines) body.removeChild(body.firstChild);
+      if (body.childNodes.length > maxLogLines) {
+        const heightBeforeTrim = following ? 0 : body.scrollHeight;
+        const topBeforeTrim = following ? 0 : body.scrollTop;
+        while (body.childNodes.length > maxLogLines) body.removeChild(body.firstChild);
+        if (!following) {
+          const removedHeight = heightBeforeTrim - body.scrollHeight;
+          body.scrollTop = Math.max(0, topBeforeTrim - removedHeight);
+        }
+      }
       lines += incoming.length;
       count.textContent = count.dataset.logCount.replace(/%(?:1\$)?d/, lines);
       if (following) body.scrollTop = body.scrollHeight;
