@@ -1423,6 +1423,20 @@ code {
   cursor: pointer;
 }
 
+.harbor-theme-toggle [role="group"] {
+  margin-top: var(--space-1, 0.25rem);
+  padding-top: var(--space-1, 0.25rem);
+  border-top: 1px solid var(--border, #ddd);
+}
+
+.harbor-theme-toggle [role="group"] > span {
+  display: block;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted-foreground, #555);
+}
+
 .harbor-theme-toggle button:hover,
 .harbor-theme-toggle button:focus-visible,
 .harbor-theme-toggle button[aria-pressed="true"] {

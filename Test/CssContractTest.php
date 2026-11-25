@@ -27,6 +27,24 @@ class CssContractTest extends Base
         $this->assertMatchesRegularExpression('/height:\s*var\(--control-height,\s*2\.25rem\)/', $this->css('kit.css'));
     }
 
+    public function testThemeMenuDensityGroupIsASubduedSection(): void
+    {
+        $css = $this->css('kit.css');
+        $rule = function (string $selector) use ($css): string {
+            $this->assertSame(1, preg_match('/' . preg_quote($selector, '/') . '\s*\{([^}]*)\}/', $css, $m), $selector);
+            return $m[1];
+        };
+
+        $group = $rule('.harbor-theme-toggle [role="group"]');
+        $this->assertMatchesRegularExpression('/border-top:\s*1px solid var\(--border,/', $group);
+
+        $label = $rule('.harbor-theme-toggle [role="group"] > span');
+        $this->assertMatchesRegularExpression('/display:\s*block/', $label);
+        $this->assertMatchesRegularExpression('/font-size:\s*0\.75rem/', $label);
+        $this->assertMatchesRegularExpression('/color:\s*var\(--muted-foreground,/', $label);
+        $this->assertMatchesRegularExpression('/padding:\s*0\.25rem 0\.5rem/', $label);
+    }
+
     public function testKitVariablesHaveFallbacks(): void
     {
         $tokens = preg_replace('~/\*.*?\*/~s', '', $this->css('tokens.css'));
