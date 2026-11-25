@@ -2,6 +2,7 @@
 
 require_once 'tests/units/Base.php';
 
+use Kanboard\Core\Security\Role;
 use Kanboard\Plugin\Harbor\Action\ActionRegistry;
 use Kanboard\Plugin\Harbor\Controller\SubtaskStatusController;
 use Kanboard\Plugin\Harbor\Plugin;
@@ -10,6 +11,54 @@ use Psr\Log\LoggerInterface;
 
 class ActionRegistryTest extends Base
 {
+    public function testBrokenListenersAreLoggedAndHarborSubtaskActionsStillLoad(): void
+    {
+        $hook = $this->container['hook'];
+        $hook->on('kit:actions', static fn () => throw new RuntimeException());
+        $hook->on('kit:actions', static fn (int $x) => []);
+        (new Plugin($this->container))->initialize();
+        $projectId = $this->container['projectModel']->create(['name' => 'Harbor']);
+        $user = ['id' => 1, 'role' => Role::APP_ADMIN];
+        $this->container['userSession']->initialize($user);
+
+        $exceptions = [];
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->exactly(2))->method('warning')->willReturnCallback(
+            static function (string $message, array $context) use (&$exceptions): void {
+                self::assertStringContainsString('kit:actions', $message);
+                $exceptions[] = get_class($context['exception']);
+            }
+        );
+        unset($this->container['logger']);
+        $this->container['logger'] = $logger;
+
+        $registry = $this->container['harborActionRegistry'];
+        $entity = ['project_id' => $projectId, 'status' => 'todo'];
+        $this->assertSame(['subtask.done', 'subtask.start', 'subtask.todo'], array_column(
+            $registry->forSlot('subtask-row', $entity, $user),
+            'id'
+        ));
+        $this->assertSame([RuntimeException::class, ArgumentCountError::class], $exceptions);
+    }
+
+    public function testWithKeysReturnsValidUniqueDescriptorsAcrossSlots(): void
+    {
+        $hook = $this->container['hook'];
+        $hook->on('kit:actions', fn () => [
+            $this->descriptor(),
+            $this->descriptor(['id' => 'subtask.unbound', 'key' => null]),
+            $this->descriptor(['id' => 'bad id']),
+            $this->descriptor(['id' => 'subtask.malformed', 'when' => 'status === done']),
+        ]);
+        $hook->on('kit:actions', fn () => [
+            $this->descriptor(['key' => 'x']),
+            $this->descriptor(['id' => 'task.close', 'slot' => 'task-row', 'key' => 'c', 'can' => static fn () => false]),
+        ]);
+
+        $registry = new ActionRegistry($this->container);
+        $this->assertSame(['subtask.done' => 'd', 'task.close' => 'c'], array_column($registry->withKeys(), 'key', 'id'));
+    }
+
     public function testCollectsValidDescriptorsFromMultipleListenersAndLogsEachRejectionOnce(): void
     {
         $hook = $this->container['hook'];

@@ -51,6 +51,12 @@ class ActionRegistry extends Base
         return $actions;
     }
 
+    /** @return list<array> Valid descriptors with registered shortcut keys. */
+    public function withKeys(): array
+    {
+        return array_values(array_filter($this->descriptors(), static fn (array $entry): bool => $entry['key'] !== null));
+    }
+
     public function execute(string $id, array $entity, array $user): array|string|null
     {
         $descriptor = $this->descriptors()[$id] ?? null;
@@ -118,7 +124,15 @@ class ActionRegistry extends Base
 
         $descriptors = [];
         foreach ($this->hook->getListeners(self::HOOK) as $listenerIndex => $listener) {
-            $entries = is_callable($listener) ? $listener() : null;
+            try {
+                $entries = is_callable($listener) ? $listener() : null;
+            } catch (Throwable $exception) {
+                $this->logger->warning('Harbor skipped a kit:actions listener.', [
+                    'listener' => $listenerIndex,
+                    'exception' => $exception,
+                ]);
+                continue;
+            }
             if (!is_array($entries)) {
                 $this->logRejection($listenerIndex, 'result');
                 continue;

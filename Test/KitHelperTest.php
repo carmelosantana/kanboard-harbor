@@ -53,6 +53,9 @@ class KitHelperTest extends Base
         $this->container['hook']->on('kit:actions', static fn (int $x) => [$descriptor]);
         $this->container['hook']->on('kit:actions', static fn () => [
             array_replace($descriptor, ['id' => 'example.two', 'key' => '⌘K', 'label' => 'Search']),
+            array_replace($descriptor, ['label' => 'Duplicate action']),
+            array_replace($descriptor, ['id' => 'bad id', 'label' => 'Invalid action ID']),
+            array_replace($descriptor, ['id' => 'example.broken', 'when' => 'status === done', 'label' => 'Malformed action condition']),
         ]);
         $html = $this->container['template']->kit->shortcutSheet();
 
@@ -62,6 +65,9 @@ class KitHelperTest extends Base
         $this->assertMatchesRegularExpression('~>example-tools</h3>\s*<dl>.*?Find &amp; select.*?'
             . '<kbd data-slot="kbd">&lt;1&gt;</kbd>.*?Search.*?<kbd data-slot="kbd">⌘K</kbd>.*?</dl>~s', $html);
         $this->assertStringNotContainsString('No key', $html);
+        $this->assertStringNotContainsString('Invalid action ID', $html);
+        $this->assertStringNotContainsString('Malformed action condition', $html);
+        $this->assertStringNotContainsString('Duplicate action', $html);
     }
 
     public function testVisuallyHiddenTextUsesTheClipPattern(): void

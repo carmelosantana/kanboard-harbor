@@ -7,7 +7,6 @@ use DateTimeImmutable;
 use InvalidArgumentException;
 use Kanboard\Core\Base;
 use Kanboard\Core\Translator;
-use Throwable;
 
 class KitHelper extends Base
 {
@@ -105,25 +104,8 @@ class KitHelper extends Base
     {
         // This reference describes registered keys without selecting or running actions for an entity.
         $groups = [];
-        foreach ($this->hook->getListeners('kit:actions') as $listenerIndex => $listener) {
-            try {
-                $descriptors = is_callable($listener) ? $listener() : null;
-            } catch (Throwable $exception) {
-                $this->logger->warning('Harbor skipped a kit:actions listener while rendering keyboard shortcuts.', [
-                    'listener' => $listenerIndex,
-                    'exception' => $exception,
-                ]);
-                continue;
-            }
-            if (!is_array($descriptors)) {
-                continue;
-            }
-            foreach ($descriptors as $descriptor) {
-                if (is_string($descriptor['key'] ?? null) && is_string($descriptor['slot'] ?? null)
-                    && is_string($descriptor['label'] ?? null)) {
-                    $groups[$descriptor['slot']][] = ['label' => $descriptor['label'], 'key' => $descriptor['key']];
-                }
-            }
+        foreach ($this->container['harborActionRegistry']->withKeys() as $descriptor) {
+            $groups[$descriptor['slot']][] = ['label' => $descriptor['label'], 'key' => $descriptor['key']];
         }
 
         return $this->template->render('Harbor:kit/shortcut_sheet', compact('groups'));
