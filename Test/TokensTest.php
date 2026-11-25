@@ -89,27 +89,35 @@ class TokensTest extends TestCase
     public function testColorsAreConsolidatedInTheTokenStylesheet(): void
     {
         $directory = __DIR__ . '/../Assets/css/';
-        $kit = file_get_contents($directory . 'kit.css');
-        $this->assertSame(0, preg_match('/--(?:shadow[\w-]*|ring-shadow|task-accent)\s*:/', $kit));
+        $this->assertSame(0, preg_match('/--(?:shadow[\w-]*|ring-shadow)\s*:/', $this->kitStylesheet()));
         $this->assertFileDoesNotExist($directory . 'theme-light.css');
         $this->assertFileDoesNotExist($directory . 'theme-dark.css');
     }
 
+    public function testKitDefinesTaskAccentsForCoreColorClasses(): void
+    {
+        $kit = $this->kitStylesheet();
+        preg_match_all('/^:root \.color-([\w-]+)\s*\{\s*--task-accent:\s*[^;]+;\s*\}/m', $kit, $matches);
+        $this->assertEqualsCanonicalizing([
+            'yellow', 'blue', 'green', 'purple', 'red', 'orange', 'grey', 'brown',
+            'deep_orange', 'dark_grey', 'pink', 'teal', 'cyan', 'lime', 'light_green', 'amber',
+        ], $matches[1]);
+        $this->assertMatchesRegularExpression('/\.task-summary-container\s*\{[^}]*border-left:\s*3px solid var\(--task-accent,/', $kit);
+    }
+
     public function testActiveSidebarRowUsesTheAccentForeground(): void
     {
-        $kit = file_get_contents(__DIR__ . '/../Assets/css/kit.css');
         $this->assertMatchesRegularExpression(
-            '/:root \\.sidebar > ul li\\.active a\s*\\{[^}]*color:\s*var\\(--accent-foreground\\)/',
-            $kit
+            '/:root \.sidebar > ul li\.active a\s*\{[^}]*color:\s*var\(--accent-foreground,/',
+            $this->kitStylesheet()
         );
     }
 
     public function testTaskSummaryLinksOverrideCoreDarkBlack(): void
     {
-        $kit = file_get_contents(__DIR__ . '/../Assets/css/kit.css');
         $this->assertMatchesRegularExpression(
-            '/:root \\.task-summary-column a,\s*:root \\.task-summary-column a:hover\s*\\{[^}]*color:\s*var\\(--foreground\\)/',
-            $kit
+            '/:root \.task-summary-column a,\s*:root \.task-summary-column a:hover\s*\{[^}]*color:\s*var\(--foreground,/',
+            $this->kitStylesheet()
         );
     }
 
@@ -117,7 +125,7 @@ class TokensTest extends TestCase
     {
         $this->assertMatchesRegularExpression(
             '/\[tabindex\]:focus-visible\s*\{\s*outline:\s*2px solid var\(--ring,/',
-            $this->tokenStylesheet()
+            $this->kitStylesheet()
         );
     }
 
@@ -165,6 +173,11 @@ class TokensTest extends TestCase
         $this->assertFileExists($file);
 
         return file_get_contents($file);
+    }
+
+    private function kitStylesheet(): string
+    {
+        return file_get_contents(__DIR__ . '/../Assets/css/kit.css');
     }
 
     private function declarations(string $block): array
