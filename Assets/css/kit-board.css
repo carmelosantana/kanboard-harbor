@@ -1,0 +1,245 @@
+/* Rule 8 — floating board */
+
+#board-container {
+  padding-top: var(--space-2, 0.5rem);
+}
+
+@media screen {
+  /* The existing horizontal scroll container must also scroll vertically for sticky headers. */
+  #board-container {
+    max-height: 80vh;
+    overflow: auto;
+  }
+
+  #board-container.board-container-compact {
+    max-height: none;
+    overflow: visible;
+  }
+}
+
+#board {
+  border-collapse: separate;
+}
+
+html #board th,
+html .board-task-list-limit {
+  background: transparent;
+  border: none;
+}
+
+html #board .board-column,
+html #board td[class*="board-column-"],
+html #board .board-task-list {
+  background: transparent;
+  border: none;
+}
+
+html #board .board-column-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  border-radius: var(--radius-full, 999px);
+  background-color: var(--secondary, #27272a);
+  color: var(--foreground, #fafafa);
+  padding: var(--space-2, 0.5rem) var(--space-3, 0.75rem);
+}
+
+html #board .board-column-header-first {
+  padding: 0;
+}
+
+html #board .board-column-header[data-over-limit] {
+  background-color: color-mix(in oklch, var(--destructive, #ef4444) 22%, var(--secondary, #27272a));
+}
+
+html .board-column-title,
+html .board-column-title a,
+html .board-column-title .dropdown-menu {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted-foreground, #a1a1aa);
+  text-decoration: none;
+}
+
+html .board-column-title a:hover,
+html .board-column-title .dropdown-menu:hover {
+  color: var(--foreground, #fafafa);
+}
+
+html .board-column-header-task-count {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 0.5rem;
+  border-radius: var(--radius-full, 999px);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+  background-color: var(--muted, #27272a);
+  color: var(--muted-foreground, #a1a1aa);
+}
+
+html #board .board-task-list {
+  padding: var(--space-1, 0.25rem);
+  min-height: 4rem;
+}
+
+html #board .board-task-list:hover,
+html #board .board-task-list.board-task-list-drop-target,
+html #board .board-task-list:has(> .draggable-placeholder) {
+  background-color: color-mix(in oklch, var(--foreground) 3%, transparent);
+}
+
+html #board .board-column-task-collapsed > .board-column-expanded {
+  display: none;
+}
+
+html #board .board-column-header-collapsed > .board-column-collapsed {
+  display: block;
+}
+
+/* Core keeps the expand control in the task cell and sets drag target sizes inline. */
+html #board .board-column-task-collapsed > .board-column-collapsed {
+  min-height: 0 !important;
+}
+
+html #board .board-column-collapsed .board-rotation-wrapper {
+  min-height: 0;
+  padding: 0;
+}
+
+html #board .board-column-collapsed .board-rotation {
+  writing-mode: vertical-rl;
+  width: auto !important;
+  transform: none;
+  cursor: pointer;
+}
+
+/* Task cards */
+html .task-board,
+html .task-board[class*="color-"] {
+  box-sizing: border-box;
+  margin-bottom: var(--space-2, 0.5rem);
+  padding: calc(var(--space-3, 0.75rem) * var(--density, 1));
+  border: 1px solid var(--row-line, #52525b);
+  border-inline-start: 3px solid var(--task-accent, var(--row-line, #52525b));
+  border-radius: var(--radius-lg, 0.75rem);
+  background-color: color-mix(in srgb, var(--task-accent, var(--card, #18181b)) var(--task-tint, 0%), var(--card, #18181b));
+  color: var(--card-foreground, #fafafa);
+  box-shadow: var(--shadow-xs, 0 1px 2px rgb(0 0 0 / 5%));
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+html.theme-light .task-board {
+  box-shadow: none;
+  border-color: var(--row-line, #d4d4d8);
+  border-inline-start-color: var(--task-accent, var(--row-line, #d4d4d8));
+}
+
+html .task-board:hover,
+html .task-board.draggable-item-selected,
+html .task-board.ui-sortable-helper {
+  box-shadow: var(--shadow-lg, 0 10px 15px -3px rgb(0 0 0 / 20%));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html .task-board {
+    transition: box-shadow var(--motion-fast, 150ms);
+  }
+}
+
+html .task-board a,
+html .task-board .task-board-title a {
+  color: var(--card-foreground, #fafafa);
+  text-decoration: none;
+}
+
+html .task-board-title {
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+html .task-board-title a:hover {
+  text-decoration: underline;
+}
+
+/* Card footer meta: quiet secondary chips */
+html .task-board-icons {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border, #52525b);
+}
+
+html .task-board-icons-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  align-items: center;
+  line-height: 1;
+}
+
+html .task-board-icons-row > span,
+html .task-board-icons-row > a,
+html .task-board-icons-row .task-score,
+html .task-board-icons-row .task-date,
+html .task-board-icons-row .task-time-estimated,
+html .task-board-icons-row .task-icon-age {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25em;
+  padding: 0.125rem 0.375rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 500;
+  background-color: var(--secondary, #27272a);
+  color: var(--muted-foreground, #a1a1aa);
+  white-space: nowrap;
+}
+
+html .task-icon-age-total,
+html .task-icon-age-column {
+  border: 0;
+  padding: 0 0.125rem;
+  background: transparent;
+}
+
+html .task-board-icons-row .task-date-overdue {
+  background-color: color-mix(in oklch, var(--destructive, #ef4444) 15%, transparent);
+  color: var(--destructive, #ef4444);
+}
+
+html .task-board-icons-row .task-date-today {
+  background-color: var(--accent, #27272a);
+  color: var(--accent-foreground, #fafafa);
+}
+
+/* Card categories */
+html .task-board-category,
+html .task-board-category[class*="color-"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.125rem 0.5rem;
+  border: 1px solid var(--border, #52525b);
+  border-radius: var(--radius-sm);
+  background-color: transparent;
+  color: var(--foreground, #fafafa);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1rem;
+}
+
+html .task-board-category[class*="color-"]::before {
+  content: "";
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: var(--radius-full, 999px);
+  background-color: var(--task-accent, currentColor);
+  flex: 0 0 auto;
+}
+
+html .task-board-category a {
+  color: inherit;
+}

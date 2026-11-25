@@ -249,6 +249,10 @@ html.preset-shadcn.theme-light {
   --density: 1;
 }
 
+html[data-density="compact"]:root {
+  --density: 0.67;
+}
+
 /* Shared colour effects and Kanboard theme variables. */
 html:root {
   /* Shadows — shadcn keeps these faint */
