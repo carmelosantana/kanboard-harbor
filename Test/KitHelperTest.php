@@ -421,6 +421,56 @@ class KitHelperTest extends Base
         $this->assertStringNotContainsString('href=', $expired);
     }
 
+    public function testBreadcrumbsMarkOnlyTheLastItemAsTheCurrentPage(): void
+    {
+        (new Plugin($this->container))->initialize();
+        $kit = $this->container['template']->kit;
+        $html = $kit->breadcrumbs([
+            ['label' => 'Projects', 'href' => '?controller=ProjectListController'],
+            ['label' => 'Design & QA', 'href' => '/projects/94'],
+            ['label' => 'Audit', 'href' => '/projects/94/audit'],
+        ]);
+
+        $this->assertStringContainsString('data-slot="breadcrumbs"', $html);
+        $this->assertMatchesRegularExpression('~<a href="\?controller=ProjectListController">Projects</a>~', $html);
+        $this->assertStringContainsString('Design &amp; QA', $html);
+        $this->assertSame(1, substr_count($html, 'aria-current="page"'));
+        $this->assertMatchesRegularExpression('~<span aria-current="page">Audit</span>~', $html);
+        $this->assertStringNotContainsString('href="/projects/94/audit"', $html);
+        $this->assertSame('', $kit->breadcrumbs([]));
+    }
+
+    public function testDateRangeRendersFrozenPresetsAndAClosedCustomPopover(): void
+    {
+        (new Plugin($this->container))->initialize();
+        $kit = $this->container['template']->kit;
+        $html = $kit->dateRange('2026-11-19T00:00:00Z', '2026-12-03T23:59:59Z');
+
+        $this->assertStringContainsString('data-slot="date-range"', $html);
+        $this->assertStringContainsString('data-slot="segmented"', $html);
+        preg_match_all('~<button[^>]*>(15m|1h|24h|7d|Custom…)</button>~', $html, $matches);
+        $this->assertSame(['15m', '1h', '24h', '7d', 'Custom…'], $matches[1]);
+        $this->assertStringContainsString('data-from="2026-11-19T00:00:00Z"', $html);
+        $this->assertStringContainsString('data-to="2026-12-03T23:59:59Z"', $html);
+        $this->assertMatchesRegularExpression('~aria-expanded="false" aria-controls="([^"]+)".*id="\1"[^>]*hidden~s', $html);
+        $subset = $kit->dateRange(null, null, ['1h']);
+        $this->assertStringContainsString('>1h</button>', $subset);
+        $this->assertStringNotContainsString('>15m</button>', $subset);
+    }
+
+    public function testAppShellStylesTheCoreHeaderAndViewSwitcherWithoutAnOverride(): void
+    {
+        $css = file_get_contents(__DIR__ . '/../Assets/css/kit.css');
+        $this->assertMatchesRegularExpression('~html body > header\s*\{[^}]*border-bottom:~', $css);
+        $this->assertMatchesRegularExpression('~\.project-header\s*\{[^}]*border-bottom:~', $css);
+        $this->assertMatchesRegularExpression('~\.views-switcher[^ ,{]*[^{}]*\.views\s*\{[^}]*overflow-x:\s*auto~', $css);
+
+        $template = $this->container['template'];
+        $core = [$template->getTemplateFile('header'), $template->getTemplateFile('project_header/views')];
+        (new Plugin($this->container))->initialize();
+        $this->assertSame($core, [$template->getTemplateFile('header'), $template->getTemplateFile('project_header/views')]);
+    }
+
     public function testKitEscapesUserControlledTextAndAttributes(): void
     {
         (new Plugin($this->container))->initialize();

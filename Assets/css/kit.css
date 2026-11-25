@@ -882,24 +882,62 @@ ul.listing ul,
   font-weight: 500;
 }
 
-/* --- Project header: gear menu, tabs and filter bar on one row ------ */
-/* Kanboard floats these; with h-9 tabs the float outgrows the header and
-   the board slides in beside it. A flex row keeps them aligned instead. */
-:root .project-header {
+/* --- App shell ------------------------------------------------------ */
+html body > header {
+  align-items: center;
+  gap: var(--space-2, .5rem) var(--space-3, .75rem);
+  padding: var(--space-2, .5rem) var(--space-4, 1rem);
+  border-bottom: 1px solid var(--border, #dedede);
+  background-color: var(--background, #fff);
+}
+
+html body > header > :is(.title-container, .board-selector-container, .menus-container) {
+  min-width: 0;
+  max-width: 100%;
+}
+
+html body > header > .board-selector-container:not(:empty) {
+  flex: 0 1 20rem;
+}
+
+html body > header h1 {
+  font-size: 1rem;
+  overflow-wrap: anywhere;
+}
+
+html .project-header {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: var(--space-2);
-  margin-bottom: var(--space-4);
+  gap: var(--space-2, .5rem);
+  padding-block: var(--space-2, .5rem);
+  margin-bottom: var(--space-4, 1rem);
+  border-bottom: 1px solid var(--row-line, #eee);
 }
 
-:root .project-header > .dropdown-component,
-:root .project-header > .views-switcher-component {
+html .project-header > :is(.dropdown-component, .views-switcher, .views-switcher-component) {
   float: none;
+  margin: 0;
+  min-width: 0;
+  max-width: 100%;
+}
+
+html .project-header :is(.views-switcher, .views-switcher-component) > .views {
+  max-width: 100%;
+  height: auto;
+  min-height: var(--control-height, 2.25rem);
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+html .project-header .views > li {
+  flex: none;
+  height: auto;
+  align-self: stretch;
   margin: 0;
 }
 
-:root .project-header > .filter-box-component {
+html .project-header > .filter-box-component {
   flex: 1 1 18rem;
   min-width: 0;
 }
@@ -1409,6 +1447,14 @@ code {
 @keyframes harbor-skeleton-reveal {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+[data-slot="skeleton"][data-skeleton] {
+  animation: none;
+}
+
+[data-slot="skeleton"][data-skeleton]:not([data-skeleton="visible"]) {
+  visibility: hidden;
 }
 
 [data-slot="skeleton"][data-kind="row"] {

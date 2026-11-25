@@ -6,6 +6,23 @@
     var popupStack = [];
     var popupRoles = { menu: 'menu', popover: 'dialog', dialog: 'dialog', tooltip: 'tooltip' };
     var toasterFocusOwner;
+    var pendingSkeletons = new WeakMap();
+
+    function skeleton(el, promise) {
+        window.clearTimeout(pendingSkeletons.get(el));
+        el.setAttribute('data-skeleton', 'waiting');
+        var timer = window.setTimeout(function () {
+            el.setAttribute('data-skeleton', 'visible');
+        }, 300);
+        pendingSkeletons.set(el, timer);
+
+        return Promise.resolve(promise).finally(function () {
+            if (pendingSkeletons.get(el) !== timer) return;
+            window.clearTimeout(timer);
+            pendingSkeletons.delete(el);
+            el.setAttribute('data-skeleton', 'settled');
+        });
+    }
 
     function enabledMenuItem(item) {
         return item.getAttribute('aria-disabled') !== 'true' && !item.disabled && !item.hidden;
@@ -491,5 +508,5 @@
         if (window.KB) window.KB.on('subtasks.reloaded', prepareSubtaskRows);
     }
 
-    window.Kit = { popup: popup, roving: roving, toast: toast };
+    window.Kit = { popup: popup, roving: roving, toast: toast, skeleton: skeleton };
 })(window, document);

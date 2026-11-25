@@ -284,6 +284,37 @@ class KitHelper extends Base
         return $this->template->render('Harbor:kit/approval_card', compact('expiresAt', 'details', 'countdown', 'remaining', 'href', 'actionLabel'));
     }
 
+    /**
+     * @param array<array{label: string, href?: array|string}> $items In order from root to the current page.
+     */
+    public function breadcrumbs(array $items): string
+    {
+        if ($items === []) {
+            return '';
+        }
+
+        $items = array_values($items);
+        $last = count($items) - 1;
+        foreach ($items as $index => &$item) {
+            $item['href'] = $index < $last ? $this->actionUrl($item['href'] ?? '') : null;
+        }
+        unset($item);
+
+        return $this->template->render('Harbor:kit/breadcrumbs', compact('items', 'last'));
+    }
+
+    /**
+     * @param string[] $presets Any subset of the supported relative ranges.
+     * Date bounds are ISO 8601 strings.
+     */
+    public function dateRange(?string $from, ?string $to, array $presets = ['15m', '1h', '24h', '7d']): string
+    {
+        $presets = array_intersect_key(['15m' => 900, '1h' => 3600, '24h' => 86400, '7d' => 604800], array_flip($presets));
+        $id = uniqid('harbor-date-range-');
+
+        return $this->template->render('Harbor:kit/date_range', compact('from', 'to', 'presets', 'id'));
+    }
+
     private static function chartJson(array $data): string
     {
         return json_encode($data, JSON_HEX_AMP | JSON_INVALID_UTF8_SUBSTITUTE | JSON_THROW_ON_ERROR);
