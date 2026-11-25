@@ -1458,7 +1458,7 @@ code {
   padding: .125rem .625rem;
   border-radius: 999px;
   background: color-mix(in srgb, var(--c, #555) 14%, transparent);
-  color: var(--c, #555);
+  color: color-mix(in srgb, var(--c, #555) 60%, var(--foreground, #222));
   font-size: .75rem;
   font-weight: 500;
 }
