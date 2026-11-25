@@ -497,9 +497,51 @@
         subtaskMenu = { controls: controls, panel: panel };
     }
 
+    var copyFeedback = new WeakMap();
+
+    async function copyText(event) {
+        var button = event.target.closest?.('[data-slot="copy-button"]');
+        if (!button || button.dataset.copy === undefined || !window.navigator.clipboard) return;
+
+        try {
+            await window.navigator.clipboard.writeText(button.dataset.copy);
+        } catch {
+            return;
+        }
+
+        var previous = copyFeedback.get(button);
+        var label = previous ? previous.label : button.textContent;
+        if (previous) window.clearTimeout(previous.timer);
+        button.textContent = button.dataset.copiedLabel || 'Copied';
+        var timer = window.setTimeout(function () {
+            button.textContent = label;
+            copyFeedback.delete(button);
+        }, 2000);
+        copyFeedback.set(button, { label: label, timer: timer });
+    }
+
+    function openShortcutSheet(event) {
+        if (event.key !== '?' || event.defaultPrevented || event.isComposing
+            || event.ctrlKey || event.metaKey || event.altKey) return;
+        if (event.target.isContentEditable || event.target.closest?.('input, textarea, select')) return;
+
+        var sheet = document.querySelector('[data-slot="shortcut-sheet"]');
+        if (!sheet || window.KB?.modal?.isOpen()) return;
+
+        // Core listens on window for the same key.
+        event.preventDefault();
+        event.stopPropagation();
+        if (!sheet.open) sheet.showModal();
+    }
+
     if (document.readyState) {
         document.addEventListener('click', function (event) { openSubtaskMenu(event, false); }, true);
         document.addEventListener('contextmenu', function (event) { openSubtaskMenu(event, true); }, true);
+        document.addEventListener('click', copyText);
+        document.addEventListener('click', function (event) {
+            event.target.closest?.('[data-shortcut-close]')?.closest('[data-slot="shortcut-sheet"]')?.close();
+        });
+        document.addEventListener('keydown', openShortcutSheet);
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', prepareSubtaskRows);
         } else {

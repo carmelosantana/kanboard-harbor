@@ -1579,6 +1579,95 @@ code {
   color: var(--foreground, #333);
 }
 
+[data-slot="avatar"] {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  flex: none;
+  border-radius: 50%;
+  background: var(--secondary, #eee);
+  color: var(--foreground, #333);
+  font-size: .7rem;
+  font-weight: 600;
+}
+
+[data-slot="avatar"] > [data-presence] {
+  position: absolute;
+  inset-inline-end: -1px;
+  bottom: -1px;
+  box-sizing: content-box;
+  width: .4375rem;
+  height: .4375rem;
+  border: 2px solid var(--card, #fff);
+  border-radius: 50%;
+  background: var(--muted-foreground, #666);
+}
+
+[data-slot="avatar"] > [data-presence="away"] {
+  background: var(--warning, #a60);
+}
+
+[data-slot="avatar"] > :is([data-presence="online"], [data-presence="on"]) {
+  background: var(--success, #283);
+}
+
+[data-slot="copy-button"],
+[data-slot="kbd"] {
+  padding: .125rem var(--space-2, .5rem);
+  border: 1px solid var(--border, #ddd);
+  border-radius: var(--radius-sm, .25rem);
+  background: var(--muted, #eee);
+  color: var(--foreground, #333);
+  font-size: .75rem;
+}
+
+[data-slot="kbd"] {
+  font-family: var(--font-mono, monospace);
+  white-space: nowrap;
+}
+
+[data-slot="shortcut-sheet"] {
+  box-sizing: border-box;
+  width: min(32rem, calc(100% - 2rem));
+  max-height: calc(100% - 2rem);
+  padding: var(--space-6, 1.5rem);
+  overflow: auto;
+  border: 1px solid var(--border, #ddd);
+  border-radius: var(--radius-lg, .5rem);
+  background: var(--popover, #fff);
+  color: var(--popover-foreground, #333);
+}
+
+[data-slot="shortcut-sheet"]::backdrop {
+  background: var(--popup-backdrop, #0008);
+}
+
+[data-slot="shortcut-sheet"] dl {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--space-2, .5rem);
+}
+
+[data-slot="shortcut-sheet"] dd {
+  margin: 0;
+  text-align: end;
+}
+
+[data-slot="visually-hidden"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
 :is([data-slot="popup"], [data-popup-preset]) {
   position: fixed;
   z-index: 10020;

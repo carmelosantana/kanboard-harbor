@@ -73,6 +73,58 @@ class KitHelper extends Base
         return $this->template->render('Harbor:kit/pill', compact('label', 'tone'));
     }
 
+    public function avatar(string $name, ?string $presence = null): string
+    {
+        $initials = $this->helper->user->getInitials(trim($name));
+        $presenceLabel = match ($presence) {
+            'on', 'online' => t('Online'),
+            'away' => t('Away'),
+            'off', 'offline' => t('Offline'),
+            default => $presence,
+        };
+
+        return $this->template->render('Harbor:kit/avatar', compact('name', 'initials', 'presence', 'presenceLabel'));
+    }
+
+    public function copyButton(string $value): string
+    {
+        $copy = htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $copiedLabel = $this->helper->text->e(e('Copied'));
+
+        return '<button type="button" data-slot="copy-button" data-copy="' . $copy
+            . '" data-copied-label="' . $copiedLabel . '" aria-live="polite">' . t('Copy') . '</button>';
+    }
+
+    public function kbd(string $key): string
+    {
+        return '<kbd data-slot="kbd">' . $this->helper->text->e($key) . '</kbd>';
+    }
+
+    public function shortcutSheet(): string
+    {
+        // This reference describes registered keys without selecting or running actions for an entity.
+        $groups = [];
+        foreach ($this->hook->getListeners('kit:actions') as $listener) {
+            $descriptors = is_callable($listener) ? $listener() : null;
+            if (!is_array($descriptors)) {
+                continue;
+            }
+            foreach ($descriptors as $descriptor) {
+                if (is_string($descriptor['key'] ?? null) && is_string($descriptor['slot'] ?? null)
+                    && is_string($descriptor['label'] ?? null)) {
+                    $groups[$descriptor['slot']][] = ['label' => $descriptor['label'], 'key' => $descriptor['key']];
+                }
+            }
+        }
+
+        return $this->template->render('Harbor:kit/shortcut_sheet', compact('groups'));
+    }
+
+    public function visuallyHidden(string $text): string
+    {
+        return '<span data-slot="visually-hidden">' . $this->helper->text->e($text) . '</span>';
+    }
+
     public function callout(string $title, string $body, string $tone = 'neutral'): string
     {
         return $this->template->render('Harbor:kit/callout', compact('title', 'body', 'tone'));

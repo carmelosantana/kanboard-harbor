@@ -13,6 +13,69 @@ use KanboardTests\units\Base;
 
 class KitHelperTest extends Base
 {
+    public function testAvatarShowsInitialsAndNamesItsOptionalPresence(): void
+    {
+        (new Plugin($this->container))->initialize();
+        $kit = $this->container['template']->kit;
+
+        $html = $kit->avatar('Éva Brown', 'away');
+        $this->assertStringContainsString('data-slot="avatar"', $html);
+        $this->assertStringContainsString('>ÉB</span>', $html);
+        $this->assertMatchesRegularExpression('~<span[^>]*role="img"[^>]*aria-label="Away"[^>]*></span>~', $html);
+        $this->assertStringNotContainsString('data-presence=', $kit->avatar('Éva Brown'));
+    }
+
+    public function testKeyboardHintsAndCopyButtonEscapePlainText(): void
+    {
+        (new Plugin($this->container))->initialize();
+        $kit = $this->container['template']->kit;
+
+        $this->assertSame('<kbd data-slot="kbd">⌘K</kbd>', $kit->kbd('⌘K'));
+        $this->assertSame('<kbd data-slot="kbd">&lt;&amp;</kbd>', $kit->kbd('<&'));
+        $copy = $kit->copyButton('"&');
+        $this->assertStringContainsString('type="button" data-slot="copy-button"', $copy);
+        $this->assertStringContainsString('data-copy="&quot;&amp;"', $copy);
+        $this->assertStringContainsString('>Copy</button>', $copy);
+    }
+
+    public function testShortcutSheetGroupsRegisteredKeysBySlot(): void
+    {
+        (new Plugin($this->container))->initialize();
+        $descriptor = [
+            'id' => 'example.one', 'key' => '<1>', 'label' => 'Find & select', 'slot' => 'example-tools',
+            'when' => '', 'route' => '/example', 'risk' => 'read', 'stepUp' => false,
+            'can' => static fn (): bool => false,
+        ];
+        $this->container['hook']->on('kit:actions', static fn () => [
+            $descriptor,
+            array_replace($descriptor, ['id' => 'example.none', 'key' => null, 'label' => 'No key']),
+        ]);
+        $this->container['hook']->on('kit:actions', static fn () => [
+            array_replace($descriptor, ['id' => 'example.two', 'key' => '⌘K', 'label' => 'Search']),
+        ]);
+        $html = $this->container['template']->kit->shortcutSheet();
+
+        $this->assertStringContainsString('<dialog data-slot="shortcut-sheet"', $html);
+        $this->assertStringContainsString('>Keyboard shortcuts</h2>', $html);
+        $this->assertMatchesRegularExpression('~>subtask-row</h3>\s*<dl>.*?Mark done.*?Start working.*?Back to todo.*?</dl>~s', $html);
+        $this->assertMatchesRegularExpression('~>example-tools</h3>\s*<dl>.*?Find &amp; select.*?'
+            . '<kbd data-slot="kbd">&lt;1&gt;</kbd>.*?Search.*?<kbd data-slot="kbd">⌘K</kbd>.*?</dl>~s', $html);
+        $this->assertStringNotContainsString('No key', $html);
+    }
+
+    public function testVisuallyHiddenTextUsesTheClipPattern(): void
+    {
+        (new Plugin($this->container))->initialize();
+        $kit = $this->container['template']->kit;
+        $this->assertSame('<span data-slot="visually-hidden">&lt;&amp;</span>', $kit->visuallyHidden('<&'));
+
+        $css = file_get_contents(__DIR__ . '/../Assets/css/kit.css');
+        $this->assertSame(1, preg_match('~\[data-slot="visually-hidden"\]\s*\{([^}]*)\}~', $css, $rule));
+        foreach (['position: absolute', 'width: 1px', 'height: 1px', 'overflow: hidden', 'clip: rect(0, 0, 0, 0)', 'white-space: nowrap'] as $declaration) {
+            $this->assertStringContainsString($declaration . ';', $rule[1]);
+        }
+    }
+
     public function testNonAdminGetsA403FromTheStyleGuide(): void
     {
         $response = $this->prepareStyleGuideRequest(Role::APP_USER);
