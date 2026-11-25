@@ -13,6 +13,36 @@ use KanboardTests\units\Base;
 
 class KitHelperTest extends Base
 {
+    public function testThemeDropdownOffersBothDensitiesInThePostForm(): void
+    {
+        $this->container['userSession']->initialize($this->container['userModel']->getById(1));
+        (new Plugin($this->container))->initialize();
+        $template = $this->container['template'];
+        $metadata = $this->container['userMetadataModel'];
+
+        foreach (['comfortable', 'compact'] as $selected) {
+            if ($selected === 'compact') {
+                $metadata->save(1, ['harbor_density' => 'compact']);
+            }
+            $html = $template->render('header/user_dropdown');
+            $this->assertSame(1, preg_match('~<form method="post" aria-label="Theme">(.*?)</form>~s', $html, $form));
+            $this->assertStringContainsString('name="csrf_token"', $form[1]);
+            $this->assertStringContainsString('name="return_to"', $form[1]);
+            $this->assertSame(1, preg_match('~<div role="group" aria-label="Density">(.*?)</div>~s', $form[1], $group));
+            $this->assertStringContainsString('>Density<', $group[1]);
+
+            foreach (['comfortable' => 'Comfortable', 'compact' => 'Compact'] as $mode => $label) {
+                $pressed = $mode === $selected ? 'true' : 'false';
+                $this->assertMatchesRegularExpression(
+                    '~<button type="submit"\s+formaction="[^"]*controller=DensityController&amp;'
+                    . 'action=set&amp;plugin=Harbor&amp;mode=' . $mode . '"\s+aria-pressed="' . $pressed . '">\s*'
+                    . $label . '\s*</button>~',
+                    $group[1]
+                );
+            }
+        }
+    }
+
     public function testAvatarShowsInitialsAndNamesItsOptionalPresence(): void
     {
         (new Plugin($this->container))->initialize();

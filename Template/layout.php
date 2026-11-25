@@ -12,9 +12,10 @@ try {
 }
 $harborHtml = ob_get_clean();
 
+$harborUserId = $this->user->getId();
 $harborTheme = (new ThemeResolver())->resolve(
     $this->user->getTheme(),
-    $this->user->getId() > 0,
+    $harborUserId > 0,
     $this->app->config('harbor_guest_theme', 'dark'),
     $this->app->config('harbor_preset', 'newburgh')
 );
@@ -22,6 +23,9 @@ $harborTheme = (new ThemeResolver())->resolve(
     'autoScript' => $harborAuto] = $harborTheme;
 
 $harborAttributes = " class=\"$harborClasses\" style=\"color-scheme:$harborScheme;background:$harborBackground\"";
+if (ThemeResolver::isCompact($this->model->userMetadataModel, $harborUserId)) {
+    $harborAttributes .= ' data-density="compact"';
+}
 $harborHtml = preg_replace('/<html(?=[\s>])/i', '<html' . $harborAttributes, $harborHtml, 1);
 
 $harborHead = "<meta name=\"color-scheme\" content=\"$harborScheme\">\n"

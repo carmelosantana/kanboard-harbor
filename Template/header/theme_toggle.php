@@ -1,11 +1,14 @@
 <?php
 
 use Kanboard\Plugin\Harbor\Theme\TemplateChain;
+use Kanboard\Plugin\Harbor\Theme\ThemeResolver;
 
-if ($this->user->getId() > 0): ?>
+if (($harborUserId = $this->user->getId()) > 0): ?>
     <?php
     $theme = $this->user->getTheme();
     $themeLabels = ['light' => t('Light'), 'dark' => t('Dark'), 'auto' => t('Auto')];
+    $density = ThemeResolver::isCompact($this->model->userMetadataModel, $harborUserId) ? 'compact' : 'comfortable';
+    $densityLabels = ['comfortable' => t('Comfortable'), 'compact' => t('Compact')];
     ?>
     <details class="harbor-theme-toggle">
         <summary title="<?= $this->text->e($themeLabels[$theme] ?? t('Theme')) ?>">
@@ -22,6 +25,16 @@ if ($this->user->getId() > 0): ?>
                     <?= $label ?>
                 </button>
             <?php endforeach ?>
+            <div role="group" aria-label="<?= t('Density') ?>">
+                <span aria-hidden="true"><?= t('Density') ?></span>
+                <?php foreach ($densityLabels as $mode => $label): ?>
+                    <button type="submit"
+                            formaction="<?= $this->url->href('DensityController', 'set', ['plugin' => 'Harbor', 'mode' => $mode]) ?>"
+                            aria-pressed="<?= $density === $mode ? 'true' : 'false' ?>">
+                        <?= $label ?>
+                    </button>
+                <?php endforeach ?>
+            </div>
         </form>
     </details>
 <?php endif ?>

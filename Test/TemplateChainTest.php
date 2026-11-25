@@ -120,6 +120,43 @@ class TemplateChainTest extends Base
         ];
     }
 
+    /** @dataProvider densityPreferences */
+    public function testDensityIsRenderedOnTheRootElementBeforeStylesheets(
+        bool $loggedIn,
+        ?string $preference,
+        bool $compact
+    ): void {
+        if ($preference !== null) {
+            $this->container['userMetadataModel']->save(1, ['harbor_density' => $preference]);
+        }
+        if ($loggedIn) {
+            $this->container['userSession']->initialize($this->container['userModel']->getById(1));
+        }
+        $this->registerHarbor();
+
+        $html = $this->renderLayout();
+
+        $this->assertSame(1, preg_match('/<html\b[^>]*>/', $html, $tag, PREG_OFFSET_CAPTURE));
+        $this->assertStringContainsString('<link', $html);
+        $this->assertLessThan(strpos($html, '<link'), $tag[0][1] + strlen($tag[0][0]));
+        if ($compact) {
+            $this->assertStringContainsString(' data-density="compact"', $tag[0][0]);
+        } else {
+            $this->assertStringNotContainsString('data-density=', $tag[0][0]);
+        }
+    }
+
+    public static function densityPreferences(): array
+    {
+        return [
+            'compact member' => [true, 'compact', true],
+            'comfortable member' => [true, 'comfortable', false],
+            'unset preference' => [true, null, false],
+            'unrecognized preference' => [true, 'dense', false],
+            'guest' => [false, 'compact', false],
+        ];
+    }
+
     public function testAutoLayoutLoadsOneBlockingScriptImmediatelyAfterCriticalCss(): void
     {
         $this->container['configModel']->save(['harbor_guest_theme' => 'auto']);

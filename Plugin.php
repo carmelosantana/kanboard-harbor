@@ -221,13 +221,14 @@ class Plugin extends Base
     }
 
     /**
-     * Add custom routes for the theme API
+     * Add custom routes
      *
      * @return void
      */
     private function addRoutes()
     {
         $this->route->addRoute('harbor/theme/:mode', 'ThemeController', 'set', 'Harbor');
+        $this->route->addRoute('harbor/density/:mode', 'DensityController', 'set', 'Harbor');
         $this->route->addRoute('harbor/subtask/:subtask_id/status/:status', 'SubtaskStatusController', 'set', 'Harbor');
     }
 
