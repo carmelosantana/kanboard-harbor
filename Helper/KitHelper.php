@@ -7,6 +7,7 @@ use DateTimeImmutable;
 use InvalidArgumentException;
 use Kanboard\Core\Base;
 use Kanboard\Core\Translator;
+use Throwable;
 
 class KitHelper extends Base
 {
@@ -104,8 +105,16 @@ class KitHelper extends Base
     {
         // This reference describes registered keys without selecting or running actions for an entity.
         $groups = [];
-        foreach ($this->hook->getListeners('kit:actions') as $listener) {
-            $descriptors = is_callable($listener) ? $listener() : null;
+        foreach ($this->hook->getListeners('kit:actions') as $listenerIndex => $listener) {
+            try {
+                $descriptors = is_callable($listener) ? $listener() : null;
+            } catch (Throwable $exception) {
+                $this->logger->warning('Harbor skipped a kit:actions listener while rendering keyboard shortcuts.', [
+                    'listener' => $listenerIndex,
+                    'exception' => $exception,
+                ]);
+                continue;
+            }
             if (!is_array($descriptors)) {
                 continue;
             }

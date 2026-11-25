@@ -50,6 +50,7 @@ class KitHelperTest extends Base
             $descriptor,
             array_replace($descriptor, ['id' => 'example.none', 'key' => null, 'label' => 'No key']),
         ]);
+        $this->container['hook']->on('kit:actions', static fn (int $x) => [$descriptor]);
         $this->container['hook']->on('kit:actions', static fn () => [
             array_replace($descriptor, ['id' => 'example.two', 'key' => '⌘K', 'label' => 'Search']),
         ]);
