@@ -7,6 +7,7 @@ use Kanboard\Core\Security\AuthenticationManager;
 use Kanboard\Core\Template;
 use Kanboard\Model\UserModel;
 use Kanboard\Plugin\Harbor\Action\ActionRegistry;
+use Kanboard\Plugin\Harbor\Assets\ModuleLoader;
 use Kanboard\Plugin\Harbor\Controller\SubtaskStatusController;
 use Kanboard\Plugin\Harbor\Helper\KitHelper;
 use Kanboard\Plugin\Harbor\Theme\LayoutChain;
@@ -44,6 +45,9 @@ class Plugin extends Base
         $this->container['harborActionRegistry'] = static fn ($container) => new ActionRegistry($container);
         $this->helper->register('kit', KitHelper::class);
         $this->hook->on('kit:actions', $this->subtaskActions(...));
+        $this->hook->on('kit:modules', static fn (string $controller, ?string $plugin): array =>
+            $controller === 'BoardViewController' && $plugin === null ? ['board'] : []
+        );
 
         $this->migrateThemePreference();
         // At normal plugin load the session has yet to open.
@@ -181,6 +185,9 @@ class Plugin extends Base
         // Core's asset hook takes static paths. Register them after the router dispatches.
         $this->on('app.bootstrap', function (): void {
             $controller = $this->router->getController();
+            $plugin = $this->router->getPlugin();
+            (new ModuleLoader($this->hook, $this->logger))->register($controller, $plugin === '' ? null : $plugin);
+
             if (in_array($controller, ['AuthController', 'TwoFactorController'], true)) {
                 $this->hook->on('template:layout:css', [
                     'template' => 'plugins/Harbor/Assets/css/login.css',
