@@ -551,6 +551,17 @@ class KitHelperTest extends Base
         $this->assertSame($core, [$template->getTemplateFile('header'), $template->getTemplateFile('project_header/views')]);
     }
 
+    public function testAppShellTruncatesTheHeaderTitleOnOneLine(): void
+    {
+        $css = file_get_contents(__DIR__ . '/../Assets/css/kit.css');
+        $this->assertSame(1, preg_match('~html body > header h1\s*\{([^}]*)\}~', $css, $heading));
+        foreach (['min-width' => '0', 'overflow' => 'hidden', 'text-overflow' => 'ellipsis', 'white-space' => 'nowrap'] as $property => $value) {
+            $this->assertMatchesRegularExpression('~(?:^|;)\s*' . $property . ':\s*' . $value . '\s*;~', $heading[1]);
+        }
+        $this->assertMatchesRegularExpression('~html body > header > \.title-container\s*\{[^}]*min-width:\s*0\s*;~', $css);
+        $this->assertMatchesRegularExpression('~html body > header > \.menus-container\s*\{[^}]*flex-shrink:\s*0\s*;~', $css);
+    }
+
     public function testKitEscapesUserControlledTextAndAttributes(): void
     {
         (new Plugin($this->container))->initialize();

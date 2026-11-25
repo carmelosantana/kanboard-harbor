@@ -975,9 +975,17 @@ html body > header {
   background-color: var(--background, #fff);
 }
 
-html body > header > :is(.title-container, .board-selector-container, .menus-container) {
+html body > header > .title-container {
+  min-width: 0;
+}
+
+html body > header > .board-selector-container {
   min-width: 0;
   max-width: 100%;
+}
+
+html body > header > .menus-container {
+  flex-shrink: 0;
 }
 
 html body > header > .board-selector-container:not(:empty) {
@@ -986,7 +994,16 @@ html body > header > .board-selector-container:not(:empty) {
 
 html body > header h1 {
   font-size: 1rem;
-  overflow-wrap: anywhere;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  html body > header > .title-container {
+    order: 1;
+  }
 }
 
 html .project-header {
