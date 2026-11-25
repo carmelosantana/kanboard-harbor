@@ -5,25 +5,27 @@ namespace Kanboard\Plugin\Harbor\Theme;
 use Kanboard\Core\Template;
 use WeakMap;
 
-final class LayoutChain
+final class TemplateChain
 {
-    /** @var WeakMap<Template, string>|null */
+    /** @var WeakMap<Template, array<string, string>>|null */
     private static ?WeakMap $previousPaths = null;
 
-    public static function register(Template $template, string $wrapper): void
+    public static function register(Template $template, string $name, string $wrapper): void
     {
         self::$previousPaths ??= new WeakMap();
-        if (isset(self::$previousPaths[$template])) {
+        $paths = self::$previousPaths[$template] ?? [];
+        if (isset($paths[$name])) {
             return;
         }
 
-        self::$previousPaths[$template] = $template->getTemplateFile('layout');
-        $template->setTemplateOverride('layout', $wrapper);
+        $paths[$name] = $template->getTemplateFile($name);
+        self::$previousPaths[$template] = $paths;
+        $template->setTemplateOverride($name, $wrapper);
     }
 
-    public static function previous(Template $template): string
+    public static function previous(Template $template, string $name): string
     {
-        return self::$previousPaths[$template];
+        return self::$previousPaths[$template][$name];
     }
 
     public static function criticalCss(): string

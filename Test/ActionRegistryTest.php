@@ -3,6 +3,7 @@
 require_once 'tests/units/Base.php';
 
 use Kanboard\Plugin\Harbor\Action\ActionRegistry;
+use Kanboard\Plugin\Harbor\Controller\SubtaskStatusController;
 use Kanboard\Plugin\Harbor\Plugin;
 use KanboardTests\units\Base;
 use Psr\Log\LoggerInterface;
@@ -72,6 +73,36 @@ class ActionRegistryTest extends Base
             $registry->forSlot('subtask-row', $entity, ['id' => 2]),
             'id'
         ));
+    }
+
+    public function testStateSourceIsOptionalAndIndependentOfTheSlot(): void
+    {
+        $this->container['hook']->on('kit:actions', fn () => [
+            $this->descriptor([
+                'id' => 'service.stop',
+                'slot' => 'service-tile',
+                'when' => 'state != stopped and status != pending and permitted == 1',
+                'states_from' => ['running' => 1, 'pending' => 2, 'stopped' => 0, 'degraded' => 3],
+            ]),
+            $this->descriptor(),
+        ]);
+        $registry = new ActionRegistry($this->container);
+
+        $this->assertSame(['running', 'degraded'], $registry->forSlot(
+            'service-tile',
+            ['state' => 'pending', 'status' => 'pending', 'permitted' => 1],
+            []
+        )[0]['states'] ?? null);
+        $this->assertArrayNotHasKey('states', $registry->forSlot('subtask-row', [], [])[0]);
+    }
+
+    public function testHarborSubtaskActionsDeclareTheirStateSource(): void
+    {
+        (new Plugin($this->container))->initialize();
+        $listeners = $this->container['hook']->getListeners('kit:actions');
+        foreach ($listeners[0]() as $descriptor) {
+            $this->assertSame(SubtaskStatusController::STATUSES, $descriptor['states_from'] ?? null);
+        }
     }
 
     public function testExecuteChecksCurrentPermissionEvenAfterAnAllowedRender(): void

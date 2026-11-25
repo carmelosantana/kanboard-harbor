@@ -4,13 +4,12 @@ namespace Kanboard\Plugin\Harbor;
 
 use Kanboard\Core\Plugin\Base;
 use Kanboard\Core\Security\AuthenticationManager;
-use Kanboard\Core\Template;
 use Kanboard\Model\UserModel;
 use Kanboard\Plugin\Harbor\Action\ActionRegistry;
 use Kanboard\Plugin\Harbor\Assets\ModuleLoader;
 use Kanboard\Plugin\Harbor\Controller\SubtaskStatusController;
 use Kanboard\Plugin\Harbor\Helper\KitHelper;
-use Kanboard\Plugin\Harbor\Theme\LayoutChain;
+use Kanboard\Plugin\Harbor\Theme\TemplateChain;
 use WeakMap;
 
 /**
@@ -28,9 +27,6 @@ use WeakMap;
 class Plugin extends Base
 {
     private const LEGACY_THEME_KEY = 'shadcn_theme_mode';
-
-    /** @var WeakMap<Template, string>|null */
-    private static ?WeakMap $previousDropdowns = null;
 
     /** @var WeakMap<\PicoDb\Database, bool>|null */
     private static ?WeakMap $shadcnHistory = null;
@@ -98,6 +94,7 @@ class Plugin extends Base
                 'slot' => 'subtask-row',
                 'key' => $key,
                 'when' => $when,
+                'states_from' => SubtaskStatusController::STATUSES,
                 'route' => ['SubtaskStatusController', 'set', 'plugin' => 'Harbor', 'status' => $status],
                 'risk' => 'reversible',
                 'stepUp' => false,
@@ -209,22 +206,13 @@ class Plugin extends Base
     private function hookTemplates()
     {
         $template = $this->template;
-        LayoutChain::register($template, 'Harbor:layout');
+        TemplateChain::register($template, 'layout', 'Harbor:layout');
 
         // Place the POST form beside the dropdown, outside the menu cloned by core.
-        self::$previousDropdowns ??= new WeakMap();
-        if (!isset(self::$previousDropdowns[$template])) {
-            self::$previousDropdowns[$template] = $template->getTemplateFile('header/user_dropdown');
-            $template->setTemplateOverride('header/user_dropdown', 'Harbor:header/theme_toggle');
-        }
+        TemplateChain::register($template, 'header/user_dropdown', 'Harbor:header/theme_toggle');
 
         $template->setTemplateOverride('auth/index', 'Harbor:auth/index');
         $template->setTemplateOverride('twofactor/check', 'Harbor:twofactor/check');
-    }
-
-    public static function previousUserDropdown(Template $template): string
-    {
-        return self::$previousDropdowns[$template];
     }
 
     /**

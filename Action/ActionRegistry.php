@@ -3,7 +3,6 @@
 namespace Kanboard\Plugin\Harbor\Action;
 
 use Kanboard\Core\Base;
-use Kanboard\Plugin\Harbor\Controller\SubtaskStatusController;
 use Throwable;
 
 /**
@@ -36,9 +35,9 @@ class ActionRegistry extends Base
             $conditions = $descriptor['conditions'];
             unset($descriptor['conditions']);
             $descriptor['disabled'] = !$this->matchesWhen($conditions, $entity);
-            if ($slot === 'subtask-row') {
+            if (isset($descriptor['states_from'])) {
                 $descriptor['states'] = array_values(array_filter(
-                    array_keys(SubtaskStatusController::STATUSES),
+                    array_keys($descriptor['states_from']),
                     fn (string $state): bool => $this->matchesWhen(
                         $conditions,
                         ['state' => $state, 'status' => $state] + $entity
@@ -149,6 +148,7 @@ class ActionRegistry extends Base
             && array_key_exists('key', $entry)
             && ($entry['key'] === null || is_string($entry['key']))
             && is_string($entry['when'] ?? null)
+            && (!array_key_exists('states_from', $entry) || is_array($entry['states_from']))
             && (is_array($entry['route'] ?? null) || is_string($entry['route'] ?? null))
             && in_array($entry['risk'] ?? null, ['read', 'reversible', 'consequential'], true)
             && is_bool($entry['stepUp'] ?? null)

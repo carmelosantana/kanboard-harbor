@@ -1,6 +1,6 @@
 <?php
 
-use Kanboard\Plugin\Harbor\Plugin;
+use Kanboard\Plugin\Harbor\Theme\TemplateChain;
 
 if ($this->user->getId() > 0): ?>
     <?php
@@ -25,4 +25,4 @@ if ($this->user->getId() > 0): ?>
         </form>
     </details>
 <?php endif ?>
-<?php include Plugin::previousUserDropdown($this); ?>
+<?php include TemplateChain::previous($this, 'header/user_dropdown'); ?>

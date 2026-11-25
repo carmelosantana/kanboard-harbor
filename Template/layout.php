@@ -1,11 +1,11 @@
 <?php
 
-use Kanboard\Plugin\Harbor\Theme\LayoutChain;
+use Kanboard\Plugin\Harbor\Theme\TemplateChain;
 use Kanboard\Plugin\Harbor\Theme\ThemeResolver;
 
 ob_start();
 try {
-    include LayoutChain::previous($this);
+    include TemplateChain::previous($this, 'layout');
 } catch (Throwable $exception) {
     ob_end_clean();
     throw $exception;
@@ -25,7 +25,7 @@ $harborAttributes = " class=\"$harborClasses\" style=\"color-scheme:$harborSchem
 $harborHtml = preg_replace('/<html(?=[\s>])/i', '<html' . $harborAttributes, $harborHtml, 1);
 
 $harborHead = "<meta name=\"color-scheme\" content=\"$harborScheme\">\n"
-    . '<style id="harbor-critical">' . LayoutChain::criticalCss() . '</style>';
+    . '<style id="harbor-critical">' . TemplateChain::criticalCss() . '</style>';
 if ($harborAuto) {
     $harborAsset = 'Assets/js/theme-auto.js';
     $harborFile = dirname(__DIR__) . '/' . $harborAsset;

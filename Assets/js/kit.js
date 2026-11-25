@@ -4,6 +4,7 @@
     var menuItem = '[role="menuitem"]';
     var focusable = 'a[href], button, input, select, textarea, summary, [tabindex], [contenteditable="true"]';
     var popupStack = [];
+    var tooltipStack = [];
     var popupRoles = { menu: 'menu', popover: 'dialog', dialog: 'dialog', tooltip: 'tooltip' };
     var toasterFocusOwner;
     var pendingSkeletons = new WeakMap();
@@ -117,6 +118,7 @@
         var preset = (options && options.preset) || 'popover';
         var dialog = preset === 'dialog';
         var tooltip = preset === 'tooltip';
+        var stack = tooltip ? tooltipStack : popupStack;
         var nativeDialog = panel.tagName === 'DIALOG';
         var opened = false;
         var motion = 0;
@@ -150,16 +152,19 @@
         }
 
         function onKey(event) {
-            if (tooltip) {
-                if (event.key === 'Escape') close();
-                return;
-            }
-            if (!isActive() || event.defaultPrevented) return;
+            if (event.defaultPrevented) return;
             if (event.key === 'Escape') {
+                // Capture listeners run in registration order. Pick the recipient
+                // before any popup can consume Escape.
+                var escapeStack = tooltipStack.length ? tooltipStack : popupStack;
+                if (escapeStack[escapeStack.length - 1] !== controls) return;
                 event.preventDefault();
                 event.stopPropagation();
                 close();
-            } else if (dialog && event.key === 'Tab') {
+                return;
+            }
+            if (!isActive()) return;
+            if (dialog && event.key === 'Tab') {
                 var items = tabStops();
                 var index = items.indexOf(document.activeElement);
                 var boundary = event.shiftKey ? 0 : items.length - 1;
@@ -204,7 +209,7 @@
             }
 
             place();
-            if (!tooltip) popupStack.push(controls);
+            stack.push(controls);
             document.addEventListener('keydown', onKey, true);
             document.addEventListener('click', onClick, true);
             window.addEventListener('resize', place);
@@ -221,7 +226,7 @@
             var restoreFocus = returnFocus !== false && isActive();
             opened = false;
             var closing = ++motion;
-            if (!tooltip) popupStack.splice(popupStack.indexOf(controls), 1);
+            stack.splice(stack.indexOf(controls), 1);
             document.removeEventListener('keydown', onKey, true);
             document.removeEventListener('click', onClick, true);
             document.removeEventListener('focusin', onFocus);

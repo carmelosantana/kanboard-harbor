@@ -6,6 +6,90 @@
  * Preset tokens live in tokens.css and are shared by the component rules.
  */
 
+/* Palette and core browser defaults. */
+:root { color-scheme: dark; }
+html.theme-light { color-scheme: light; }
+html.preset-shadcn { color-scheme: dark; }
+html.preset-shadcn.theme-light { color-scheme: light; }
+
+/* Kanboard color id → accent. Kanboard injects `.task-board.color-<id>`
+   (0,2,0) inline; `:root` raises these to 0,3,0. */
+:root .color-yellow { --task-accent: oklch(0.86 0.15 95); }
+:root .color-blue { --task-accent: oklch(0.68 0.15 250); }
+:root .color-green { --task-accent: oklch(0.72 0.16 150); }
+:root .color-purple { --task-accent: oklch(0.65 0.18 300); }
+:root .color-red { --task-accent: oklch(0.66 0.2 25); }
+:root .color-orange { --task-accent: oklch(0.76 0.17 55); }
+:root .color-grey { --task-accent: oklch(0.65 0.02 250); }
+:root .color-brown { --task-accent: oklch(0.58 0.12 50); }
+:root .color-deep_orange { --task-accent: oklch(0.7 0.2 40); }
+:root .color-dark_grey { --task-accent: oklch(0.48 0.02 250); }
+:root .color-pink { --task-accent: oklch(0.72 0.19 350); }
+:root .color-teal { --task-accent: oklch(0.7 0.14 190); }
+:root .color-cyan { --task-accent: oklch(0.73 0.14 210); }
+:root .color-lime { --task-accent: oklch(0.82 0.17 125); }
+:root .color-light_green { --task-accent: oklch(0.79 0.17 140); }
+:root .color-amber { --task-accent: oklch(0.83 0.16 85); }
+
+html ::selection {
+  background-color: var(--highlight, #e2eff7);
+  color: var(--foreground, #333);
+}
+
+header {
+  background-color: var(--background, var(--header-background-color, #fbfbfb));
+  border-bottom: 1px solid var(--border, var(--table-border-color, #eee));
+}
+
+.sidebar {
+  background-color: var(--background, var(--body-background-color, #fff));
+}
+
+a {
+  color: var(--foreground, var(--link-color-primary, #36c));
+  text-decoration: none;
+}
+
+a:hover,
+a:focus-visible {
+  color: var(--foreground, var(--link-color-focus, #df5353));
+  text-decoration: underline;
+}
+
+a:focus-visible,
+button:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--ring, var(--input-focus-border-color, #2472a4));
+  outline-offset: 2px;
+}
+
+html:not(.theme-light) ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+html:not(.theme-light) ::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+html:not(.theme-light) ::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb, GrayText);
+  border-radius: 9999px;
+}
+
+html:not(.theme-light) ::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scrollbar-thumb-hover, GrayText);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* ============================================================
    LAYER 1 — CONTROLS / TYPE
    ============================================================ */
@@ -28,7 +112,7 @@
 }
 
 body {
-  font-family: var(--font-sans);
+  font-family: var(--font-sans, system-ui, sans-serif);
   font-feature-settings: "rlig" 1, "calt" 1;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -78,11 +162,11 @@ h6 { font-size: 0.8125rem; line-height: 1.45; font-weight: 600; }
   background-color: var(--input-surface, #fff);
   color: var(--foreground, #333);
   box-shadow: var(--shadow-xs, none);
-  font-size: var(--control-font-size);
+  font-size: var(--control-font-size, 0.875rem);
   line-height: 1.25rem;
-  padding: 0.25rem var(--control-px);
+  padding: 0.25rem var(--control-px, 0.75rem);
   outline: none;
-  transition: color var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
+  transition: color var(--transition-fast, 150ms ease), border-color var(--transition-fast, 150ms ease), box-shadow var(--transition-fast, 150ms ease);
   -webkit-appearance: none;
   appearance: none;
 }
@@ -108,7 +192,7 @@ h6 { font-size: 0.8125rem; line-height: 1.45; font-weight: 600; }
 /* Select: shadcn chevron instead of the OS arrow. */
 :root select:not([multiple]) {
   padding-right: 2rem;
-  background-image: var(--select-chevron);
+  background-image: var(--select-chevron, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a1a1a1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"));
   background-repeat: no-repeat;
   background-position: right 0.625rem center;
   background-size: 1rem;
@@ -121,7 +205,7 @@ h6 { font-size: 0.8125rem; line-height: 1.45; font-weight: 600; }
 
 :root textarea {
   min-height: 4rem;
-  padding: 0.5rem var(--control-px);
+  padding: 0.5rem var(--control-px, 0.75rem);
   line-height: 1.5;
   resize: vertical;
 }
@@ -158,8 +242,8 @@ h6 { font-size: 0.8125rem; line-height: 1.45; font-weight: 600; }
 
 :root :is(input, textarea).form-error,
 :root :is(input, textarea).form-error:focus {
-  border: 1px solid var(--destructive);
-  box-shadow: 0 0 0 3px color-mix(in oklch, var(--destructive) 20%, transparent);
+  border: 1px solid var(--destructive, #a52824);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--destructive, #a52824) 20%, transparent);
 }
 
 /* Checkbox / radio — shadcn checkbox: 16px, rounded-[4px], filled with
@@ -175,12 +259,12 @@ h6 { font-size: 0.8125rem; line-height: 1.45; font-weight: 600; }
   height: 1rem;
   margin: 0 0.5rem 0 0;
   vertical-align: -0.1875rem;
-  border: 1px solid var(--input);
+  border: 1px solid var(--input, #ccc);
   border-radius: 4px;
-  background-color: var(--input-surface);
-  box-shadow: var(--shadow-xs);
+  background-color: var(--input-surface, #fff);
+  box-shadow: var(--shadow-xs, none);
   cursor: pointer;
-  transition: background-color var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
+  transition: background-color var(--transition-fast, 150ms ease), border-color var(--transition-fast, 150ms ease), box-shadow var(--transition-fast, 150ms ease);
 }
 
 :root input[type="radio"] {
@@ -189,8 +273,8 @@ h6 { font-size: 0.8125rem; line-height: 1.45; font-weight: 600; }
 
 :root input[type="checkbox"]:checked,
 :root input[type="radio"]:checked {
-  background-color: var(--primary);
-  border-color: var(--primary);
+  background-color: var(--primary, #2472a4);
+  border-color: var(--primary, #2472a4);
 }
 
 :root input[type="checkbox"]:checked::after,
@@ -198,7 +282,7 @@ h6 { font-size: 0.8125rem; line-height: 1.45; font-weight: 600; }
   content: "";
   position: absolute;
   inset: 2px;
-  background-color: var(--primary-foreground);
+  background-color: var(--primary-foreground, #fff);
   -webkit-mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 12 10' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolyline points='1,5 4,9 11,1' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
   mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 12 10' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolyline points='1,5 4,9 11,1' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
 }
@@ -213,18 +297,18 @@ h6 { font-size: 0.8125rem; line-height: 1.45; font-weight: 600; }
 :root input[type="checkbox"]:focus-visible,
 :root input[type="radio"]:focus-visible {
   outline: none;
-  border-color: var(--ring);
-  box-shadow: var(--ring-shadow);
+  border-color: var(--ring, #2472a4);
+  box-shadow: var(--ring-shadow, 0 0 0 2px #2472a4);
 }
 
 /* Labels — text-sm font-medium, 8px above the control. */
 label {
-  font-size: var(--control-font-size);
+  font-size: var(--control-font-size, 0.875rem);
   font-weight: 500;
   line-height: 1.25rem;
   margin-top: 1rem;
   margin-bottom: 0.5rem;
-  color: var(--foreground);
+  color: var(--foreground, #333);
 }
 
 /* A label wrapping its own checkbox/radio reads as an inline option. */
@@ -246,13 +330,13 @@ label:has(> input[type="radio"]) > input {
 .form-help {
   font-size: 0.8125rem;
   line-height: 1.25rem;
-  color: var(--muted-foreground);
+  color: var(--muted-foreground, #555);
   margin-top: 0.375rem;
   margin-bottom: 0.75rem;
 }
 
 .form-required {
-  color: var(--destructive);
+  color: var(--destructive, #a52824);
 }
 
 .form-actions {
@@ -272,7 +356,7 @@ label:has(> input[type="radio"]) > input {
 fieldset {
   border: 0;
   padding: 0;
-  margin: 0 0 var(--space-6);
+  margin: 0 0 var(--space-6, 1.5rem);
   min-width: 0;
 }
 
@@ -280,10 +364,10 @@ fieldset legend {
   border: 0;
   background: transparent;
   padding: 0;
-  margin-bottom: var(--space-2);
+  margin-bottom: var(--space-2, .5rem);
   font-size: 0.9375rem;
   font-weight: 600;
-  color: var(--foreground);
+  color: var(--foreground, #333);
   width: auto;
 }
 
@@ -291,33 +375,33 @@ fieldset legend {
 :root .input-addon {
   display: flex;
   align-items: stretch;
-  height: var(--control-height);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-xs);
+  height: var(--control-height, 2.25rem);
+  border-radius: var(--radius-md, .375rem);
+  box-shadow: var(--shadow-xs, none);
 }
 
 :root .input-addon > .input-addon-field,
 :root .input-addon > .input-addon-item {
   box-sizing: border-box;
-  height: var(--control-height);
+  height: var(--control-height, 2.25rem);
   display: flex;
   align-items: center;
-  border: 1px solid var(--input);
+  border: 1px solid var(--input, #ccc);
   border-radius: 0;
-  background-color: var(--input-surface);
-  color: var(--foreground);
+  background-color: var(--input-surface, #fff);
+  color: var(--foreground, #333);
   box-shadow: none;
-  font-size: var(--control-font-size);
-  padding: 0 var(--control-px);
+  font-size: var(--control-font-size, 0.875rem);
+  padding: 0 var(--control-px, 0.75rem);
 }
 
 :root .input-addon > .input-addon-item {
-  color: var(--muted-foreground);
+  color: var(--muted-foreground, #555);
 }
 
 :root .input-addon > .input-addon-item:hover {
-  background-color: var(--accent);
-  color: var(--accent-foreground);
+  background-color: var(--accent, #eee);
+  color: var(--accent-foreground, #333);
 }
 
 :root .input-addon > :not(:first-child) {
@@ -325,20 +409,20 @@ fieldset legend {
 }
 
 :root .input-addon > :first-child {
-  border-top-left-radius: var(--radius-md);
-  border-bottom-left-radius: var(--radius-md);
+  border-top-left-radius: var(--radius-md, .375rem);
+  border-bottom-left-radius: var(--radius-md, .375rem);
 }
 
 :root .input-addon > :last-child {
-  border-top-right-radius: var(--radius-md);
-  border-bottom-right-radius: var(--radius-md);
+  border-top-right-radius: var(--radius-md, .375rem);
+  border-bottom-right-radius: var(--radius-md, .375rem);
 }
 
 :root .input-addon > .input-addon-field:focus {
   position: relative;
   z-index: 1;
-  border-color: var(--ring);
-  box-shadow: var(--ring-shadow);
+  border-color: var(--ring, #2472a4);
+  box-shadow: var(--ring-shadow, 0 0 0 2px #2472a4);
 }
 
 /* --- Header project switcher (.select-dropdown-input-container) ------- */
@@ -348,17 +432,17 @@ fieldset legend {
   box-sizing: border-box;
   display: flex;
   align-items: center;
-  height: var(--control-height);
-  border: 1px solid var(--input);
-  border-radius: var(--radius-md);
-  background-color: var(--input-surface);
-  box-shadow: var(--shadow-xs);
+  height: var(--control-height, 2.25rem);
+  border: 1px solid var(--input, #ccc);
+  border-radius: var(--radius-md, .375rem);
+  background-color: var(--input-surface, #fff);
+  box-shadow: var(--shadow-xs, none);
   max-width: 320px;
 }
 
 :root .select-dropdown-input-container:focus-within {
-  border-color: var(--ring);
-  box-shadow: var(--ring-shadow);
+  border-color: var(--ring, #2472a4);
+  box-shadow: var(--ring-shadow, 0 0 0 2px #2472a4);
 }
 
 :root .select-dropdown-input-container input.select-dropdown-input,
@@ -371,7 +455,7 @@ fieldset legend {
   border-radius: inherit;
   box-shadow: none;
   background-color: transparent;
-  padding: 0 2rem 0 var(--control-px);
+  padding: 0 2rem 0 var(--control-px, 0.75rem);
 }
 
 :root .select-dropdown-input-container .select-dropdown-chevron,
@@ -379,36 +463,36 @@ fieldset legend {
   top: 50%;
   right: 0.625rem;
   transform: translateY(-50%);
-  color: var(--muted-foreground);
+  color: var(--muted-foreground, #555);
 }
 
 /* --- Select2 (tags, color picker, assignees) -------------------------- */
 :root .select2-container--default .select2-selection--single,
 :root .select2-container--default .select2-selection--multiple {
   box-sizing: border-box;
-  border: 1px solid var(--input);
-  border-radius: var(--radius-md);
-  background-color: var(--input-surface);
-  box-shadow: var(--shadow-xs);
-  font-size: var(--control-font-size);
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  border: 1px solid var(--input, #ccc);
+  border-radius: var(--radius-md, .375rem);
+  background-color: var(--input-surface, #fff);
+  box-shadow: var(--shadow-xs, none);
+  font-size: var(--control-font-size, 0.875rem);
+  transition: border-color var(--transition-fast, 150ms ease), box-shadow var(--transition-fast, 150ms ease);
 }
 
 :root .select2-container--default .select2-selection--single {
-  height: var(--control-height);
+  height: var(--control-height, 2.25rem);
   display: flex;
   align-items: center;
 }
 
 :root .select2-container--default .select2-selection--multiple {
-  min-height: var(--control-height);
+  min-height: var(--control-height, 2.25rem);
   padding: 0 0.25rem 0.25rem;
 }
 
 :root .select2-container--default .select2-selection--single .select2-selection__rendered {
-  color: var(--foreground);
+  color: var(--foreground, #333);
   line-height: 1.25rem;
-  padding-left: var(--control-px);
+  padding-left: var(--control-px, 0.75rem);
   padding-right: 2rem;
 }
 
@@ -419,15 +503,15 @@ fieldset legend {
 }
 
 :root .select2-container--default .select2-selection--single .select2-selection__arrow b {
-  border-top-color: var(--muted-foreground);
+  border-top-color: var(--muted-foreground, #555);
 }
 
 :root .select2-container--default.select2-container--focus .select2-selection--multiple,
 :root .select2-container--default.select2-container--focus .select2-selection--single,
 :root .select2-container--default.select2-container--open .select2-selection--multiple,
 :root .select2-container--default.select2-container--open .select2-selection--single {
-  border-color: var(--ring);
-  box-shadow: var(--ring-shadow);
+  border-color: var(--ring, #2472a4);
+  box-shadow: var(--ring-shadow, 0 0 0 2px #2472a4);
 }
 
 :root .select2-container--default .select2-selection--multiple .select2-selection__choice {
@@ -436,15 +520,15 @@ fieldset legend {
   padding: 0 0.5rem;
   line-height: 1.5rem;
   border: 0;
-  border-radius: var(--radius-sm);
-  background-color: var(--secondary);
-  color: var(--secondary-foreground);
+  border-radius: var(--radius-sm, .25rem);
+  background-color: var(--secondary, #eee);
+  color: var(--secondary-foreground, #333);
   font-size: 0.75rem;
   font-weight: 500;
 }
 
 :root .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
-  color: var(--muted-foreground);
+  color: var(--muted-foreground, #555);
   margin-right: 0.25rem;
 }
 
@@ -457,27 +541,27 @@ fieldset legend {
   border-radius: 0;
   background: transparent;
   box-shadow: none;
-  color: var(--foreground);
+  color: var(--foreground, #333);
 }
 
 :root .select2-dropdown {
-  background-color: var(--popover);
-  color: var(--popover-foreground);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-md);
+  background-color: var(--popover, #fff);
+  color: var(--popover-foreground, #333);
+  border: 1px solid var(--border, #ddd);
+  border-radius: var(--radius-md, .375rem);
+  box-shadow: var(--shadow-md, 0 4px 12px #0003);
   overflow: hidden;
 }
 
 :root .select2-container--default .select2-search--dropdown .select2-search__field {
-  height: var(--control-height);
-  border: 1px solid var(--input);
-  border-radius: var(--radius-sm);
+  height: var(--control-height, 2.25rem);
+  border: 1px solid var(--input, #ccc);
+  border-radius: var(--radius-sm, .25rem);
 }
 
 :root .select2-container--default .select2-results__option {
   padding: 0.375rem 0.5rem;
-  font-size: var(--control-font-size);
+  font-size: var(--control-font-size, 0.875rem);
 }
 
 :root .select2-container--default .select2-results__option[aria-selected="true"] {
@@ -486,8 +570,8 @@ fieldset legend {
 }
 
 :root .select2-container--default .select2-results__option--highlighted[aria-selected] {
-  background-color: var(--accent);
-  color: var(--accent-foreground);
+  background-color: var(--accent, #eee);
+  color: var(--accent-foreground, #333);
 }
 
 /* ============================================================
@@ -503,36 +587,36 @@ fieldset legend {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-2);
-  height: var(--control-height);
+  gap: var(--space-2, .5rem);
+  height: var(--control-height, 2.25rem);
   padding: 0 1rem;
   margin: 0;
-  border: 1px solid var(--input);
-  border-radius: var(--radius-md);
-  background: var(--input-surface);
-  color: var(--foreground);
-  box-shadow: var(--shadow-xs);
-  font-size: var(--control-font-size);
+  border: 1px solid var(--input, #ccc);
+  border-radius: var(--radius-md, .375rem);
+  background: var(--input-surface, #fff);
+  color: var(--foreground, #333);
+  box-shadow: var(--shadow-xs, none);
+  font-size: var(--control-font-size, 0.875rem);
   font-weight: 500;
   line-height: 1;
   white-space: nowrap;
   text-decoration: none;
   cursor: pointer;
   user-select: none;
-  transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
+  transition: background-color var(--transition-fast, 150ms ease), color var(--transition-fast, 150ms ease), border-color var(--transition-fast, 150ms ease), box-shadow var(--transition-fast, 150ms ease);
 }
 
 :root .btn:hover {
-  background: var(--accent);
-  color: var(--accent-foreground);
-  border-color: var(--input);
+  background: var(--accent, #eee);
+  color: var(--accent-foreground, #333);
+  border-color: var(--input, #ccc);
   text-decoration: none;
 }
 
 :root .btn:focus-visible {
   outline: none;
-  border-color: var(--ring);
-  box-shadow: var(--ring-shadow);
+  border-color: var(--ring, #2472a4);
+  box-shadow: var(--ring-shadow, 0 0 0 2px #2472a4);
 }
 
 :root .btn:disabled,
@@ -544,39 +628,39 @@ fieldset legend {
 :root .btn-blue,
 :root .btn-primary {
   border-color: transparent;
-  background: var(--primary);
-  color: var(--primary-foreground);
+  background: var(--primary, #2472a4);
+  color: var(--primary-foreground, #fff);
 }
 
 :root .btn-blue:hover,
 :root .btn-primary:hover {
   border-color: transparent;
-  background: color-mix(in oklch, var(--primary) 90%, transparent);
-  color: var(--primary-foreground);
+  background: color-mix(in oklch, var(--primary, #2472a4) 90%, transparent);
+  color: var(--primary-foreground, #fff);
 }
 
 :root .btn-red,
 :root .btn-destructive {
   border-color: transparent;
-  background: var(--destructive);
-  color: var(--destructive-foreground);
+  background: var(--destructive, #a52824);
+  color: var(--destructive-foreground, #fff);
 }
 
 :root .btn-red:hover,
 :root .btn-destructive:hover {
   border-color: transparent;
-  background: color-mix(in oklch, var(--destructive) 90%, transparent);
-  color: var(--destructive-foreground);
+  background: color-mix(in oklch, var(--destructive, #a52824) 90%, transparent);
+  color: var(--destructive-foreground, #fff);
 }
 
 /* --- Cards / containers ---------------------------------------------- */
 .panel {
-  background-color: var(--card);
-  color: var(--card-foreground);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-xs);
-  padding: var(--space-4);
+  background-color: var(--card, #fff);
+  color: var(--card-foreground, #333);
+  border: 1px solid var(--border, #ddd);
+  border-radius: var(--radius-lg, .5rem);
+  box-shadow: var(--shadow-xs, none);
+  padding: var(--space-4, 1rem);
 }
 
 #modal-overlay {
@@ -585,15 +669,15 @@ fieldset legend {
 
 #modal-box {
   animation: modalSlideIn 0.3s ease-out;
-  background-color: var(--card);
-  color: var(--card-foreground);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
+  background-color: var(--card, #fff);
+  color: var(--card-foreground, #333);
+  border: 1px solid var(--border, #ddd);
+  border-radius: var(--radius-lg, .5rem);
+  box-shadow: var(--shadow-lg, 0 10px 15px -3px rgb(0 0 0 / 0.1));
 }
 
 #modal-content {
-  padding: var(--space-6);
+  padding: var(--space-6, 1.5rem);
 }
 
 @keyframes backdropFadeIn {
@@ -650,24 +734,24 @@ table {
 
 table th {
   background-color: transparent;
-  color: var(--muted-foreground);
+  color: var(--muted-foreground, #555);
   font-weight: 500;
   text-align: left;
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-2, .5rem) var(--space-3, .75rem);
   border: 0;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--border, #ddd);
   font-size: 0.8125rem;
 }
 
 table td {
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-2, .5rem) var(--space-3, .75rem);
   border: 0;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--border, #ddd);
   background-color: transparent;
 }
 
 table tr:hover td {
-  background-color: color-mix(in oklch, var(--muted) 50%, transparent);
+  background-color: color-mix(in oklch, var(--muted, #eee) 50%, transparent);
 }
 
 /* Calendars are tables too; keep them flat on hover. */
@@ -688,19 +772,19 @@ table tr:hover td {
 .table-list-header {
   background-color: transparent;
   border: 0;
-  border-bottom: 1px solid var(--border);
-  color: var(--muted-foreground);
+  border-bottom: 1px solid var(--border, #ddd);
+  color: var(--muted-foreground, #555);
   font-size: 0.8125rem;
   font-weight: 500;
 }
 
 .table-list-row {
-  border-bottom: 1px solid var(--border);
-  transition: background-color var(--transition-fast);
+  border-bottom: 1px solid var(--border, #ddd);
+  transition: background-color var(--transition-fast, 150ms ease);
 }
 
 .table-list-row:hover {
-  background-color: color-mix(in oklch, var(--muted) 50%, transparent);
+  background-color: color-mix(in oklch, var(--muted, #eee) 50%, transparent);
 }
 
 /* Admin/settings lists are rows, not prose — no bullets. */
@@ -716,43 +800,43 @@ ul.listing ul,
 .dropdown-submenu-open,
 #select-dropdown-menu {
   animation: dropdownSlideIn 0.2s ease-out;
-  background-color: var(--popover);
-  color: var(--popover-foreground);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-md);
-  padding: var(--space-1);
+  background-color: var(--popover, #fff);
+  color: var(--popover-foreground, #333);
+  border: 1px solid var(--border, #ddd);
+  border-radius: var(--radius-md, .375rem);
+  box-shadow: var(--shadow-md, 0 4px 12px #0003);
+  padding: var(--space-1, .25rem);
   min-width: 12rem;
 }
 
 .dropdown-submenu-open li,
 .select-dropdown-menu-item {
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-sm, .25rem);
   padding: 0.375rem 0.5rem;
-  font-size: var(--control-font-size);
+  font-size: var(--control-font-size, 0.875rem);
   line-height: 1.25rem;
   cursor: pointer;
   list-style: none;
   border: none !important;
-  transition: background-color var(--transition-fast);
+  transition: background-color var(--transition-fast, 150ms ease);
 }
 
 .dropdown-submenu-open li a,
 .dropdown-submenu-open li .dropdown-menu,
 .select-dropdown-menu-item a {
-  color: var(--popover-foreground);
+  color: var(--popover-foreground, #333);
   text-decoration: none;
 }
 
 .dropdown-submenu-open li:not(.no-hover):hover,
 .select-dropdown-menu-item:hover,
 .select-dropdown-menu-item.active {
-  background-color: var(--accent);
-  color: var(--accent-foreground);
+  background-color: var(--accent, #eee);
+  color: var(--accent-foreground, #333);
 }
 
 .dropdown-submenu-open li:not(.no-hover):hover a {
-  color: var(--accent-foreground);
+  color: var(--accent-foreground, #333);
   text-decoration: none;
 }
 
@@ -808,26 +892,26 @@ ul.listing ul,
 
 /* --- Alerts ---------------------------------------------------------- */
 .alert {
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-lg, .5rem);
   padding: 0.75rem 1rem;
-  border: 1px solid var(--border);
-  background-color: var(--card);
-  color: var(--card-foreground);
+  border: 1px solid var(--border, #ddd);
+  background-color: var(--card, #fff);
+  color: var(--card-foreground, #333);
   font-size: 0.875rem;
   line-height: 1.5;
 }
 
 .alert-success {
-  border-color: color-mix(in oklch, var(--alert-color-success) 45%, var(--border));
+  border-color: color-mix(in oklch, var(--alert-color-success, #287a43) 45%, var(--border, #ddd));
 }
 
 .alert-error {
-  color: var(--destructive);
-  border-color: color-mix(in oklch, var(--destructive) 45%, var(--border));
+  color: var(--destructive, #a52824);
+  border-color: color-mix(in oklch, var(--destructive, #a52824) 45%, var(--border, #ddd));
 }
 
 .alert-info {
-  border-color: color-mix(in oklch, var(--alert-color-info) 45%, var(--border));
+  border-color: color-mix(in oklch, var(--alert-color-info, #3a87ad) 45%, var(--border, #ddd));
 }
 
 /* --- Tabs: Kanboard's ul.views as a shadcn TabsList ------------------ */
@@ -836,12 +920,12 @@ ul.listing ul,
   display: inline-flex;
   align-items: center;
   gap: 0;
-  height: var(--control-height);
+  height: var(--control-height, 2.25rem);
   padding: 3px;
   margin-top: 0;
-  border-radius: var(--radius-lg);
-  background-color: var(--muted);
-  font-size: var(--control-font-size);
+  border-radius: var(--radius-lg, .5rem);
+  background-color: var(--muted, #eee);
+  font-size: var(--control-font-size, 0.875rem);
 }
 
 :root ul.views li,
@@ -851,7 +935,7 @@ ul.listing ul,
   height: 100%;
   padding: 0;
   border: 1px solid transparent;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-md, .375rem);
   background: transparent;
 }
 
@@ -862,23 +946,23 @@ ul.listing ul,
   gap: 0.375rem;
   padding: 0 0.625rem;
   font-weight: 500;
-  color: var(--muted-foreground);
+  color: var(--muted-foreground, #555);
   text-decoration: none;
 }
 
 :root ul.views li:hover a {
-  color: var(--foreground);
+  color: var(--foreground, #333);
   text-decoration: none;
 }
 
 :root ul.views li.active {
-  background-color: var(--views-active-bg, var(--background));
+  background-color: var(--views-active-bg, var(--background, var(--body-background-color, #fff)));
   border-color: var(--views-active-border, transparent);
-  box-shadow: var(--shadow-xs);
+  box-shadow: var(--shadow-xs, none);
 }
 
 :root ul.views li.active a {
-  color: var(--foreground);
+  color: var(--foreground, #333);
   font-weight: 500;
 }
 
@@ -948,49 +1032,49 @@ html .project-header > .filter-box-component {
   padding: 0.375rem 0.5rem;
   margin: 0 0 2px;
   border: 0;
-  border-radius: var(--radius-md);
-  font-size: var(--control-font-size);
-  transition: background-color var(--transition-fast);
+  border-radius: var(--radius-md, .375rem);
+  font-size: var(--control-font-size, 0.875rem);
+  transition: background-color var(--transition-fast, 150ms ease);
 }
 
 :root .sidebar > ul li:hover,
 :root .sidebar > ul li.active {
   padding-left: 0.5rem;
   border: 0;
-  background-color: var(--accent);
+  background-color: var(--accent, #eee);
 }
 
 :root .sidebar > ul li a {
-  color: var(--muted-foreground);
+  color: var(--muted-foreground, #555);
   font-weight: 400;
   text-decoration: none;
 }
 
 :root .sidebar > ul li:hover a,
 :root .sidebar > ul li.active a {
-  color: var(--accent-foreground);
+  color: var(--accent-foreground, #333);
   font-weight: 500;
   text-decoration: none;
 }
 
 /* --- Page header ----------------------------------------------------- */
 .page-header {
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-4, 1rem);
 }
 
 .page-header h2 {
-  color: var(--foreground);
-  border-bottom: 1px solid var(--border);
-  padding-bottom: var(--space-2);
+  color: var(--foreground, #333);
+  border-bottom: 1px solid var(--border, #ddd);
+  padding-bottom: var(--space-2, .5rem);
 }
 
 /* --- Comments -------------------------------------------------------- */
 .comment {
   background-color: transparent;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-3) var(--space-4);
-  margin-bottom: var(--space-3);
+  border: 1px solid var(--border, #ddd);
+  border-radius: var(--radius-lg, .5rem);
+  padding: var(--space-3, .75rem) var(--space-4, 1rem);
+  margin-bottom: var(--space-3, .75rem);
 }
 
 .comment:target,
@@ -1007,11 +1091,11 @@ html .project-header > .filter-box-component {
 /* --- Code ------------------------------------------------------------ */
 .markdown pre,
 code {
-  background-color: var(--muted);
-  color: var(--foreground);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  font-family: var(--font-mono);
+  background-color: var(--muted, #eee);
+  color: var(--foreground, #333);
+  border: 1px solid var(--border, #ddd);
+  border-radius: var(--radius-sm, .25rem);
+  font-family: var(--font-mono, monospace);
 }
 
 /* ============================================================
@@ -1231,15 +1315,15 @@ code {
 /* Task detail summary */
 :root .task-summary-column a,
 :root .task-summary-column a:hover {
-  color: var(--foreground);
+  color: var(--foreground, #333);
 }
 
 :root .task-summary-container {
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--task-accent, var(--border));
-  border-radius: var(--radius-lg);
-  background-color: color-mix(in srgb, var(--task-accent, var(--card)) var(--task-tint), var(--card));
-  color: var(--card-foreground);
+  border: 1px solid var(--border, #ddd);
+  border-left: 3px solid var(--task-accent, var(--border, #ddd));
+  border-radius: var(--radius-lg, .5rem);
+  background-color: color-mix(in srgb, var(--task-accent, var(--card, #fff)) var(--task-tint, 6%), var(--card, #fff));
+  color: var(--card-foreground, #333);
 }
 
 /* Tags + categories: shadcn outline badge with a colored dot */
@@ -1250,10 +1334,10 @@ code {
   align-items: center;
   gap: 0.375rem;
   padding: 0.125rem 0.5rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  border: 1px solid var(--border, #ddd);
+  border-radius: var(--radius-sm, .25rem);
   background-color: transparent;
-  color: var(--foreground);
+  color: var(--foreground, #333);
   font-size: 0.75rem;
   font-weight: 500;
   line-height: 1rem;
@@ -1265,7 +1349,7 @@ code {
   width: 0.5rem;
   height: 0.5rem;
   border-radius: 9999px;
-  background-color: var(--task-accent);
+  background-color: var(--task-accent, currentColor);
   flex: 0 0 auto;
 }
 
@@ -1274,17 +1358,17 @@ code {
 }
 
 :root .table-list-row[class*="color-"] {
-  border-left: 3px solid var(--task-accent, var(--border));
+  border-left: 3px solid var(--task-accent, var(--border, #ddd));
 }
 
 :root td[class*="color-"] {
-  background-color: color-mix(in srgb, var(--task-accent, transparent) var(--task-tint), transparent);
+  background-color: color-mix(in srgb, var(--task-accent, transparent) var(--task-tint, 6%), transparent);
 }
 
 :root .color-picker-square[class*="color-"] {
-  background-color: var(--task-accent);
-  border-color: color-mix(in srgb, var(--task-accent) 70%, black);
-  border-radius: var(--radius-sm);
+  background-color: var(--task-accent, currentColor);
+  border-color: color-mix(in srgb, var(--task-accent, currentColor) 70%, black);
+  border-radius: var(--radius-sm, .25rem);
 }
 
 

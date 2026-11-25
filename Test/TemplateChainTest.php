@@ -4,7 +4,7 @@ require_once 'tests/units/Base.php';
 
 use Kanboard\Core\Base as CoreBase;
 use Kanboard\Plugin\Harbor\Plugin;
-use Kanboard\Plugin\Harbor\Theme\LayoutChain;
+use Kanboard\Plugin\Harbor\Theme\TemplateChain;
 use Kanboard\Plugin\Harbor\Theme\ThemeResolver;
 use KanboardTests\units\Base;
 
@@ -13,18 +13,37 @@ class FakeStewardLayoutHelper extends CoreBase
     public string $previous;
 }
 
-class LayoutChainTest extends Base
+class TemplateChainTest extends Base
 {
-    public function testRegistrationCapturesTheCurrentLayoutBeforeOverridingIt(): void
+    /** @dataProvider registrationOrders */
+    public function testEachTemplateKeepsItsOwnPredecessor(array $names): void
     {
         $template = $this->container['template'];
+        $wrappers = [
+            'layout' => 'Harbor:layout',
+            'header/user_dropdown' => 'Harbor:header/theme_toggle',
+        ];
         $template->setTemplateOverride('layout', 'Harbor:../Test/fixtures/steward-layout');
-        $previous = $template->getTemplateFile('layout');
+        $template->setTemplateOverride('header/user_dropdown', 'Harbor:../Test/fixtures/user-dropdown');
+        $previous = [];
+        foreach ($names as $name) {
+            $previous[$name] = $template->getTemplateFile($name);
+            TemplateChain::register($template, $name, $wrappers[$name]);
+        }
 
-        LayoutChain::register($template, 'Harbor:layout');
+        foreach ($names as $name) {
+            TemplateChain::register($template, $name, $wrappers[$name]);
+            $this->assertSame($previous[$name], TemplateChain::previous($template, $name));
+            $this->assertSame($template->getTemplateFile($wrappers[$name]), $template->getTemplateFile($name));
+        }
+    }
 
-        $this->assertSame($previous, LayoutChain::previous($template));
-        $this->assertSame($template->getTemplateFile('Harbor:layout'), $template->getTemplateFile('layout'));
+    public static function registrationOrders(): array
+    {
+        return [
+            'layout first' => [['layout', 'header/user_dropdown']],
+            'dropdown first' => [['header/user_dropdown', 'layout']],
+        ];
     }
 
     public function testDarkGuestLayoutHasOneThemeAndCriticalCssBeforeStylesheets(): void

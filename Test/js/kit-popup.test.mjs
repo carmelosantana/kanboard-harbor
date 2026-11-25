@@ -69,7 +69,7 @@ function harness() {
       target: document.activeElement,
       defaultPrevented: false,
       preventDefault() { this.defaultPrevented = true; },
-      stopPropagation() {},
+      stopPropagation() { this.propagationStopped = true; },
       ...options,
     };
     target.emit('keydown', event);
@@ -283,4 +283,25 @@ test('an open tooltip leaves outside click dismissal active for a menu', () => {
   h.document.emit('click', { target: h.element() });
   assert.equal(menu.getAttribute('data-state'), 'closed');
   assert.equal(tooltip.getAttribute('data-state'), 'closed');
+});
+
+test('Escape inside a dialog dismisses the tooltip first and the dialog on the next press', () => {
+  const h = harness();
+  const trigger = h.element();
+  const anchor = h.element();
+  const tooltip = h.element();
+  const dialog = h.element([anchor, tooltip]);
+  h.Kit.popup(trigger, dialog, { preset: 'dialog' });
+  h.Kit.popup(anchor, tooltip, { preset: 'tooltip' });
+
+  const event = h.key(h.document, 'Escape');
+  assert.equal(tooltip.getAttribute('data-state'), 'closed');
+  assert.equal(dialog.getAttribute('data-state'), 'open');
+  assert.equal(h.document.activeElement, anchor);
+  assert.equal(event.defaultPrevented, true);
+  assert.equal(event.propagationStopped, true);
+
+  h.key(h.document, 'Escape');
+  assert.equal(dialog.getAttribute('data-state'), 'closed');
+  assert.equal(h.document.activeElement, trigger);
 });

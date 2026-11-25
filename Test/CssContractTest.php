@@ -24,7 +24,42 @@ class CssContractTest extends Base
 
     public function testCoreSizesControlsFromTheToken()
     {
-        $this->assertMatchesRegularExpression('/height:\s*var\(--control-height\)/', $this->css('kit.css'));
+        $this->assertMatchesRegularExpression('/height:\s*var\(--control-height,\s*2\.25rem\)/', $this->css('kit.css'));
+    }
+
+    public function testKitVariablesHaveFallbacks(): void
+    {
+        $tokens = preg_replace('~/\*.*?\*/~s', '', $this->css('tokens.css'));
+        preg_match_all('/(?:^|})\s*(?::root|html:root|html)\s*\{([^{}]*)\}/m', $tokens, $roots);
+        preg_match_all('/(?:^|;)\s*(--[\w-]+)\s*:/m', implode("\n", $roots[1]), $alwaysDefined);
+
+        $directory = __DIR__ . '/../Assets/css/';
+        foreach ([$directory . 'kit.css', ...glob($directory . 'kit-*.css')] as $file) {
+            $css = preg_replace('~/\*.*?\*/~s', '', file_get_contents($file));
+            preg_match_all('/\bvar\(\s*(--[\w-]+)\s*\)/i', $css, $bare);
+            // Core must stand on its own. Surface modules can use the shared root tokens.
+            $exempt = basename($file) === 'kit.css' ? [] : $alwaysDefined[1];
+            $this->assertSame([], array_values(array_unique(array_diff($bare[1], $exempt))), basename($file));
+        }
+    }
+
+    public function testTokenStylesheetContainsOnlyRootRulesAndCriticalPaint(): void
+    {
+        $css = $this->css('tokens.css');
+        $css = preg_replace('~/\* critical:start \*/.*?/\* critical:end \*/~s', '', $css);
+        $css = preg_replace('~/\*.*?\*/~s', '', $css);
+        preg_match_all('/([^{}]+)\{([^{}]*)\}/', $css, $rules, PREG_SET_ORDER);
+        $roots = [
+            ':root', 'html', 'html.theme-light', 'html.preset-shadcn', 'html.preset-shadcn.theme-light',
+            'html[data-density="compact"]:root', 'html:root', 'html:root:not(.theme-light)',
+        ];
+
+        $this->assertNotEmpty($rules);
+        foreach ($rules as [, $selector, $declarations]) {
+            $this->assertContains(trim($selector), $roots);
+            $this->assertMatchesRegularExpression('/\A(?:\s*--[\w-]+\s*:[^;]+;)*\s*\z/', $declarations, $selector);
+        }
+        $this->assertSame('', trim(preg_replace('/[^{}]+\{[^{}]*\}/', '', $css)));
     }
 
     public function testThemeAndLoginFilesDoNotResizeControls()
