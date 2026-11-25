@@ -295,6 +295,97 @@ class KitHelperTest extends Base
         $this->assertStringContainsString('style="--pct:0%"', $kit->usageBar('Disk', 0, 0, 'GB'));
     }
 
+    public function testStatusAlwaysRendersAnIconAndTheFrozenWord(): void
+    {
+        (new Plugin($this->container))->initialize();
+        $kit = $this->container['template']->kit;
+        foreach ([
+            'running' => 'Running',
+            'stopped' => 'Stopped',
+            'starting' => 'Starting',
+            'failed' => 'Failed',
+            'degraded' => 'Degraded',
+            'pending' => 'Pending approval',
+        ] as $state => $word) {
+            $html = $kit->status($state);
+            $this->assertMatchesRegularExpression(
+                '~<span data-slot="status" data-state="' . $state . '">\s*'
+                . '<span aria-hidden="true">\S+</span>\s*' . $word . '\s*</span>~u',
+                $html
+            );
+        }
+
+        $this->expectException(InvalidArgumentException::class);
+        $kit->status('unknown');
+    }
+
+    public function testDataTableReusesTheToolbarAndKeepsThePagerOutsideTheScrollWrapper(): void
+    {
+        (new Plugin($this->container))->initialize();
+        $kit = $this->container['template']->kit;
+        $html = $kit->dataTable(
+            ['actor' => ['label' => 'Actor', 'sortUrl' => '?sort=actor&order=desc', 'sort' => 'ascending'], 'outcome' => 'Outcome'],
+            [['outcome' => 'Allowed', 'actor' => 'A & B']],
+            ['start' => 1, 'end' => 50, 'total' => 2314, 'previous' => '?page=1', 'next' => '?page=3', 'toolbar' => ['query' => 'audit']]
+        );
+
+        $this->assertStringContainsString('data-slot="data-table"', $html);
+        $this->assertStringContainsString($kit->toolbar(['query' => 'audit']), $html);
+        $this->assertMatchesRegularExpression('~<div class="table-wrap"[^>]*tabindex="0"[^>]*>\s*<table>.*</table>\s*</div>.*1–50 of 2,314~s', $html);
+        $this->assertMatchesRegularExpression('/\.table-wrap\s*\{[^}]*overflow-x:\s*auto/', file_get_contents(__DIR__ . '/../Assets/css/kit.css'));
+        $this->assertMatchesRegularExpression('~<th scope="col" aria-sort="ascending">\s*<a href="\?sort=actor&amp;order=desc">Actor</a>~', $html);
+        $this->assertMatchesRegularExpression('~<td>A &amp; B</td>\s*<td>Allowed</td>~', $html);
+        $this->assertStringContainsString('<a href="?page=1" rel="prev">Previous</a>', $html);
+        $this->assertStringContainsString('<a href="?page=3" rel="next">Next</a>', $html);
+
+        $empty = $kit->dataTable(['actor' => 'Actor'], [], ['start' => 0, 'end' => 0, 'total' => 0, 'next' => '//example.com']);
+        $this->assertStringNotContainsString('href=', $empty);
+    }
+
+    public function testStepListShowsEveryStateAndOnlyFailedStepsHaveARetrySlot(): void
+    {
+        (new Plugin($this->container))->initialize();
+        $kit = $this->container['template']->kit;
+        $retry = '<button type="submit">Retry</button>';
+        $html = $kit->stepList([
+            ['label' => 'Snapshot', 'state' => 'done', 'duration' => '0.4 s'],
+            ['label' => 'Upload', 'state' => 'active', 'detail' => '63%'],
+            ['label' => 'Prune', 'state' => 'waiting', 'detail' => 'Queued'],
+            ['label' => 'Notify', 'state' => 'failed', 'detail' => '401 <Resend>', 'retry' => static fn () => $retry],
+        ]);
+
+        $this->assertStringContainsString('<ol data-slot="step-list">', $html);
+        foreach (['done' => '0.4 s', 'active' => '63%', 'waiting' => 'Queued', 'failed' => '401 &lt;Resend&gt;'] as $state => $detail) {
+            $this->assertMatchesRegularExpression(
+                '~<li data-slot="step" data-state="' . $state . '">(?:(?!</li>).)*' . preg_quote($detail, '~') . '~s',
+                $html
+            );
+        }
+        $this->assertSame(1, substr_count($html, 'data-slot="retry"'));
+        $this->assertMatchesRegularExpression(
+            '~data-state="failed">(?:(?!</li>).)*<span data-slot="retry">\s*' . preg_quote($retry, '~') . '~s',
+            $html
+        );
+        $this->assertStringContainsString('data-slot="retry"', $kit->stepList([['label' => 'Notify', 'state' => 'failed']]));
+    }
+
+    public function testServiceTileComposesTheStatusBadgeWithoutStateSpecificTileMarkup(): void
+    {
+        (new Plugin($this->container))->initialize();
+        $kit = $this->container['template']->kit;
+        $html = $kit->serviceTile('SQL & backups', 'degraded', 'Disk < 10 GB free');
+        $badge = trim($kit->status('degraded'));
+
+        $this->assertStringContainsString('data-slot="service-tile"', $html);
+        $this->assertStringContainsString('SQL &amp; backups', $html);
+        $this->assertStringContainsString('Disk &lt; 10 GB free', $html);
+        $this->assertSame(1, substr_count($html, $badge));
+        $frame = str_replace($badge, '', $html);
+        $this->assertDoesNotMatchRegularExpression('/\b(?:style|data-state|data-tone)\s*=|degraded/i', $frame);
+        $runningFrame = str_replace(trim($kit->status('running')), '', $kit->serviceTile('SQL & backups', 'running', 'Disk < 10 GB free'));
+        $this->assertSame($frame, $runningFrame);
+    }
+
     public function testKitEscapesUserControlledTextAndAttributes(): void
     {
         (new Plugin($this->container))->initialize();

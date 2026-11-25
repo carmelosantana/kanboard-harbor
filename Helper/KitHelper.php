@@ -193,6 +193,73 @@ class KitHelper extends Base
         return $this->template->render('Harbor:kit/usage_bar', compact('label', 'used', 'total', 'unit', 'level', 'pct'));
     }
 
+    public function status(string $state): string
+    {
+        [$icon, $label] = match ($state) {
+            'running' => ['●', t('Running')],
+            'stopped' => ['■', t('Stopped')],
+            'starting' => ['◐', t('Starting')],
+            'failed' => ['✕', t('Failed')],
+            'degraded' => ['▲', t('Degraded')],
+            'pending' => ['⏱', t('Pending approval')],
+            default => throw new InvalidArgumentException('Unknown status state.'),
+        };
+
+        return $this->template->render('Harbor:kit/status', compact('state', 'icon', 'label'));
+    }
+
+    /**
+     * Column keys select plain-text cells from each row. Sort and pager links are local URLs.
+     *
+     * @param array<array-key, string|array{label: string, sortUrl?: string, sort?: 'ascending'|'descending'}> $columns
+     * @param list<array<array-key, scalar|null>> $rows
+     * @param array{start: int, end: int, total: int, previous?: string, next?: string, toolbar?: array} $pager
+     */
+    public function dataTable(array $columns, array $rows, array $pager): string
+    {
+        foreach ($columns as $key => $column) {
+            $column = is_string($column) ? ['label' => $column] : $column;
+            $sort = $column['sort'] ?? null;
+            $columns[$key] = [
+                'label' => $column['label'],
+                'sortUrl' => $this->actionUrl($column['sortUrl'] ?? ''),
+                'sort' => in_array($sort, ['ascending', 'descending'], true) ? $sort : null,
+            ];
+        }
+        $previous = $this->actionUrl($pager['previous'] ?? '');
+        $next = $this->actionUrl($pager['next'] ?? '');
+        $range = t('%s–%s of %s', number_format($pager['start']), number_format($pager['end']), number_format($pager['total']));
+
+        return $this->template->render('Harbor:kit/data_table', compact('columns', 'rows', 'pager', 'range', 'previous', 'next'));
+    }
+
+    /**
+     * Retry callbacks render trusted controls supplied by the caller.
+     *
+     * @param list<array{label: string, state: 'done'|'active'|'waiting'|'failed', duration?: string, detail?: string, retry?: Closure(): string}> $steps
+     */
+    public function stepList(array $steps): string
+    {
+        foreach ($steps as $index => $step) {
+            [$icon, $stateLabel] = match ($step['state']) {
+                'done' => ['✓', t('Done')],
+                'active' => ['◐', t('Active')],
+                'waiting' => ['○', t('Waiting')],
+                'failed' => ['✕', t('Failed')],
+                default => throw new InvalidArgumentException('Unknown step state.'),
+            };
+            $details = array_filter([$step['duration'] ?? '', $step['detail'] ?? ''], static fn (string $part): bool => $part !== '');
+            $steps[$index] = ['icon' => $icon, 'stateLabel' => $stateLabel, 'summary' => implode(' · ', $details)] + $step;
+        }
+
+        return $this->template->render('Harbor:kit/step_list', compact('steps'));
+    }
+
+    public function serviceTile(string $name, string $state, string $detail): string
+    {
+        return $this->template->render('Harbor:kit/service_tile', compact('name', 'state', 'detail'));
+    }
+
     private static function chartJson(array $data): string
     {
         return json_encode($data, JSON_HEX_AMP | JSON_INVALID_UTF8_SUBSTITUTE | JSON_THROW_ON_ERROR);
