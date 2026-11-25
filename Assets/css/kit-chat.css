@@ -61,14 +61,19 @@
 
 [data-slot="composer"].float {
   display: flex;
-  position: sticky;
-  inset-block-end: 0;
+  position: static;
+  flex: none;
   margin-block-start: auto;
 }
 
 [data-slot="composer"] textarea {
   flex: 1;
   min-inline-size: 0;
+  min-block-size: 0;
+  block-size: auto;
+  max-block-size: 6rem;
+  field-sizing: content;
+  overflow-y: auto;
   margin: 0;
   padding: var(--space-2, .5rem);
   border: 0;

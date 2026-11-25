@@ -270,10 +270,25 @@ class KitHelperTest extends Base
 
         $this->assertMatchesRegularExpression('~<form\b[^>]*data-slot="composer"[^>]*data-kind="pill"~', $html);
         $this->assertStringContainsString('method="post" action="/?controller=Chat&amp;action=send"', $html);
-        $this->assertMatchesRegularExpression('~<textarea\b[^>]*name="message"[^>]*placeholder="Message &quot;Design&quot;"~', $html);
+        $this->assertMatchesRegularExpression('~<textarea\b[^>]*name="message"[^>]*rows="1"[^>]*placeholder="Message &quot;Design&quot;"~', $html);
         $this->assertSame(1, preg_match('/<input type="hidden" name="csrf_token" value="([^"]+)"/', $html, $token));
         $this->assertTrue($this->container['token']->validateCSRFToken($token[1]));
         $this->assertMatchesRegularExpression('~<button\b[^>]*type="submit"~', $html);
+    }
+
+    public function testComposerStaysInFlowAndBoundsTheGrowingTextarea(): void
+    {
+        $css = file_get_contents(__DIR__ . '/../Assets/css/kit-chat.css');
+        $this->assertSame(1, preg_match('~\[data-slot="composer"\]\.float\s*\{([^}]*)\}~', $css, $composer));
+        $this->assertMatchesRegularExpression('~\bposition:\s*static\s*;~', $composer[1]);
+        $this->assertMatchesRegularExpression('~\bflex:\s*none\s*;~', $composer[1]);
+
+        $this->assertSame(1, preg_match('~\[data-slot="composer"\] textarea\s*\{([^}]*)\}~', $css, $textarea));
+        $this->assertMatchesRegularExpression('~(?:^|;)\s*block-size:\s*auto\s*;~', $textarea[1]);
+        $this->assertMatchesRegularExpression('~\bmin-block-size:\s*0\s*;~', $textarea[1]);
+        $this->assertMatchesRegularExpression('~\bmax-block-size:\s*[1-9]\d*rem\s*;~', $textarea[1]);
+        $this->assertMatchesRegularExpression('~\bfield-sizing:\s*content\s*;~', $textarea[1]);
+        $this->assertMatchesRegularExpression('~\boverflow-y:\s*auto\s*;~', $textarea[1]);
     }
 
     public function testChatLoadsTheFloatModuleOnceAndOnlyOnRoutesRequestingChat(): void
