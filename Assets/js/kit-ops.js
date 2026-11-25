@@ -41,6 +41,7 @@
     let lines = 0;
 
     function setFollowing(value) {
+      if (el.dataset.state === 'closed') return;
       following = value;
       follow.setAttribute('aria-pressed', String(value));
       pause.setAttribute('aria-pressed', String(!value));
@@ -94,6 +95,9 @@
     function onError() {
       if (source.readyState !== window.EventSource.CLOSED) return;
       el.dataset.state = 'closed';
+      follow.disabled = true;
+      pause.disabled = true;
+      jump.hidden = true;
       status.textContent = status.dataset.logStatus;
       close();
     }

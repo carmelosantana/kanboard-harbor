@@ -90,7 +90,10 @@ function logFixture() {
     set: value => { scrollTop = Math.min(value, body.scrollHeight - body.clientHeight); },
   });
   const count = { dataset: { logCount: '%d lines' } };
-  const button = () => Object.assign(new EventTarget(), { setAttribute(name, value) { this[name] = value; } });
+  const button = () => Object.assign(new EventTarget(), {
+    disabled: false,
+    setAttribute(name, value) { this[name] = value; },
+  });
   const follow = button();
   const pause = button();
   const jump = button();
@@ -108,7 +111,7 @@ function logFixture() {
 
 test('streams plain text and counts actual lines through a native reconnect', () => {
   const { Kit, sources } = loadOps();
-  const { el, body, count, status } = logFixture();
+  const { el, body, count, follow, pause, status } = logFixture();
   Kit.logViewer(el);
   Kit.logViewer(el);
   const [source] = sources;
@@ -117,6 +120,8 @@ test('streams plain text and counts actual lines through a native reconnect', ()
   source.dispatchEvent(new Event('error'));
   assert.equal(source.closed, false);
   assert.equal(status.textContent, '');
+  assert.equal(follow.disabled, false);
+  assert.equal(pause.disabled, false);
   assert.equal(sources.length, 1);
   source.dispatchEvent(new MessageEvent('message', { data: '\x1b]0;title\x07<done>' }));
   assert.equal(body.textContent, 'error\nworking\n<done>\n');
@@ -220,18 +225,36 @@ test('trimming at the log cap keeps the same lines in view while paused', () => 
   assert.equal(jump.hidden, false);
 });
 
-test('a terminal EventSource error shows the disconnected status', () => {
+test('a terminal EventSource error shows the disconnected status and disables the controls', () => {
   const { Kit, sources } = loadOps();
-  const { el, body, status } = logFixture();
+  const { el, body, follow, pause, jump, status } = logFixture();
   Kit.logViewer(el);
+  pause.dispatchEvent(new Event('click'));
+  assert.equal(jump.hidden, false);
   const [source] = sources;
   source.readyState = source.constructor.CLOSED;
   source.dispatchEvent(new Event('error'));
   assert.equal(el.dataset.state, 'closed');
   assert.equal(status.textContent, 'Disconnected');
+  assert.equal(follow.disabled, true);
+  assert.equal(pause.disabled, true);
+  assert.equal(jump.hidden, true);
   assert.equal(source.closed, true);
   source.dispatchEvent(new MessageEvent('message', { data: 'late delivery' }));
   assert.equal(body.textContent, '');
+});
+
+test('scrolling after a terminal error cannot show Jump to latest', () => {
+  const { Kit, sources } = loadOps();
+  const { el, body, jump } = logFixture();
+  Kit.logViewer(el);
+  const [source] = sources;
+  source.readyState = source.constructor.CLOSED;
+  source.dispatchEvent(new Event('error'));
+
+  body.scrollTop = 80;
+  body.dispatchEvent(new Event('scroll'));
+  assert.equal(jump.hidden, true);
 });
 
 test('approval uses the absolute deadline and disables the action at zero', (t) => {

@@ -489,6 +489,24 @@ class KitHelperTest extends Base
         }
     }
 
+    public function testClosedLogViewerDimsTheToolbarAndShowsAWarningWithAnIcon(): void
+    {
+        $css = file_get_contents(__DIR__ . '/../Assets/css/kit-ops.css');
+        $closed = '\[data-slot="log-viewer"\]\[data-state="closed"\]';
+        $this->assertMatchesRegularExpression(
+            '~' . $closed . '\s*>\s*\[role="group"\]\s*\{[^}]*\bopacity:\s*0?\.\d+\s*;~',
+            $css
+        );
+        $this->assertMatchesRegularExpression(
+            '~' . $closed . '\s*>\s*\[data-log-status\]\s*\{[^}]*\bcolor:\s*var\(--warning,\s*[^)]+\)\s*;~',
+            $css
+        );
+        $this->assertMatchesRegularExpression(
+            '~' . $closed . '\s*>\s*\[data-log-status\]::before\s*\{[^}]*\bcontent:\s*"⚠"\s*/\s*""\s*;~',
+            $css
+        );
+    }
+
     public function testApprovalCardRendersTheDeadlineAndDisablesAnExpiredAction(): void
     {
         (new Plugin($this->container))->initialize();

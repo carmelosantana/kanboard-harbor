@@ -143,6 +143,18 @@
   overflow-anchor: none;
 }
 
+[data-slot="log-viewer"][data-state="closed"] > [role="group"] {
+  opacity: .6;
+}
+
 [data-slot="log-viewer"][data-state="closed"] > [data-log-status] {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1, .25rem);
+  color: var(--warning, #9b620c);
   font-weight: 600;
+}
+
+[data-slot="log-viewer"][data-state="closed"] > [data-log-status]::before {
+  content: "⚠" / "";
 }
