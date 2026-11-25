@@ -4,8 +4,10 @@ require_once 'tests/units/Base.php';
 
 use Kanboard\Core\Controller\Runner;
 use Kanboard\Core\Http\Response;
+use Kanboard\Core\Plugin\Hook;
 use Kanboard\Core\Security\Role;
 use Kanboard\Core\Session\SessionManager;
+use Kanboard\Plugin\Harbor\Assets\ModuleLoader;
 use Kanboard\Plugin\Harbor\Plugin;
 use KanboardTests\units\Base;
 
@@ -174,6 +176,60 @@ class KitHelperTest extends Base
             '/html\.theme-light\s+\[data-slot="stage"\]\s*\{[^}]*color-scheme:\s*dark;[^}]*--background:\s*var\(--stage-dark-background,/',
             file_get_contents($file)
         );
+    }
+
+    public function testChatMessageRendersToolChipsBeforeTheBodyAndIdentifiesTheSpeaker(): void
+    {
+        (new Plugin($this->container))->initialize();
+        $kit = $this->container['template']->kit;
+        $body = '<p>Found <strong>seven</strong> plugins.</p>';
+        $other = $kit->chatMessage('Agent & reviewer', $body, '10:41', false, ['Search <assets>', 'Read files']);
+
+        $this->assertStringContainsString('data-slot="chat-message" data-from="other"', $other);
+        $this->assertStringContainsString('Agent &amp; reviewer', $other);
+        $this->assertStringContainsString('10:41', $other);
+        $this->assertMatchesRegularExpression(
+            '~data-slot="tool-chip"[^>]*>\s*Search &lt;assets&gt;\s*</span>\s*'
+            . '<span\b[^>]*data-slot="tool-chip"[^>]*>\s*Read files\s*</span>.*'
+            . preg_quote($body, '~') . '~s',
+            $other
+        );
+
+        $self = $kit->chatMessage('Me', '<p>Thanks!</p>', '10:42', true);
+        $this->assertStringContainsString('data-slot="chat-message" data-from="self"', $self);
+        $this->assertStringNotContainsString('data-slot="tool-chip"', $self);
+    }
+
+    public function testComposerPostsTheMessageAndCsrfTokenFromAFloatingPill(): void
+    {
+        (new Plugin($this->container))->initialize();
+        $html = $this->container['template']->kit->composer('Message "Design"', '/?controller=Chat&action=send');
+
+        $this->assertMatchesRegularExpression('~<form\b[^>]*data-slot="composer"[^>]*data-kind="pill"~', $html);
+        $this->assertStringContainsString('method="post" action="/?controller=Chat&amp;action=send"', $html);
+        $this->assertMatchesRegularExpression('~<textarea\b[^>]*name="message"[^>]*placeholder="Message &quot;Design&quot;"~', $html);
+        $this->assertSame(1, preg_match('/<input type="hidden" name="csrf_token" value="([^"]+)"/', $html, $token));
+        $this->assertTrue($this->container['token']->validateCSRFToken($token[1]));
+        $this->assertMatchesRegularExpression('~<button\b[^>]*type="submit"~', $html);
+    }
+
+    public function testChatLoadsTheFloatModuleOnceAndOnlyOnRoutesRequestingChat(): void
+    {
+        foreach (['ChatController', 'DashboardController'] as $controller) {
+            $hook = new Hook();
+            $hook->on('kit:modules', static fn (string $route): array => $route === 'ChatController' ? ['chat'] : []);
+            $hook->on('kit:modules', static fn (string $route): array => $route === 'ChatController' ? ['float', 'chat'] : []);
+
+            (new ModuleLoader($hook, $this->container['logger']))->register($controller, null);
+
+            foreach (['css', 'js'] as $type) {
+                $expected = $controller === 'ChatController' ? [
+                    "plugins/Harbor/Assets/$type/kit-float.$type",
+                    "plugins/Harbor/Assets/$type/kit-chat.$type",
+                ] : [];
+                $this->assertSame($expected, array_column($hook->getListeners('template:layout:' . $type), 'template'));
+            }
+        }
     }
 
     public function testKitEscapesUserControlledTextAndAttributes(): void

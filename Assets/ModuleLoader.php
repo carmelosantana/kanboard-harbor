@@ -20,6 +20,9 @@ final class ModuleLoader
     {
         $requested = [];
         $this->hook->merge('kit:modules', $requested, [$controller, $plugin]);
+        if (in_array('chat', $requested, true)) {
+            array_unshift($requested, 'float');
+        }
 
         $registered = [];
         foreach ($requested as $module) {

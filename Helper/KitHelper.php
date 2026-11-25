@@ -82,6 +82,26 @@ class KitHelper extends Base
         return $this->template->render('Harbor:kit/stage', compact('contentHtml', 'playing'));
     }
 
+    /**
+     * The body is trusted HTML and must already escape any user content.
+     *
+     * @param list<string> $toolChips Plain-text tool call labels.
+     */
+    public function chatMessage(string $author, string $bodyHtml, string $time, bool $self, array $toolChips = []): string
+    {
+        return $this->template->render('Harbor:kit/chat_message', compact('author', 'bodyHtml', 'time', 'self', 'toolChips'));
+    }
+
+    public function composer(string $placeholder, string $formAction): string
+    {
+        $formAction = $this->actionUrl($formAction);
+        if ($formAction === null) {
+            throw new \InvalidArgumentException('A composer requires a local form action.');
+        }
+
+        return $this->template->render('Harbor:kit/composer', compact('placeholder', 'formAction'));
+    }
+
     /** The body is trusted template HTML. Open the dialog with Kit.typedConfirm(dialog, trigger). */
     public function typedConfirm(string $title, string $bodyHtml, string $phrase, string $actionLabel, string $formAction): string
     {
