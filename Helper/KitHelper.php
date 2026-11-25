@@ -3,6 +3,7 @@
 namespace Kanboard\Plugin\Harbor\Helper;
 
 use Closure;
+use DateTimeImmutable;
 use Kanboard\Core\Base;
 
 class KitHelper extends Base
@@ -73,6 +74,36 @@ class KitHelper extends Base
     public function callout(string $title, string $body, string $tone = 'neutral'): string
     {
         return $this->template->render('Harbor:kit/callout', compact('title', 'body', 'tone'));
+    }
+
+    /**
+     * The sentence is trusted HTML and must already escape any user content.
+     */
+    public function activityRow(string $actorName, string $sentenceHtml, int $timestamp, string $id = ''): string
+    {
+        $initials = $this->helper->user->getInitials(trim($actorName));
+
+        return $this->template->render('Harbor:kit/activity_row', compact('initials', 'sentenceHtml', 'timestamp', 'id'));
+    }
+
+    /**
+     * @param array<string, int> $countsByDay Event counts keyed by local YYYY-MM-DD.
+     */
+    public function heatmap(array $countsByDay, int $weeks = 26): string
+    {
+        $days = [];
+        $dayCount = max(0, $weeks) * 7;
+        if ($dayCount > 0) {
+            $day = new DateTimeImmutable('today -' . ($dayCount - 1) . ' days');
+            for ($index = 0; $index < $dayCount; ++$index, $day = $day->modify('+1 day')) {
+                $date = $day->format('Y-m-d');
+                $days[$date] = max(0, (int) ($countsByDay[$date] ?? 0));
+            }
+        }
+        $peak = $days === [] ? 1 : max(1, max($days));
+        $levels = array_map(static fn (int $count): int => (int) ceil(4 * ($count / $peak)), $days);
+
+        return $this->template->render('Harbor:kit/heatmap', compact('days', 'levels'));
     }
 
     public function progress(int $done, ?int $total, float $spentH, float $estH): string

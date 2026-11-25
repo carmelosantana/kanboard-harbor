@@ -78,6 +78,72 @@ class KitHelperTest extends Base
         $this->assertStringNotContainsString('aria-valuenow', $loading);
     }
 
+    public function testActivityRowRendersInitialsTrustedSentenceAndMachineReadableTime(): void
+    {
+        (new Plugin($this->container))->initialize();
+        $sentence = '<strong>Élodie Santana</strong> moved <a href="?task_id=42">#42</a>.';
+        $timestamp = strtotime('2026-11-20T14:30:00+00:00');
+        $html = $this->container['template']->kit->activityRow('Élodie Santana', $sentence, $timestamp, 'event-42');
+
+        $this->assertStringContainsString('data-slot="activity-row" id="event-42"', $html);
+        $this->assertMatchesRegularExpression('~>ÉS</span>\s*<div[^>]*>'
+            . preg_quote($sentence, '~') . '</div>\s*<time datetime="'
+            . preg_quote(date(DATE_ATOM, $timestamp), '~') . '">[^<]+</time>~u', $html);
+    }
+
+    public function testHeatmapRendersEveryDayAndQuantisesCountsToFiveLevels(): void
+    {
+        (new Plugin($this->container))->initialize();
+        $kit = $this->container['template']->kit;
+        $today = new DateTimeImmutable('today');
+        $counts = [];
+        foreach ([1, 3, 5, 8] as $daysAgo => $count) {
+            $date = $today->modify("-$daysAgo days")->format('Y-m-d');
+            $counts[$date] = $count;
+        }
+        $counts[$today->modify('-14 days')->format('Y-m-d')] = 500;
+        $html = $kit->heatmap($counts, 2);
+
+        $this->assertStringContainsString('data-slot="heatmap"', $html);
+        preg_match_all('/style="--level:(\d+)" aria-label="(\d+) events on (\d{4}-\d{2}-\d{2})"/', $html, $cells, PREG_SET_ORDER);
+        $expectedLevels = [8 => 4, 5 => 3, 3 => 2, 1 => 1, 0 => 0];
+        $this->assertCount(14, $cells);
+        foreach ($cells as $index => [, $level, $count, $date]) {
+            $this->assertSame($today->modify(($index - 13) . ' days')->format('Y-m-d'), $date);
+            $this->assertSame($counts[$date] ?? 0, (int) $count);
+            $this->assertSame($expectedLevels[$count], (int) $level);
+        }
+        $this->assertSame(182, substr_count($kit->heatmap([]), 'style="--level:0"'));
+    }
+
+    public function testDeepLinkedCommentsAndActivityRowsUseTheHighlightToken(): void
+    {
+        $css = file_get_contents(__DIR__ . '/../Assets/css/kit.css');
+        preg_match_all('/([^{}]+)\{([^{}]*)\}/', $css, $rules, PREG_SET_ORDER);
+        foreach (['.comment:target', '[data-slot="activity-row"]:target'] as $selector) {
+            $declarations = '';
+            foreach ($rules as [, $selectors, $body]) {
+                if (in_array($selector, array_map('trim', explode(',', $selectors)), true)) {
+                    $declarations .= $body;
+                }
+            }
+            $this->assertMatchesRegularExpression('/background(?:-color)?:\s*var\(--highlight,/', $declarations);
+            $this->assertDoesNotMatchRegularExpression('/var\(--(?:accent|muted)[,)]/', $declarations);
+        }
+    }
+
+    public function testActivityModuleStylesCoreEventsAndUsesPrimaryHeatmapSteps(): void
+    {
+        $file = __DIR__ . '/../Assets/css/kit-activity.css';
+        $this->assertFileExists($file);
+        $css = file_get_contents($file);
+
+        $this->assertStringContainsString('.activity-event', $css);
+        $this->assertMatchesRegularExpression('/\[data-slot="heatmap"\]\s*\{[^}]*grid-template-rows:\s*repeat\(7,/', $css);
+        $this->assertMatchesRegularExpression('/color-mix\([^;]*var\(--primary,[^;]*var\(--level/', $css);
+        $this->assertStringNotContainsString('--pulse-', $css);
+    }
+
     public function testKitEscapesUserControlledTextAndAttributes(): void
     {
         (new Plugin($this->container))->initialize();

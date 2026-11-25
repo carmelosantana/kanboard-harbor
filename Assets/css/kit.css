@@ -955,6 +955,12 @@ ul.listing ul,
   margin-bottom: var(--space-3);
 }
 
+.comment:target,
+.comments .comment:nth-child(even):not(.comment-highlighted):target,
+[data-slot="activity-row"]:target {
+  background-color: var(--highlight, #e2eff7);
+}
+
 .comment-inner {
   background: transparent;
   border: 0;
