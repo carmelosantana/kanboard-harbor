@@ -1,0 +1,158 @@
+[data-slot="stage"] {
+  position: relative;
+  border-radius: var(--radius-lg, .5rem);
+  padding: var(--space-4, 1rem);
+  background:
+    radial-gradient(ellipse at top right, color-mix(in srgb, var(--primary, #d5b894) 10%, transparent), transparent 65%),
+    var(--background, #080f16);
+  color: var(--foreground, #ece6df);
+  color-scheme: dark;
+}
+
+html.theme-light [data-slot="stage"] {
+  color-scheme: dark;
+  --background: var(--stage-dark-background, hsl(210 50% 6%));
+  --foreground: var(--stage-dark-foreground, hsl(30 25% 90%));
+  --card: var(--stage-dark-card, hsl(210 45% 12%));
+  --secondary: var(--stage-dark-secondary, hsl(210 35% 18%));
+  --muted-foreground: var(--stage-dark-muted-foreground, hsl(30 20% 75%));
+  --primary: var(--stage-dark-primary, hsl(30 40% 72%));
+  --primary-foreground: var(--stage-dark-primary-foreground, hsl(210 50% 6%));
+  --border: var(--stage-dark-border, hsl(270 10% 25%));
+  --muted: var(--stage-dark-muted, hsl(270 10% 30%));
+  --card-foreground: var(--foreground, #ece6df);
+  --popover: var(--card, #111f2c);
+  --popover-foreground: var(--foreground, #ece6df);
+  --secondary-foreground: var(--foreground, #ece6df);
+  --input: var(--border, #403945);
+  --input-surface: var(--card, #111f2c);
+  --ring: var(--primary, #d5b894);
+  --highlight: color-mix(in srgb, var(--primary, #d5b894) 18%, transparent);
+}
+
+html.theme-light.preset-shadcn [data-slot="stage"] {
+  --background: var(--stage-dark-background, oklch(.145 0 0));
+  --foreground: var(--stage-dark-foreground, oklch(.985 0 0));
+  --card: var(--stage-dark-card, oklch(.205 0 0));
+  --secondary: var(--stage-dark-secondary, oklch(.269 0 0));
+  --muted-foreground: var(--stage-dark-muted-foreground, oklch(.708 0 0));
+  --primary: var(--stage-dark-primary, oklch(.922 0 0));
+  --primary-foreground: var(--stage-dark-primary-foreground, oklch(.205 0 0));
+  --border: var(--stage-dark-border, oklch(1 0 0 / 12%));
+  --muted: var(--stage-dark-muted, oklch(.269 0 0));
+  --input: var(--stage-dark-input, oklch(1 0 0 / 15%));
+  --input-surface: var(--stage-dark-input-surface, oklch(1 0 0 / 4.5%));
+  --ring: var(--stage-dark-ring, oklch(.556 0 0));
+  --highlight: var(--stage-dark-highlight, oklch(.795 .184 86 / 16%));
+}
+
+.float,
+[data-slot="float"] {
+  border: 0;
+  border-radius: var(--radius-lg, .5rem);
+  padding: var(--space-3, .75rem);
+  background: color-mix(in srgb, var(--card, #fff) 88%, transparent);
+  color: var(--foreground, #333);
+  backdrop-filter: blur(8px);
+  box-shadow: var(--shadow-lg, 0 8px 24px #0005);
+}
+
+:is(.float, [data-slot="float"])[data-kind="pill"] {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2, .5rem);
+  border-radius: 999px;
+  padding: var(--space-1, .25rem) var(--space-3, .75rem);
+}
+
+[data-slot="stage"] [data-float-controls] {
+  transition: opacity var(--motion-base, 200ms ease);
+}
+
+[data-slot="stage"][data-playing][data-state="idle"] [data-float-controls]:not(:focus-visible, :has(:focus-visible)) {
+  opacity: 0;
+  pointer-events: none;
+}
+
+:is([data-slot="icon-button"], [data-slot="fab"]) {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: var(--control-height, 2.25rem);
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--secondary, #eee);
+  color: var(--foreground, #333);
+  cursor: pointer;
+}
+
+:is([data-slot="icon-button"], [data-slot="fab"]):focus-visible,
+[data-slot="stage"]:focus-visible {
+  outline: 2px solid var(--ring, #9b704e);
+  outline-offset: 2px;
+}
+
+[data-slot="icon-button"][data-kind="primary"],
+[data-slot="fab"] {
+  width: max(44px, var(--control-height, 2.25rem));
+  background: var(--primary, #9b704e);
+  color: var(--primary-foreground, #fff);
+}
+
+[data-slot="fab"] {
+  position: fixed;
+  z-index: 10;
+  inset-inline-end: var(--space-4, 1rem);
+  inset-block-end: var(--space-4, 1rem);
+  box-shadow: var(--shadow-lg, 0 8px 24px #0005);
+}
+
+[data-slot="stage"] [data-slot="fab"] {
+  position: absolute;
+}
+
+[data-popup-preset="dialog"] {
+  border: 0;
+  background: color-mix(in srgb, var(--popover, #fff) 94%, transparent);
+  backdrop-filter: blur(8px);
+  box-shadow: var(--shadow-lg, 0 8px 24px #0005);
+}
+
+body:has([data-popup-preset="dialog"]:not([hidden]))::before {
+  background: var(--popup-backdrop, #0009);
+  backdrop-filter: blur(2px);
+}
+
+body:has([data-popup-preset="dialog"]:is([data-starting-style], [data-state="open"]))::before {
+  animation: harbor-float-backdrop-in var(--motion-fast, 150ms ease);
+}
+
+body:has([data-popup-preset="dialog"][data-ending-style]):not(:has([data-popup-preset="dialog"][data-state="open"]))::before {
+  animation: harbor-popup-out var(--motion-fast, 150ms ease) both;
+}
+
+@keyframes harbor-float-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+[data-slot="typed-confirm"] form label {
+  display: grid;
+  gap: var(--space-1, .25rem);
+}
+
+[data-slot="typed-confirm"] .form-actions {
+  justify-content: flex-end;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-slot="stage"] [data-float-controls] {
+    transition: none;
+  }
+
+  body:has([data-popup-preset="dialog"]:is([data-starting-style], [data-state="open"], [data-ending-style]))::before {
+    animation: none;
+  }
+}

@@ -76,6 +76,23 @@ class KitHelper extends Base
         return $this->template->render('Harbor:kit/callout', compact('title', 'body', 'tone'));
     }
 
+    /** The stage content is trusted template HTML. Mark fading controls with data-float-controls. */
+    public function stage(string $contentHtml, bool $playing = false): string
+    {
+        return $this->template->render('Harbor:kit/stage', compact('contentHtml', 'playing'));
+    }
+
+    /** The body is trusted template HTML. Open the dialog with Kit.typedConfirm(dialog, trigger). */
+    public function typedConfirm(string $title, string $bodyHtml, string $phrase, string $actionLabel, string $formAction): string
+    {
+        $formAction = $this->actionUrl($formAction);
+        if ($formAction === null) {
+            throw new \InvalidArgumentException('A typed confirm requires a local form action.');
+        }
+
+        return $this->template->render('Harbor:kit/typed_confirm', compact('title', 'bodyHtml', 'phrase', 'actionLabel', 'formAction'));
+    }
+
     /**
      * The sentence is trusted HTML and must already escape any user content.
      */

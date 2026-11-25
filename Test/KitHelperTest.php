@@ -144,6 +144,38 @@ class KitHelperTest extends Base
         $this->assertStringNotContainsString('--pulse-', $css);
     }
 
+    public function testTypedConfirmRendersADialogWithAnInitiallyDisabledSubmit(): void
+    {
+        (new Plugin($this->container))->initialize();
+        $html = $this->container['template']->kit->typedConfirm(
+            'Delete & archive',
+            '<p>This removes the project.</p>',
+            'delete & archive',
+            'Delete project',
+            '/?controller=ProjectController&action=remove'
+        );
+
+        $this->assertMatchesRegularExpression('/<dialog\b[^>]*data-slot="typed-confirm"/', $html);
+        $this->assertStringContainsString('Delete &amp; archive', $html);
+        $this->assertStringContainsString('<p>This removes the project.</p>', $html);
+        $this->assertStringContainsString('Type delete &amp; archive to confirm', $html);
+        $this->assertStringContainsString('data-phrase="delete &amp; archive"', $html);
+        $this->assertStringContainsString('method="post" action="/?controller=ProjectController&amp;action=remove"', $html);
+        $this->assertSame(1, preg_match('/<input type="hidden" name="csrf_token" value="([^"]+)"/', $html, $token));
+        $this->assertTrue($this->container['token']->validateCSRFToken($token[1]));
+        $this->assertMatchesRegularExpression('/<button\b(?=[^>]*\btype="submit")(?=[^>]*\sdisabled\b)[^>]*>\s*Delete project\s*<\/button>/', $html);
+    }
+
+    public function testStageUsesDarkTokensInLightMode(): void
+    {
+        $file = __DIR__ . '/../Assets/css/kit-float.css';
+        $this->assertFileExists($file);
+        $this->assertMatchesRegularExpression(
+            '/html\.theme-light\s+\[data-slot="stage"\]\s*\{[^}]*color-scheme:\s*dark;[^}]*--background:\s*var\(--stage-dark-background,/',
+            file_get_contents($file)
+        );
+    }
+
     public function testKitEscapesUserControlledTextAndAttributes(): void
     {
         (new Plugin($this->container))->initialize();
