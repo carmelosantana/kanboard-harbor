@@ -37,7 +37,7 @@ class AssetContractTest extends Base
     }
 
     /** @dataProvider routes */
-    public function testLayoutAssetListeners(string $controller, array $stylesheets): void
+    public function testLayoutAssetListeners(string $controller, array $stylesheets, array $scripts): void
     {
         $router = $this->createMock(Router::class);
         $router->method('getController')->willReturn($controller);
@@ -49,15 +49,19 @@ class AssetContractTest extends Base
 
         $hook = $this->container['hook'];
         $this->assertSame($stylesheets, array_column($hook->getListeners('template:layout:css'), 'template'));
-        $this->assertSame(self::GLOBAL_JS, array_column($hook->getListeners('template:layout:js'), 'template'));
+        $this->assertSame($scripts, array_column($hook->getListeners('template:layout:js'), 'template'));
     }
 
     public static function routes(): array
     {
         return [
-            'board' => ['BoardViewController', [...self::GLOBAL_CSS, 'plugins/Harbor/Assets/css/kit-board.css']],
-            'login' => ['AuthController', [...self::GLOBAL_CSS, 'plugins/Harbor/Assets/css/login.css']],
-            'task' => ['TaskViewController', self::GLOBAL_CSS],
+            'board' => [
+                'BoardViewController',
+                [...self::GLOBAL_CSS, 'plugins/Harbor/Assets/css/kit-board.css'],
+                [...self::GLOBAL_JS, 'plugins/Harbor/Assets/js/kit-board.js'],
+            ],
+            'login' => ['AuthController', [...self::GLOBAL_CSS, 'plugins/Harbor/Assets/css/login.css'], self::GLOBAL_JS],
+            'task' => ['TaskViewController', self::GLOBAL_CSS, self::GLOBAL_JS],
         ];
     }
 }

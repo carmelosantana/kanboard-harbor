@@ -29,6 +29,7 @@ html .board-task-list-limit {
 
 html #board .board-column,
 html #board td[class*="board-column-"],
+html #board tr:hover td,
 html #board .board-task-list {
   background: transparent;
   border: none;
@@ -99,21 +100,21 @@ html #board .board-column-header-collapsed > .board-column-collapsed {
   display: block;
 }
 
-/* Core keeps the expand control in the task cell and sets drag target sizes inline. */
-html #board .board-column-task-collapsed > .board-column-collapsed {
-  min-height: 0 !important;
-}
-
-html #board .board-column-collapsed .board-rotation-wrapper {
-  min-height: 0;
+html #board .board-column-expand {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: var(--space-1, 0.25rem);
   padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm, 0.25rem);
+  background: transparent;
+  color: var(--foreground, #fafafa);
+  cursor: pointer;
 }
 
-html #board .board-column-collapsed .board-rotation {
-  writing-mode: vertical-rl;
-  width: auto !important;
-  transform: none;
-  cursor: pointer;
+html #board .board-column-collapsed .board-rotation-wrapper[hidden] {
+  display: none;
 }
 
 /* Task cards */

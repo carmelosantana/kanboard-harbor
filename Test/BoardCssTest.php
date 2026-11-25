@@ -68,8 +68,9 @@ class BoardCssTest extends TestCase
     public function testCollapsedColumnsHideTheCardListAndKeepTheHeader(): void
     {
         $this->assertSame('none', $this->rules['html #board .board-column-task-collapsed > .board-column-expanded']['display'] ?? null);
-        $this->assertSame('0 !important', $this->rules['html #board .board-column-task-collapsed > .board-column-collapsed']['min-height'] ?? null);
         $this->assertSame('block', $this->rules['html #board .board-column-header-collapsed > .board-column-collapsed']['display'] ?? null);
+        $this->assertSame('inline-flex', $this->rules['html #board .board-column-expand']['display'] ?? null);
+        $this->assertSame('none', $this->rules['html #board .board-column-collapsed .board-rotation-wrapper[hidden]']['display'] ?? null);
     }
 
     public function testCompactDensityReducesCardPadding(): void
