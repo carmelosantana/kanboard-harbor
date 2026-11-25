@@ -6,6 +6,7 @@ use Closure;
 use DateTimeImmutable;
 use InvalidArgumentException;
 use Kanboard\Core\Base;
+use Kanboard\Core\Translator;
 
 class KitHelper extends Base
 {
@@ -258,6 +259,29 @@ class KitHelper extends Base
     public function serviceTile(string $name, string $state, string $detail): string
     {
         return $this->template->render('Harbor:kit/service_tile', compact('name', 'state', 'detail'));
+    }
+
+    public function logViewer(string $title, string $sseUrl): string
+    {
+        $lineCount = Translator::getInstance()->get('%d lines', '%d lines');
+
+        return $this->template->render('Harbor:kit/log_viewer', compact('title', 'sseUrl', 'lineCount'));
+    }
+
+    /**
+     * @param array<string, string> $details Labels and values describing the request.
+     * @param string $approvalUrl Local or HTTPS URL for a separate human approval flow.
+     */
+    public function approvalCard(int $expiresAt, array $details, string $approvalUrl, string $actionLabel): string
+    {
+        $remaining = max(0, $expiresAt - time());
+        $countdown = $remaining > 0 ? sprintf('%d:%02d', intdiv($remaining, 60), $remaining % 60) : t('Expired');
+        $href = $this->actionUrl($approvalUrl);
+        if ($href === null && str_starts_with($approvalUrl, 'https://') && filter_var($approvalUrl, FILTER_VALIDATE_URL)) {
+            $href = $approvalUrl;
+        }
+
+        return $this->template->render('Harbor:kit/approval_card', compact('expiresAt', 'details', 'countdown', 'remaining', 'href', 'actionLabel'));
     }
 
     private static function chartJson(array $data): string

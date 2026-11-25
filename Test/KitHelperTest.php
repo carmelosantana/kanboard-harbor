@@ -386,6 +386,41 @@ class KitHelperTest extends Base
         $this->assertSame($frame, $runningFrame);
     }
 
+    public function testLogViewerRendersAnAccessibleLogAndFollowControls(): void
+    {
+        (new Plugin($this->container))->initialize();
+        $kit = $this->container['template']->kit;
+        $html = $kit->logViewer('Backup <output>', '/logs?id=14&tail=1');
+
+        $this->assertStringContainsString('data-slot="log-viewer"', $html);
+        $this->assertStringContainsString('data-sse-url="/logs?id=14&amp;tail=1"', $html);
+        $this->assertStringContainsString('Backup &lt;output&gt;', $html);
+        $this->assertMatchesRegularExpression('~<[^>]+role="log"[^>]+aria-live="off"[^>]*>~', $html);
+        $this->assertStringContainsString('0 lines', $html);
+        foreach (['Follow', 'Pause', 'Jump to latest'] as $label) {
+            $this->assertMatchesRegularExpression('~<button\b[^>]*>' . $label . '</button>~', $html);
+        }
+    }
+
+    public function testApprovalCardRendersTheDeadlineAndDisablesAnExpiredAction(): void
+    {
+        (new Plugin($this->container))->initialize();
+        $kit = $this->container['template']->kit;
+        $deadline = time() + 300;
+        $details = ['Target' => 'backup <latest>'];
+        $html = $kit->approvalCard($deadline, $details, '/approve?id=14', 'Open approval');
+
+        $this->assertStringContainsString('data-slot="approval-card"', $html);
+        $this->assertStringContainsString('data-expires-at="' . $deadline . '"', $html);
+        $this->assertStringContainsString('Pending approval', $html);
+        $this->assertStringContainsString('backup &lt;latest&gt;', $html);
+        $this->assertStringContainsString('href="/approve?id=14"', $html);
+        $expired = $kit->approvalCard(time() - 1, $details, '/approve?id=14', 'Open approval');
+        $this->assertStringContainsString('Expired', $expired);
+        $this->assertStringContainsString('aria-disabled="true"', $expired);
+        $this->assertStringNotContainsString('href=', $expired);
+    }
+
     public function testKitEscapesUserControlledTextAndAttributes(): void
     {
         (new Plugin($this->container))->initialize();
