@@ -7,23 +7,32 @@ function loadOps() {
     hidden: false,
     readyState: 'complete',
     querySelectorAll: () => [],
+    createTextNode: textContent => ({ textContent }),
   });
   const sources = [];
   const observers = new Set();
+  let observerConstructions = 0;
   const requests = [];
   const window = {
     Kit: {},
     EventSource: class extends EventTarget {
+      static CONNECTING = 0;
+      static CLOSED = 2;
+
       constructor(url) {
         super();
         this.url = url;
         this.closed = false;
+        this.readyState = this.constructor.CONNECTING;
         sources.push(this);
       }
       close() { this.closed = true; }
     },
     MutationObserver: class {
-      constructor(callback) { this.callback = callback; }
+      constructor(callback) {
+        this.callback = callback;
+        observerConstructions++;
+      }
       observe() { observers.add(this); }
       disconnect() { observers.delete(this); }
     },
@@ -39,9 +48,11 @@ function loadOps() {
 
   return {
     Kit: window.Kit, sources, requests, document, window,
+    get observerConstructions() { return observerConstructions; },
+    get activeObservers() { return observers.size; },
     remove(el) {
       el.isConnected = false;
-      for (const observer of observers) observer.callback();
+      for (const observer of observers) observer.callback([{ removedNodes: [el] }]);
     },
   };
 }
@@ -56,14 +67,22 @@ function fixture(selectors, dataset = {}) {
 
 function logFixture() {
   const body = Object.assign(new EventTarget(), {
-    textContent: '',
+    childNodes: [],
     scrollHeight: 200,
     clientHeight: 100,
     scrollTop: 100,
-    append(text) {
-      this.textContent += text;
+    append(node) {
+      this.childNodes.push(node);
       this.scrollHeight += 20;
     },
+    removeChild(node) {
+      this.childNodes.splice(this.childNodes.indexOf(node), 1);
+      this.scrollHeight -= 20;
+    },
+  });
+  Object.defineProperties(body, {
+    textContent: { get: () => body.childNodes.map(node => node.textContent ?? node).join('') },
+    firstChild: { get: () => body.childNodes[0] },
   });
   let scrollTop = body.scrollTop;
   Object.defineProperty(body, 'scrollTop', {
@@ -75,19 +94,21 @@ function logFixture() {
   const follow = button();
   const pause = button();
   const jump = button();
+  const status = { dataset: { logStatus: 'Disconnected' }, textContent: '' };
   const el = fixture({
     '[role="log"]': body,
     '[data-log-count]': count,
     '[data-log-follow]': follow,
     '[data-log-pause]': pause,
     '[data-log-jump]': jump,
+    '[data-log-status]': status,
   }, { sseUrl: '/logs' });
-  return { el, body, count, follow, pause, jump };
+  return { el, body, count, follow, pause, jump, status };
 }
 
 test('streams plain text and counts actual lines through a native reconnect', () => {
   const { Kit, sources } = loadOps();
-  const { el, body, count } = logFixture();
+  const { el, body, count, status } = logFixture();
   Kit.logViewer(el);
   Kit.logViewer(el);
   const [source] = sources;
@@ -95,6 +116,7 @@ test('streams plain text and counts actual lines through a native reconnect', ()
   source.dispatchEvent(new MessageEvent('message', { data: '\x1b[31merror\x1b[0m\nworking\n' }));
   source.dispatchEvent(new Event('error'));
   assert.equal(source.closed, false);
+  assert.equal(status.textContent, '');
   assert.equal(sources.length, 1);
   source.dispatchEvent(new MessageEvent('message', { data: '\x1b]0;title\x07<done>' }));
   assert.equal(body.textContent, 'error\nworking\n<done>\n');
@@ -139,6 +161,57 @@ test('done and removal each close the stream and stop processing messages', () =
   }
   assert.equal(first.body.textContent, '');
   assert.equal(second.body.textContent, '');
+});
+
+test('operations components share one removal observer and release it when idle', (t) => {
+  t.mock.timers.enable({ apis: ['setInterval'] });
+  const ops = loadOps();
+  const elements = Array.from({ length: 9 }, (_, index) => {
+    const { el } = logFixture();
+    if (index % 2 === 0) ops.Kit.logViewer(el);
+    else ops.Kit.poll(el, '/tiles');
+    return el;
+  });
+  const action = new EventTarget();
+  const approval = fixture({
+    '[data-approval-countdown]': { textContent: '5:00', dataset: { approvalCountdown: 'Expired' } },
+    '[data-approval-action]': action,
+  }, { expiresAt: String(Math.ceil(Date.now() / 1000) + 300) });
+  ops.Kit.approvalCountdown(approval);
+  elements.push(approval);
+
+  assert.equal(ops.observerConstructions, 1);
+  ops.remove(elements.shift());
+  assert.equal(ops.activeObservers, 1);
+  elements.forEach(ops.remove);
+  assert.equal(ops.activeObservers, 0);
+});
+
+test('retains the newest 5000 log lines and counts all received lines', () => {
+  const { Kit, sources } = loadOps();
+  const { el, body, count } = logFixture();
+  Kit.logViewer(el);
+  const append = data => sources[0].dispatchEvent(new MessageEvent('message', { data }));
+  append(Array.from({ length: 4999 }, (_, index) => `line ${index + 1}`).join('\n'));
+  for (let line = 5000; line <= 5005; line++) append(`line ${line}`);
+  assert.equal(body.childNodes.length, 5000);
+  assert.equal(body.firstChild.textContent, 'line 6\n');
+  assert.equal(body.childNodes.at(-1).textContent, 'line 5005\n');
+  assert.equal(count.textContent, '5005 lines');
+});
+
+test('a terminal EventSource error shows the disconnected status', () => {
+  const { Kit, sources } = loadOps();
+  const { el, body, status } = logFixture();
+  Kit.logViewer(el);
+  const [source] = sources;
+  source.readyState = source.constructor.CLOSED;
+  source.dispatchEvent(new Event('error'));
+  assert.equal(el.dataset.state, 'closed');
+  assert.equal(status.textContent, 'Disconnected');
+  assert.equal(source.closed, true);
+  source.dispatchEvent(new MessageEvent('message', { data: 'late delivery' }));
+  assert.equal(body.textContent, '');
 });
 
 test('approval uses the absolute deadline and disables the action at zero', (t) => {
@@ -197,12 +270,15 @@ test('polling refreshes at 5 s intervals only while visible and stops on removal
   await advance(10000);
   assert.equal(requests.length, 1);
   setHidden(false);
-  await advance(5000);
   assert.equal(requests.length, 2);
+  await advance(4999);
+  assert.equal(requests.length, 2);
+  await advance(1);
+  assert.equal(requests.length, 3);
 
   remove(el);
   await advance(5000);
-  assert.equal(requests.length, 2);
+  assert.equal(requests.length, 3);
 });
 
 test('hiding the tab aborts an in-flight poll and discards its late response', async (t) => {

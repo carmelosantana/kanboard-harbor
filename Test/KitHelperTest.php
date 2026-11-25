@@ -475,6 +475,8 @@ class KitHelperTest extends Base
         $this->assertStringContainsString('Backup &lt;output&gt;', $html);
         $this->assertMatchesRegularExpression('~<[^>]+role="log"[^>]+aria-live="off"[^>]*>~', $html);
         $this->assertStringContainsString('0 lines', $html);
+        $this->assertStringNotContainsString('style=', $html);
+        $this->assertMatchesRegularExpression('~role="status"[^>]+data-log-status="Disconnected"~', $html);
         foreach (['Follow', 'Pause', 'Jump to latest'] as $label) {
             $this->assertMatchesRegularExpression('~<button\b[^>]*>' . $label . '</button>~', $html);
         }

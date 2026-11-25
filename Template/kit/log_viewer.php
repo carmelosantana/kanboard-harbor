@@ -5,7 +5,7 @@
         <button type="button" data-log-follow aria-pressed="true"><?= $this->text->e(t('Follow')) ?></button>
         <button type="button" data-log-pause aria-pressed="false"><?= $this->text->e(t('Pause')) ?></button>
     </div>
-    <pre role="log" aria-live="off" aria-label="<?= $this->text->e($title) ?>" tabindex="0"
-         style="max-block-size: 16rem; overflow: auto; overflow-anchor: none"></pre>
+    <pre role="log" aria-live="off" aria-label="<?= $this->text->e($title) ?>" tabindex="0"></pre>
+    <span role="status" data-log-status="<?= $this->text->e(t('Disconnected')) ?>"></span>
     <button type="button" data-log-jump hidden><?= $this->text->e(t('Jump to latest')) ?></button>
 </section>

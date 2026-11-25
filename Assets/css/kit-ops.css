@@ -136,3 +136,9 @@
 .kit-service-detail {
   overflow-wrap: anywhere;
 }
+
+[data-slot="log-viewer"] > [role="log"] {
+  max-block-size: 16rem;
+  overflow: auto;
+  overflow-anchor: none;
+}

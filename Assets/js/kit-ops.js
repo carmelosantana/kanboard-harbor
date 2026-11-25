@@ -4,13 +4,25 @@
   const logs = new WeakSet();
   const approvals = new WeakSet();
   const polls = new WeakSet();
+  const maxLogLines = 5000;
+  const removalWatches = new Map();
+  let removalObserver;
 
   function watchRemoval(el, stop) {
-    const observer = new window.MutationObserver(() => {
-      if (!el.isConnected) stop();
+    removalObserver ??= new window.MutationObserver(records => {
+      if (!records.some(record => record.removedNodes.length)) return;
+      for (const [cleanup, element] of removalWatches) {
+        if (!element.isConnected) cleanup();
+      }
     });
-    observer.observe(document, { childList: true, subtree: true });
-    return () => observer.disconnect();
+    if (removalWatches.size === 0) {
+      removalObserver.observe(document, { childList: true, subtree: true });
+    }
+    removalWatches.set(stop, el);
+    return () => {
+      removalWatches.delete(stop);
+      if (removalWatches.size === 0) removalObserver.disconnect();
+    };
   }
 
   function logViewer(el) {
@@ -21,6 +33,7 @@
     const follow = el.querySelector('[data-log-follow]');
     const pause = el.querySelector('[data-log-pause]');
     const jump = el.querySelector('[data-log-jump]');
+    const status = el.querySelector('[data-log-status]');
     const source = new window.EventSource(el.dataset.sseUrl);
     logs.add(el);
 
@@ -53,8 +66,12 @@
         .replace(/(?:\x1b\[|\x9b)[0-?]*[ -/]*[@-~]|\x1b[ -/]*[@-Z\\-_]/g, '')
         .replace(/\r\n?/g, '\n')
         .replace(/\n$/, '');
-      body.append(text + '\n');
-      lines += text.split('\n').length;
+      const incoming = text.split('\n');
+      for (const line of incoming.slice(-maxLogLines)) {
+        body.append(document.createTextNode(line + '\n'));
+      }
+      while (body.childNodes.length > maxLogLines) body.removeChild(body.firstChild);
+      lines += incoming.length;
       count.textContent = count.dataset.logCount.replace(/%(?:1\$)?d/, lines);
       if (following) body.scrollTop = body.scrollHeight;
     }
@@ -63,12 +80,21 @@
     source.addEventListener('message', append);
     source.addEventListener('line', append);
     source.addEventListener('done', close);
+    source.addEventListener('error', onError);
     const unwatch = watchRemoval(el, close);
+
+    function onError() {
+      if (source.readyState !== window.EventSource.CLOSED) return;
+      el.dataset.state = 'closed';
+      status.textContent = status.dataset.logStatus;
+      close();
+    }
 
     function close() {
       source.removeEventListener('message', append);
       source.removeEventListener('line', append);
       source.removeEventListener('done', close);
+      source.removeEventListener('error', onError);
       source.close();
       unwatch();
     }
@@ -153,11 +179,12 @@
       pending = undefined;
     }
 
-    function updateVisibility() {
+    function updateVisibility(visibilityEvent) {
       if (document.hidden) {
         suspend();
       } else if (timer === undefined) {
         timer = window.setInterval(refresh, interval);
+        if (visibilityEvent) refresh();
       }
     }
 
