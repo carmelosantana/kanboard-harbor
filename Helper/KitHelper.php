@@ -4,6 +4,7 @@ namespace Kanboard\Plugin\Harbor\Helper;
 
 use Closure;
 use DateTimeImmutable;
+use InvalidArgumentException;
 use Kanboard\Core\Base;
 
 class KitHelper extends Base
@@ -141,6 +142,60 @@ class KitHelper extends Base
         $levels = array_map(static fn (int $count): int => (int) ceil(4 * ($count / $peak)), $days);
 
         return $this->template->render('Harbor:kit/heatmap', compact('days', 'levels'));
+    }
+
+    /** @param list<int|float>|null $spark */
+    public function statTile(string $label, string|int|float $value, ?array $spark = null): string
+    {
+        $points = $spark === null ? null : self::chartJson(array_values($spark));
+
+        return $this->template->render('Harbor:kit/stat_tile', compact('label', 'value', 'points'));
+    }
+
+    /**
+     * Each value is indexed by its position in $labels. A null or missing value leaves a gap.
+     *
+     * @param list<array{name: string, values: list<int|float|null>}> $series
+     * @param list<string> $labels
+     */
+    public function lineChart(array $series, array $labels): string
+    {
+        if (count($series) > 5) {
+            throw new InvalidArgumentException('A line chart supports up to five series.');
+        }
+
+        $labels = array_values($labels);
+        $labelCount = count($labels);
+        $series = array_values($series);
+        foreach ($series as $index => $entry) {
+            $series[$index] = [
+                'name' => $entry['name'],
+                'values' => array_slice($entry['values'], 0, $labelCount),
+                'color' => '--chart-' . ($index + 1),
+            ];
+        }
+        $seriesJson = self::chartJson($series);
+        $labelsJson = self::chartJson($labels);
+
+        return $this->template->render('Harbor:kit/line_chart', compact('series', 'labels', 'seriesJson', 'labelsJson'));
+    }
+
+    public function usageBar(string $label, float $used, float $total, string $unit): string
+    {
+        $ratio = $total > 0 ? $used / $total : 0;
+        $level = match (true) {
+            $ratio > 0.9 => 'danger',
+            $ratio > 0.8 => 'warning',
+            default => 'normal',
+        };
+        $pct = 100 * max(0, min(1, $ratio));
+
+        return $this->template->render('Harbor:kit/usage_bar', compact('label', 'used', 'total', 'unit', 'level', 'pct'));
+    }
+
+    private static function chartJson(array $data): string
+    {
+        return json_encode($data, JSON_HEX_AMP | JSON_INVALID_UTF8_SUBSTITUTE | JSON_THROW_ON_ERROR);
     }
 
     public function progress(int $done, ?int $total, float $spentH, float $estH): string

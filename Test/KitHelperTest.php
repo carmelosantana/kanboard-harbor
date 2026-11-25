@@ -232,6 +232,69 @@ class KitHelperTest extends Base
         }
     }
 
+    public function testStatTilePrintsItsValueAndOptionallyCarriesSparklinePoints(): void
+    {
+        (new Plugin($this->container))->initialize();
+        $kit = $this->container['template']->kit;
+        $html = $kit->statTile('CPU <idle>', '37%', [12, 44.5, 37]);
+        $this->assertStringContainsString('data-slot="stat-tile"', $html);
+        $this->assertStringContainsString('CPU &lt;idle&gt;', $html);
+        $this->assertMatchesRegularExpression('~<strong>37%</strong>~', $html);
+        $this->assertSame(1, preg_match('/data-slot="sparkline" data-points="([^"]+)"/', $html, $matches));
+        $this->assertSame([12, 44.5, 37], json_decode(html_entity_decode($matches[1]), true, 512, JSON_THROW_ON_ERROR));
+        $this->assertStringNotContainsString('data-slot="sparkline"', $kit->statTile('Uptime', '18d'));
+    }
+
+    public function testLineChartSharesOrderedSeriesAndValuesBetweenSvgDataAndTheFallbackTable(): void
+    {
+        (new Plugin($this->container))->initialize();
+        $kit = $this->container['template']->kit;
+        $series = [
+            ['name' => 'User & system', 'values' => [12, 18.5]],
+            ['name' => 'Idle', 'values' => [88, 81.5]],
+            ['name' => 'I/O', 'values' => [0, 1]],
+            ['name' => 'IRQ', 'values' => [2, 3]],
+            ['name' => 'Steal', 'values' => [4, 5]],
+        ];
+        $html = $kit->lineChart($series, ['12:00 <UTC>', '12:05']);
+
+        $this->assertStringContainsString('data-slot="line-chart"', $html);
+        $this->assertSame(1, preg_match('/data-series="([^"]+)"/', $html, $matches));
+        $data = json_decode(html_entity_decode($matches[1]), true, 512, JSON_THROW_ON_ERROR);
+        foreach ($series as $index => $entry) {
+            $this->assertSame($entry + ['color' => '--chart-' . ($index + 1)], $data[$index]);
+        }
+        $this->assertStringContainsString('data-slot="chart-legend"', $html);
+        $this->assertMatchesRegularExpression('~<table data-slot="chart-table">.*'
+            . '<th scope="col">User &amp; system</th>.*'
+            . '<th scope="row">12:00 &lt;UTC&gt;</th>\s*<td>12</td>\s*<td>88</td>\s*<td>0</td>\s*<td>2</td>\s*<td>4</td>.*'
+            . '<th scope="row">12:05</th>\s*<td>18\.5</td>\s*<td>81\.5</td>\s*<td>1</td>\s*<td>3</td>\s*<td>5</td>.*</table>~s', $html);
+
+        $single = $kit->lineChart([$series[0]], ['12:00', '12:05', '12:10']);
+        $this->assertStringNotContainsString('data-slot="chart-legend"', $single);
+        $this->assertStringContainsString('<table data-slot="chart-table">', $single);
+        $this->assertMatchesRegularExpression('~<th scope="row">12:10</th>\s*<td>—</td>~', $single);
+        $this->assertStringContainsString('<table data-slot="chart-table">', $kit->lineChart([], []));
+
+        $this->expectException(\InvalidArgumentException::class);
+        $kit->lineChart(array_fill(0, 6, $series[0]), ['12:00', '12:05']);
+    }
+
+    public function testUsageBarUsesStrictThresholdsAndPrintsCapacity(): void
+    {
+        (new Plugin($this->container))->initialize();
+        $kit = $this->container['template']->kit;
+        foreach ([80 => 'normal', 81 => 'warning', 90 => 'warning', 91 => 'danger', 120 => 'danger'] as $used => $level) {
+            $html = $kit->usageBar('Disk & pool', $used, 100, 'GB');
+            $this->assertStringContainsString('data-slot="usage-bar"', $html);
+            $this->assertStringContainsString('data-level="' . $level . '"', $html);
+            $this->assertStringContainsString('style="--pct:' . min(100, $used) . '%"', $html);
+            $this->assertStringContainsString('Disk &amp; pool', $html);
+            $this->assertStringContainsString($used . ' / 100 GB', $html);
+        }
+        $this->assertStringContainsString('style="--pct:0%"', $kit->usageBar('Disk', 0, 0, 'GB'));
+    }
+
     public function testKitEscapesUserControlledTextAndAttributes(): void
     {
         (new Plugin($this->container))->initialize();
